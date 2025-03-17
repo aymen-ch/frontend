@@ -1,25 +1,48 @@
-import logo from './logo.svg';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
 
+import { useEffect } from 'react';
+
+import { Routes, Route, Router } from 'react-router';
+import { Navigate } from 'react-router';
+import Login from './component/Login'
+import UserInterface from './component/user/UserInterface';
+import Home from './component/user/pages/Home';
+import Upload from './component/user/pages/Upload';
+import Search from './component/user/pages/Search';
+// import GraphAnalysisComponent from './component/GraphAnalysis/GraphAnalysisComponent';
+
+import Graphe_analysis from './component/GraphAnalysis/graphe_analysis';
+
+function App() {
+    console.log("dddd");
+    useEffect(()=>{
+      console.log("useEffect");
+    })
+    const isAuthenticated = true;
+    return( 
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/home" element={isAuthenticated ? <UserInterface /> : <Navigate to="/" replace />}>
+              <Route index element={<Home />} />
+              <Route path="upload" element={<Upload />} />
+              <Route path="search" element={<Search />} />
+              <Route path="analytics/AlgorithmicAnalysis" element={<Graphe_analysis />} /> 
+          </Route>
+        </Routes>
+      
+      /*<BrowserRouter>
+        <Link to="/" >Home</Link>
+        <Link to="/login" style={{marginLeft:"12px"}}>Login</Link>
+        <Link to="/details" style={{marginLeft:"12px"}}>Details</Link>
+        <Link to="/about" style={{marginLeft:"12px"}}>About</Link>
+        <Routes>
+          <Route path="/" element={<Home/>}/>
+          <Route path="/details" element={<Details/>}/>
+          <Route path="/about" element={<About/>}/>
+          <Route path="/login" element={<Login/>}/>
+        </Routes>
+      </BrowserRouter>*/
+    )
+}
 export default App;
