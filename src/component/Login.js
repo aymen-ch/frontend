@@ -26,7 +26,7 @@ const Login = () => {
     }
 
     axios
-      .post('http://192.168.3.6:8000/api/token/', {
+      .post('http://127.0.0.1:8000/api/token/', {
         username: email,
         password: password,
       })
