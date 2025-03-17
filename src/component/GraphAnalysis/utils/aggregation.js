@@ -19,8 +19,15 @@ const Aggregation = ({
   const [isClassifying, setIsClassifying] = useState(false);
 
   useEffect(() => {
-    const types = [...new Set(nodes.map((node) => node.group))];
+    // Get unique node types, excluding those where any node has hidden: true
+    const types = [...new Set(
+      nodes
+        .filter((node) => !node.aggregationType      ) // Only include nodes that aren't hidden
+        .map((node) => node.group)
+    )];
     setNodeTypes(types);
+    console.log(nodes)
+    // Set selected affaires (unchanged)
     const affids = nodes
       .filter((node) => node.group === "Affaire")
       .map((node) => parseInt(node.id, 10));
@@ -38,8 +45,8 @@ const Aggregation = ({
     switch (type) {
       case "Phone":
         return ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"];
-      case "Affaire":
-        return ["Personne", "Impliquer", "Affaire", "Impliquer", "Personne"];
+      // case "Affaire":
+      //   return ["Personne", "Impliquer", "Affaire", "Impliquer", "Personne"];
       case "Personne":
         return ["Phone", "Proprietaire", "Personne", "Impliquer", "Affaire"];
       case "Unite":
@@ -149,29 +156,63 @@ const Aggregation = ({
 
   const toggleAggregation = (type) => {
     if (activeAggregations[type]) {
+      // Deaggregate: Remove edges tied to this aggregation and restore relevant edges/nodes
       setEdges((prevEdges) => {
-        const combinedEdges = [...prevEdges, ...edges];
-        const filteredEdges = combinedEdges.filter(edge => edge.aggregationType !== type);
-        const nodeIdsWithType = nodes
-          .filter(node => node.group === type)
-          .map(node => node.id);
-        const updatedEdges = filteredEdges.map(edge => ({
-          ...edge,
-          hidden: nodeIdsWithType.includes(edge.from) || nodeIdsWithType.includes(edge.to) ? false : edge.hidden,
-        }));
-        return updatedEdges;
+        // Keep track of original edges and edges from other aggregations
+        const filteredEdges = prevEdges.filter(edge => edge.aggregationType !== type);
+        
+        // Update hidden state for remaining edges
+        return filteredEdges.map(edge => {
+          const fromNode = nodes.find(node => node.id === edge.from);
+          const toNode = nodes.find(node => node.id === edge.to);
+          
+          // Check if this edge should remain hidden due to other active aggregations
+          const isHiddenByOtherAggregation = Object.keys(activeAggregations)
+            .filter(t => t !== type && activeAggregations[t])
+            .some(t => {
+              const path = getAggregationPath(t);
+              const intermediateTypes = getIntermediateTypes(path || []);
+              return (
+                intermediateTypes.includes(fromNode?.group) || 
+                intermediateTypes.includes(toNode?.group)
+              );
+            });
+          
+          // If the edge was hidden by this aggregation, unhide it unless another aggregation keeps it hidden
+          return {
+            ...edge,
+            hidden: isHiddenByOtherAggregation,
+          };
+        });
       });
   
-      setNodes((prevNodes) =>
-        prevNodes.map(node => 
-          node.group === type 
-            ? { ...node, hidden: false } 
-            : { ...node, hidden: node.aggregationType == type }
-        )
-      );
+      setNodes((prevNodes) => {
+        return prevNodes.map(node => {
+          // Remove nodes created by this aggregation
+          if (node.aggregationType === type) {
+            return null;
+          }
+          
+          // Check if this node should remain hidden due to other active aggregations
+          const isHiddenByOtherAggregation = Object.keys(activeAggregations)
+            .filter(t => t !== type && activeAggregations[t])
+            .some(t => {
+              const path = getAggregationPath(t);
+              const intermediateTypes = getIntermediateTypes(path || []);
+              return intermediateTypes.includes(node.group);
+            });
+          
+          // Restore visibility unless hidden by another aggregation
+          return {
+            ...node,
+            hidden: isHiddenByOtherAggregation,
+          };
+        }).filter(node => node !== null); // Remove null nodes
+      });
   
       setActiveAggregations((prev) => ({ ...prev, [type]: false }));
     } else {
+      // Aggregate: Trigger the aggregation process
       handleTypeFilterChange(type);
     }
   };
@@ -201,56 +242,67 @@ const Aggregation = ({
     );
   };
 
-  // Updated function to render the aggregation path in a single line
+
+  
   const renderAggregationPath = (type) => {
     const path = getAggregationPath(type);
-    if (!path) return null;
-
+    if (!path || path.length < 1) return null;
+  
+    // Get start node (first element), middle relation (if exists), and end node (last element)
+    const startNode = path[0];
+    const endNode = path[path.length - 1];
+    // Find middle relation (use first relation if path is short)
+    const middleIndex = Math.floor(path.length / 2);
+    const middleRelation = path.length > 2 && middleIndex % 2 === 0 
+      ? path[1] 
+      : path[middleIndex % 2 === 1 ? middleIndex : 1];
+  
     return (
       <div
         className="aggregation-path mt-1"
         style={{
-          whiteSpace: 'nowrap', // Prevents wrapping to a new line
-          fontSize: '12px', // Smaller font size
-          display: 'inline-flex', // Keeps everything inline
+          whiteSpace: 'nowrap',
+          fontSize: '12px',
+          display: 'inline-flex',
           alignItems: 'center',
         }}
       >
-        {path.map((step, index) => (
-          <span key={index} className="path-step">
-            {index % 2 === 0 ? (
-              // Node step
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '2px 4px', // Reduced padding
-                  backgroundColor: getNodeColor(step),
-                  borderRadius: '8px', // Slightly smaller radius
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  margin: '0 2px', // Reduced margin
-                }}
-              >
-                {renderIconWithBackground(step)} {step}
-              </span>
-            ) : (
-              // Relation step
+        {/* Start Node */}
+        <span className="path-step">
+          <span style={{ display: 'inline-flex' }}>
+            {startNode}
+          </span>
+        </span>
+        
+        {/* Arrow and Middle Relation */}
+        {path.length > 1 && (
+          <>
+            <span style={{ margin: '0 2px' }}>→</span>
+            <span className="path-step">
               <span
                 style={{
                   color: '#666',
                   fontStyle: 'italic',
-                  margin: '0 2px', // Reduced margin
+                  margin: '0 2px',
                 }}
               >
-                {step}
+                {middleRelation}
               </span>
-            )}
-            {index < path.length - 1 && (
-              <span style={{ margin: '0 2px' }}>→</span> // Reduced margin
-            )}
-          </span>
-        ))}
+            </span>
+          </>
+        )}
+        
+        {/* Arrow and End Node */}
+        {path.length > 1 && (
+          <>
+            <span style={{ margin: '0 2px' }}>→</span>
+            <span className="path-step">
+              <span style={{ display: 'inline-flex' }}>
+                {endNode}
+              </span>
+            </span>
+          </>
+        )}
       </div>
     );
   };
@@ -260,21 +312,24 @@ const Aggregation = ({
       <h3 className="text-lg font-semibold text-gray-800 mb-3">Aggregation</h3>
 
       <div className="d-flex flex-wrap gap-2 mb-4">
-        {nodeTypes.map((type) => (
-          <div key={type} className="form-check">
-            <input
-              type="checkbox"
-              className="form-check-input"
-              checked={!!activeAggregations[type]}
-              onChange={() => toggleAggregation(type)}
-            />
-            <label className="form-check-label">
-              {renderIconWithBackground(type)} {type}
-            </label> <br/>
-            {/* Display the aggregation path below each type */}
-            {renderAggregationPath(type)}
-          </div>
-        ))}
+      {nodeTypes.map((type) => (
+  renderAggregationPath(type) ? (
+    <div key={type} className="form-check">
+      <input
+        type="checkbox"
+        className="form-check-input"
+        checked={!!activeAggregations[type]}
+        onChange={() => toggleAggregation(type)}
+      />
+      <label className="form-check-label">
+        {renderIconWithBackground(type)} {type}
+      </label>
+      <br />
+      {/* Display the aggregation path below each type */}
+      {renderAggregationPath(type)}
+    </div>
+  ) : null
+))}
       </div>
 
       {/* <div className="d-flex flex-column gap-3">

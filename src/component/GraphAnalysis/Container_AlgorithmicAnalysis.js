@@ -142,13 +142,6 @@ const Container_AlgorithmicAnalysis = () => {
           />
           {isBoxPath > 0 && (
             <div className="path-visualization-overlay">
-              <div className="path-visualization-header">
-                <h6 className="path-visualization-title">Path Visualization</h6>
-                <button 
-                  className="btn btn-sm path-visualization-close-btn" 
-                  onClick={() => setIsBoxPath(false)}
-                >×</button>
-              </div>
               <div className="path-visualization-content">
                 <PathVisualization
                   setEdges={setEdges}

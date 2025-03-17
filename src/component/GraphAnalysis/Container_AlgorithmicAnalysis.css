@@ -32,43 +32,7 @@
   }
   
   /* Path visualization overlay */
-  .path-visualization-overlay {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    width: 320px;
-    border: 1px solid #dee2e6;
-  }
   
-  .path-visualization-header {
-    padding: 10px;
-    border-bottom: 1px solid #dee2e6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(to right, #4a6fa5, #6384b8);
-    color: white;
-    border-radius: 8px 8px 0 0;
-  }
-  
-  .path-visualization-title {
-    margin: 0;
-    font-weight: 600;
-  }
-  
-  .path-visualization-close-btn {
-    color: white;
-    padding: 2px 5px;
-    background: none;
-    border: none;
-  }
-  
-  .path-visualization-content {
-    padding: 10px;
-  }
   
   /* Side navigation */
   /* Side navigation - Positioned along the entire right side */
