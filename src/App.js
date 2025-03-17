@@ -11,7 +11,7 @@ import Home from './component/user/pages/Home';
 import Upload from './component/user/pages/Upload';
 import Search from './component/user/pages/Search';
 // import GraphAnalysisComponent from './component/GraphAnalysis/GraphAnalysisComponent';
-
+import Register from './component/Register';
 import Graphe_analysis from './component/GraphAnalysis/graphe_analysis';
 
 function App() {
@@ -19,10 +19,11 @@ function App() {
     useEffect(()=>{
       console.log("useEffect");
     })
-    const isAuthenticated = true;
+    const isAuthenticated = !!localStorage.getItem('authToken');
     return( 
         <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/home" element={isAuthenticated ? <UserInterface /> : <Navigate to="/" replace />}>
               <Route index element={<Home />} />
               <Route path="upload" element={<Upload />} />
