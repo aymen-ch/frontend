@@ -50,7 +50,7 @@
   display: flex;
   flex-direction: column;
   height: 100%; /* Takes full height of the side-nav */
-  background: linear-gradient(to bottom, #3a4a66, #2c3e50);
+  background: #E4EFE7;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   overflow-y: auto;
 }
@@ -98,7 +98,7 @@
   writing-mode: vertical-rl;
   transform: rotate(180deg); /* Makes text more readable */
   cursor: pointer;
-  color: white;
+  color: rgb(59, 55, 55);
   transition: all 0.2s ease;
   min-height: 100px;
   display: flex;
@@ -175,15 +175,19 @@
   }
   
   .option-tab.active {
-    box-shadow: 0 2px 5px rgba(23, 162, 184, 0.3);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   }
   
   .option-content {
     background-color: #fff;
-   
     border-radius: 8px;
   
   }
+
+  .btn-check:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    color: #fff;
+    background-color: #5f7c57;
+}
   
   /* Timeline bar */
   .timeline-container {

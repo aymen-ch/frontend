@@ -27,7 +27,7 @@ const Sidebar = () => {
 
         <CDBSidebarContent className="sidebar-content">
           <CDBSidebarMenu>
-            <NavLink exact to="/home" activeClassName="activeClicked">
+            <NavLink exact to="/home/Dahboard" activeClassName="activeClicked">
               <CDBSidebarMenuItem icon="columns">Dashboard</CDBSidebarMenuItem>
             </NavLink>
             <NavLink exact to="/home/upload" activeClassName="activeClicked">
@@ -54,6 +54,13 @@ const Sidebar = () => {
           </div>
         </CDBSidebarFooter>  */}
       </CDBSidebar>
+
+      <style jsx>{`
+        .active li {
+          background-color:rgb(81, 140, 168) !important; /* Different background for active item */
+          color: #fff !important; /* Ensure text remains readable */
+        }
+      `}</style>
     </div>
   );
 };

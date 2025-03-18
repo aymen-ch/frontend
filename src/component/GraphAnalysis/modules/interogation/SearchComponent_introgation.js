@@ -1,22 +1,24 @@
 import React, { useEffect, useState, memo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { fetchNodeProperties, submitSearch } from '../../utils/Urls'; // Import utility functions
-import { getNodeIcon, getNodeColor, LabelManager, createNode } from '../../utils/Parser';// Ensure getNodeColor is imported
-
+import { fetchNodeProperties, submitSearch } from '../../utils/Urls';
+import { getNodeIcon, getNodeColor, LabelManager, createNode } from '../../utils/Parser';
 
 const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, setNodeTypes }) => {
   const [nodeProperties, setNodeProperties] = useState([]);
   const [formValues, setFormValues] = useState({});
+  const [operations, setOperations] = useState({});
   const [error, setError] = useState(null);
   const [searchResult, setSearchResult] = useState('');
 
   useEffect(() => {
     setNodeProperties([]);
     setFormValues({});
+    setOperations({});
 
     const getNodeProperties = async () => {
       try {
         const properties = await fetchNodeProperties(selectedNodeType);
+        console.log('Fetched properties:', properties); // Debug log
         setNodeProperties(properties);
       } catch (error) {
         setError('Error fetching properties.');
@@ -30,10 +32,9 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
   useEffect(() => {
     if (!searchResult || typeof searchResult !== 'object' || !searchResult.results) return;
     const nodes1 = [];
-    // Iterate over each object in the searchResult.results array
-    console.log(searchResult)
+    console.log(searchResult);
     searchResult.results.forEach((object) => {
-      nodes1.push(createNode(object, selectedNodeType, object,false));
+      nodes1.push(createNode(object, selectedNodeType, object, false));
     });
     setNodes([...nodes, ...nodes1]);
   }, [searchResult]);
@@ -46,23 +47,39 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
     setFormValues({ ...formValues, [propertyName]: value });
   };
 
+  const handleOperationChange = (propertyName, operation) => {
+    setOperations({ ...operations, [propertyName]: operation });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await submitSearch(selectedNodeType, formValues);
+      const searchPayload = {
+        values: formValues,
+        operations: operations
+      };
+      const result = await submitSearch(selectedNodeType, searchPayload);
       setSearchResult(result);
     } catch (error) {
       setError('Error during submission.');
     }
   };
 
+  const intOperationOptions = ['=', '!=', '>', '<', '>=', '<='];
+  const stringOperationOptions = [ '=', 'contains','startswith', 'endswith'];
+
+  const getOperationOptions = (propertyType) => {
+    if (propertyType === 'int') return intOperationOptions;
+    if (propertyType === 'str') return stringOperationOptions;
+    return [];
+  };
+
   return (
     <div className="container mt-4">
       {error && <div className="alert alert-danger">{error}</div>}
   
-      {/* Filter out properties that start with '_' */}
       {nodeProperties
-        .filter((property) => !property.name.startsWith('_')) // Exclude properties starting with '_'
+        .filter((property) => !property.name.startsWith('_'))
         .length > 0 && (
         <div className="card shadow-sm" style={{ border: 'none', borderRadius: '10px', backgroundColor: '#f1f3f5' }}>
           <div className="card-header" style={{ backgroundColor: '#346478', color: '#ffffff', border: 'none', borderRadius: '10px 10px 0 0' }}>
@@ -72,17 +89,17 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                   width: '24px',
                   height: '24px',
                   marginRight: '10px',
-                  backgroundColor: getNodeColor(selectedNodeType), // Apply color here
+                  backgroundColor: getNodeColor(selectedNodeType),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: '50%', // Make it circular
+                  borderRadius: '50%',
                 }}
               >
                 <img
                   src={getNodeIcon(selectedNodeType)}
                   alt="Node Type Icon"
-                  style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} // Ensure icon is visible on colored background
+                  style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }}
                 />
               </div>
               Properties for {selectedNodeType}
@@ -91,20 +108,44 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
           <div className="card-body">
             <form onSubmit={handleSubmit}>
               {nodeProperties
-                .filter((property) => !property.name.startsWith('_')) // Exclude properties starting with '_'
-                .map((property, index) => (
-                  <div key={index} className="mb-3">
-                    <label className="form-label fw-bold d-flex align-items-center">
-                      {property.name} ({property.type}):
-                    </label>
-                    <input
-                      type={property.type === 'int' ? 'number' : 'text'}
-                      className="form-control"
-                      style={{ borderRadius: '5px', border: '1px solid #ced4da' }}
-                      onChange={(e) => handleInputChange(e, property.name, property.type)}
-                    />
-                  </div>
-                ))}
+                .filter((property) => !property.name.startsWith('_'))
+                .map((property, index) => {
+                  console.log(`Property: ${property.name}, Type: ${property.type}`); // Debug log
+                  const showOperations = property.type === 'int' || property.type === 'str';
+                  return (
+                    <div key={index} className="mb-3">
+                      <label className="form-label fw-bold d-flex align-items-center">
+                        {property.name} ({property.type}):
+                      </label>
+                      <div className="input-group">
+                        {showOperations && (
+                          <select
+                            className="form-select"
+                            style={{ 
+                              maxWidth: property.type === 'int' ? '90px' : '120px', 
+                              borderRadius: '5px 0 0 5px' 
+                            }}
+                            value={operations[property.name] || (property.type === 'int' ? '=' : 'contains')}
+                            onChange={(e) => handleOperationChange(property.name, e.target.value)}
+                          >
+                            {getOperationOptions(property.type).map((op) => (
+                              <option key={op} value={op}>{op}</option>
+                            ))}
+                          </select>
+                        )}
+                        <input
+                          type={property.type === 'int' ? 'number' : 'text'}
+                          className="form-control"
+                          style={{
+                            borderRadius: showOperations ? '0 5px 5px 0' : '5px',
+                            border: '1px solid #ced4da'
+                          }}
+                          onChange={(e) => handleInputChange(e, property.name, property.type)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               <div className="d-grid">
                 <button
                   type="submit"

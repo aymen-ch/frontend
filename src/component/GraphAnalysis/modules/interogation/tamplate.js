@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import './Template.css'; // Import the CSS file for styling
+import React, { useState, useEffect } from 'react';
+import AceEditor from 'react-ace';
+import 'ace-builds/src-noconflict/mode-sql';
+import 'ace-builds/src-noconflict/theme-monokai';
+import './Template.css';
 import { BASE_URL } from '../../utils/Urls';
 import { arabicQuestions } from './tamplate_question';
 
@@ -16,7 +19,27 @@ const Template = () => {
     parameters: {},
     parameterTypes: {},
   });
-  const [customQuestions, setCustomQuestions] = useState([]);
+  const [customQuestions, setCustomQuestions] = useState(() => {
+    // Load custom questions from localStorage on initial render
+    const savedQuestions = localStorage.getItem('customQuestions');
+    return savedQuestions ? JSON.parse(savedQuestions) : [];
+  });
+  const [templateError, setTemplateError] = useState('');
+  const [newParam, setNewParam] = useState({ name: '', description: '', type: 'string' });
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Effect to clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  // Effect to save customQuestions to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('customQuestions', JSON.stringify(customQuestions));
+  }, [customQuestions]);
 
   const handleQuestionSelect = (e) => {
     const questionId = e.target.value;
@@ -32,11 +55,7 @@ const Template = () => {
     const value = e.target.value;
     const type = selectedQuestion.parameterTypes[paramName];
     const parsedValue = type === 'int' ? parseInt(value, 10) : value;
-
-    setQueryParameters((prevParams) => ({
-      ...prevParams,
-      [paramName]: parsedValue,
-    }));
+    setQueryParameters((prev) => ({ ...prev, [paramName]: parsedValue }));
   };
 
   const executeQuery = async () => {
@@ -44,26 +63,17 @@ const Template = () => {
       setIsLoading(true);
       setError('');
       setQueryResult('');
-
       try {
-        const payload = {
-          query: selectedQuestion.query,
-          parameters: queryParameters,
-        };
-
+        const payload = { query: selectedQuestion.query, parameters: queryParameters };
         const response = await fetch(BASE_URL + '/run/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-
         if (!response.ok) throw new Error('Failed to execute query');
-
         const data = await response.json();
-        const formattedResult = formatQueryResult(data.result);
-        setQueryResult(formattedResult);
+        setQueryResult(formatQueryResult(data.result));
       } catch (error) {
-        console.error('Error executing query:', error);
         setError(`خطأ: ${error.message}`);
       } finally {
         setIsLoading(false);
@@ -75,9 +85,7 @@ const Template = () => {
     if (!result || result.length === 0) return 'لا توجد بيانات.';
     return result
       .map((item, index) => {
-        const properties = Object.entries(item)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join('\n');
+        const properties = Object.entries(item).map(([key, value]) => `${key}: ${value}`).join('\n');
         return `النتيجة ${index + 1}:\n${properties}`;
       })
       .join('\n\n');
@@ -85,39 +93,78 @@ const Template = () => {
 
   const handleNewTemplateChange = (e) => {
     const { name, value } = e.target;
-    setNewTemplate((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setNewTemplate((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleNewParamChange = (e) => {
+    const { name, value } = e.target;
+    setNewParam((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleQueryChange = (value) => {
+    setNewTemplate((prev) => ({ ...prev, query: value }));
   };
 
   const addNewParameter = () => {
-    const paramName = prompt('أدخل اسم المتغير (بالإنجليزية):');
-    const paramDescription = prompt('أدخل وصف المتغير (بالعربية):');
-    const paramType = prompt('أدخل نوع المتغير (int أو string):');
-
-    if (paramName && paramDescription && (paramType === 'int' || paramType === 'string')) {
+    const { name, description, type } = newParam;
+    if (name && description && (type === 'int' || type === 'string')) {
       setNewTemplate((prev) => ({
         ...prev,
-        parameters: { ...prev.parameters, [paramName]: paramDescription },
-        parameterTypes: { ...prev.parameterTypes, [paramName]: paramType },
+        parameters: { ...prev.parameters, [name]: description },
+        parameterTypes: { ...prev.parameterTypes, [name]: type },
       }));
+      setNewParam({ name: '', description: '', type: 'string' });
+      setTemplateError('');
     } else {
-      alert('يرجى إدخال بيانات صحيحة للمتغير!');
+      setTemplateError('يرجى إدخل اسم ووصف ونوع صالح للمتغير!');
     }
   };
 
-  const saveNewTemplate = () => {
-    if (!newTemplate.question || !newTemplate.query) {
-      alert('يرجى ملء جميع الحقول المطلوبة!');
-      return;
-    }
+  const removeParameter = (paramName) => {
+    setNewTemplate((prev) => {
+      const { [paramName]: _, ...remainingParams } = prev.parameters;
+      const { [paramName]: __, ...remainingTypes } = prev.parameterTypes;
+      return { ...prev, parameters: remainingParams, parameterTypes: remainingTypes };
+    });
+  };
 
+  const addAbstractQuestionTemplate = (userTemplate) => {
+    const requiredFields = ['question', 'query', 'parameters', 'parameterTypes'];
+    for (const field of requiredFields) {
+      if (!(field in userTemplate) || !userTemplate[field]) {
+        throw new Error(`الحقل المطلوب مفقود أو فارغ: ${field}`);
+      }
+    }
+    const paramKeys = Object.keys(userTemplate.parameters);
+    const typeKeys = Object.keys(userTemplate.parameterTypes);
+    if (paramKeys.length !== typeKeys.length || !paramKeys.every((key) => typeKeys.includes(key))) {
+      throw new Error('عدم تطابق بين المتغيرات وأنواعها');
+    }
+    const validTypes = ['string', 'int'];
+    for (const type of Object.values(userTemplate.parameterTypes)) {
+      if (!validTypes.includes(type)) {
+        throw new Error(`نوع متغير غير صالح: ${type}. يجب أن يكون string أو int`);
+      }
+    }
+    const query = userTemplate.query.toLowerCase();
+    if (!query.includes('match') || !query.includes('return')) {
+      throw new Error('استعلام Cypher غير صالح: يجب أن يحتوي على MATCH و RETURN');
+    }
     const newId = Math.max(...arabicQuestions.map((q) => q.id), ...customQuestions.map((q) => q.id), 0) + 1;
-    const newQuestion = { id: newId, ...newTemplate };
+    const newQuestion = { id: newId, ...userTemplate };
     setCustomQuestions((prev) => [...prev, newQuestion]);
     setNewTemplate({ question: '', query: '', parameters: {}, parameterTypes: {} });
     setShowNewTemplateForm(false);
+    setTemplateError('');
+    setSuccessMessage('تم إضافة القالب بنجاح!');
+  };
+
+  const saveNewTemplate = () => {
+    try {
+      addAbstractQuestionTemplate(newTemplate);
+    } catch (error) {
+      setTemplateError(`خطأ في حفظ القالب: ${error.message}`);
+    }
   };
 
   return (
@@ -128,16 +175,11 @@ const Template = () => {
       <select onChange={handleQuestionSelect} className="question-select">
         <option value="">اختر سؤالًا...</option>
         {[...arabicQuestions, ...customQuestions].map((q) => (
-          <option key={q.id} value={q.id}>
-            {q.question}
-          </option>
+          <option key={q.id} value={q.id}>{q.question}</option>
         ))}
       </select>
 
-      <button
-        className="add-template-button"
-        onClick={() => setShowNewTemplateForm(true)}
-      >
+      <button className="add-template-button" onClick={() => setShowNewTemplateForm(true)}>
         إضافة قالب جديد
       </button>
 
@@ -153,27 +195,74 @@ const Template = () => {
               placeholder="أدخل السؤال (بالعربية)"
               className="new-template-input"
             />
-            <textarea
-              name="query"
+            <AceEditor
+              mode="sql"
+              theme="monokai"
               value={newTemplate.query}
-              onChange={handleNewTemplateChange}
+              onChange={handleQueryChange}
+              name="query-editor"
+              editorProps={{ $blockScrolling: true }}
+              setOptions={{
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                fontSize: 14,
+                showGutter: true,
+                showPrintMargin: false,
+                tabSize: 2,
+                wrap: true,
+              }}
+              style={{
+                width: '100%',
+                height: '150px',
+                borderRadius: '8px',
+                marginBottom: '15px',
+              }}
               placeholder="أدخل استعلام Cypher"
-              className="new-template-textarea"
             />
-            <div>
-              <h6>المتغيرات:</h6>
-              {Object.entries(newTemplate.parameters).map(([paramName, paramDescription]) => (
-                <p key={paramName}>
-                  {paramDescription} ({paramName}): {newTemplate.parameterTypes[paramName]}
-                </p>
-              ))}
-              <button onClick={addNewParameter}>إضافة متغير</button>
+            <h6>المتغيرات</h6>
+            <div className="parameter-form">
+              <input
+                type="text"
+                name="name"
+                value={newParam.name}
+                onChange={handleNewParamChange}
+                placeholder="اسم المتغير (بالإنجليزية)"
+              />
+              <input
+                type="text"
+                name="description"
+                value={newParam.description}
+                onChange={handleNewParamChange}
+                placeholder="وصف المتغير (بالعربية)"
+              />
+              <select name="type" value={newParam.type} onChange={handleNewParamChange}>
+                <option value="string">String</option>
+                <option value="int">Int</option>
+              </select>
+              <button className="add-parameter-button" onClick={addNewParameter}>
+                إضافة
+              </button>
             </div>
+            <div className="parameter-list">
+              {Object.entries(newTemplate.parameters).map(([paramName, paramDescription]) => (
+                <div key={paramName} className="parameter-item">
+                  <span>{paramDescription} ({paramName}): {newTemplate.parameterTypes[paramName]}</span>
+                  <button onClick={() => removeParameter(paramName)}>حذف</button>
+                </div>
+              ))}
+            </div>
+            {templateError && <p className="error-text">{templateError}</p>}
             <div className="modal-buttons">
-              <button onClick={saveNewTemplate}>حفظ القالب</button>
-              <button onClick={() => setShowNewTemplateForm(false)}>إلغاء</button>
+              <button className="save-button" onClick={saveNewTemplate}>حفظ القالب</button>
+              <button className="cancel-button" onClick={() => setShowNewTemplateForm(false)}>إلغاء</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="success-message">
+          <p>{successMessage}</p>
         </div>
       )}
 
@@ -181,7 +270,6 @@ const Template = () => {
         <div className="query-section">
           <h5 className="section-title">السؤال المحدد:</h5>
           <p className="selected-question">{selectedQuestion.question}</p>
-
           {Object.entries(selectedQuestion.parameters).map(([paramName, paramDescription]) => (
             <div key={paramName} className="parameter-input">
               <label className="parameter-label">{paramDescription}:</label>
@@ -194,7 +282,6 @@ const Template = () => {
               />
             </div>
           ))}
-
           <button className="execute-button" onClick={executeQuery} disabled={isLoading}>
             {isLoading ? 'جاري التنفيذ...' : 'تنفيذ الاستعلام'}
           </button>
