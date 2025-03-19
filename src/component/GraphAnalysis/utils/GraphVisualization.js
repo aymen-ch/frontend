@@ -25,7 +25,7 @@ const GraphVisualization = React.memo(({
   const [contextMenu, setContextMenu] = useState(null);
   const [allPaths, setAllPaths] = useState([]);
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
-  const [render, setRenderer] = useState("WebGL");
+  const [render, setRenderer] = useState("canvas");
   const [layoutOptions, setLayoutOptions] = useState({
     enableCytoscape: true,
     enableVerlet: false,

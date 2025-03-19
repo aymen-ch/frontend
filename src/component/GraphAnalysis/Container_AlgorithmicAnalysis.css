@@ -96,7 +96,6 @@
   text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   writing-mode: vertical-rl;
-  transform: rotate(180deg); /* Makes text more readable */
   cursor: pointer;
   color: rgb(59, 55, 55);
   transition: all 0.2s ease;
@@ -110,6 +109,7 @@
     background-color: rgba(255, 255, 255, 0.15);
     border-left: 3px solid #17a2b8;
     font-weight: bold;
+    color: #007bff;
   }
   
   /* Module panel */

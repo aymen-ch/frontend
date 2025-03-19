@@ -16,6 +16,7 @@ import PathFinder from './modules/path/pathfinding';
 import LayoutControl from './modules/layout/Layoutcontrol';
 import Analysis from './modules/analysis/analysis';
 import { NodeTypeVisibilityControl } from './utils/NodeTypeVisibilityControl';
+import { getNodeColor,getNodeIcon } from './utils/Parser';
 import { useAggregation, fetchNodeProperties, handleLayoutChange,drawCirclesOnPersonneNodes , ColorPersonWithClass} from './utils/function_container';
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
@@ -172,7 +173,7 @@ const Container_AlgorithmicAnalysis = () => {
         {!isGraphOnlyMode && (
           <div className="side-nav">
             <div className="side-nav-inner">
-              {['Properties', 'Detection de Chemin', 'Aggregation', 'Contextualization', 'interogation', 'Layout', 'Analysis'].map((module) => (
+              {['Details','interogation', 'Detection de Chemin', 'Aggregation', 'Contextualization','Analysis','Layout'].map((module) => (
                 <div
                   key={module}
                   className={`side-nav-item ${activeModule === module ? 'active' : ''}`}
@@ -230,33 +231,79 @@ const Container_AlgorithmicAnalysis = () => {
                 />
               )}
               
-              {activeModule === 'Properties' && (
+              {activeModule === 'Details' && (
                 <>
-                  <h6 style={{ marginBottom: '15px', color: '#2c3e50' }}>Toggle Node Types</h6>
+                 
                   <NodeTypeVisibilityControl 
                     visibleNodeTypes={visibleNodeTypes} 
                     toggleNodeTypeVisibility={toggleNodeTypeVisibility} 
                   />
 
-                  {nodetoshow && (
-                    <div className="properties-container">
-                      <button 
-                        className="btn btn-sm properties-close-btn" 
-                        onClick={() => setSelectedNodeData(null)}
-                      >Close</button>
-                      
-                      <ul className="list-group properties-list">
-                        {Object.entries(selectedNodeData).map(([key, value], index) => (
-                          <li key={key} className="list-group-item property-item">
-                            <strong className="property-key">{key}:</strong> 
-                            <span className="property-value">
-                              {typeof value === 'object' ? JSON.stringify(value) : value}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+{nodetoshow && (
+  <div className="properties-container">
+    {(() => {
+      const matchedNode = combinedNodes.find(node => 
+        node.id === selectedNodeData.identity.toString()
+      );
+      const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
+      const nodeColor = getNodeColor(nodeGroup);
+      const nodeIcon = getNodeIcon(nodeGroup);
+
+      return (
+        <div 
+          className="node-type-header" 
+          style={{ 
+            backgroundColor: nodeColor,
+            padding: '8px',
+            borderRadius: '4px',
+            marginBottom: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            color: '#fff'
+          }}
+        >
+          {/* Circular node with icon */}
+          <div
+            style={{
+              width: '24px', // Adjust size as needed
+              height: '24px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '10px',
+              overflow: 'hidden',
+            }}
+          >
+            <img
+              src={nodeIcon}
+              alt={`${nodeGroup} icon`}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover', // Ensures the image fills the circle
+              }}
+            />
+          </div>
+          
+          {/* Node type text */}
+          <span>{nodeGroup}</span>
+        </div>
+      );
+    })()}
+    
+    <ul className="list-group properties-list">
+      {Object.entries(selectedNodeData).map(([key, value], index) => (
+        <li key={key} className="list-group-item property-item">
+          <strong className="property-key">{key}:</strong> 
+          <span className="property-value">
+            {typeof value === 'object' ? JSON.stringify(value) : value}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
                 </>
               )}
               
