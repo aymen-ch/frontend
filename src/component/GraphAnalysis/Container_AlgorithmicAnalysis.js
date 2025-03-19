@@ -155,6 +155,7 @@ return (
                   ispath={false}
                   setAllPaths={setAllPaths}
                   setPathisempty={setPathisempty}
+                  setrelationtoshow={setrelationtoshow}
                 />
               </div>
             </div>

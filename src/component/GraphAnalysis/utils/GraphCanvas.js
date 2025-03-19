@@ -171,13 +171,13 @@ const GraphCanvas = ({
         if (!hitElements || ((!hitElements.nodes || hitElements.nodes.length === 0) && 
             (!hitElements.relationships || hitElements.relationships.length === 0))) {
               setnodetoshow(null);
-              setEdges((prevEdges) =>
-                prevEdges.map((edge) => ({
-                  ...edge,
-                  width: 5,
-                  color: 'red'
-                }))
-              );
+              // setEdges((prevEdges) =>
+              //   prevEdges.map((edge) => ({
+              //     ...edge,
+              //     width: 5,
+              //     color: 'red'
+              //   }))
+              // );
           // Clear node effects
           if (previouslyHoveredNodeRef.current) {
             const shadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
@@ -253,13 +253,13 @@ const GraphCanvas = ({
             }
             setnodetoshow(null);
             setrelationtoshow(hoveredEdge.data.id); // Set the hovered relation ID
-            if (combinedEdges.some(n => n.id === hoveredEdge.data.id)) {
-              setEdges(combinedEdges.map((edge) => ({
-                ...edge,
-                width: edge.id === hoveredEdge.data.id ? 15 : edge.width,
-                color: edge.id === hoveredEdge.data.id ? 'green' : 'red'
-              })));
-            }
+            // if (combinedEdges.some(n => n.id === hoveredEdge.data.id)) {
+            //   setEdges(combinedEdges.map((edge) => ({
+            //     ...edge,
+            //     width: edge.id === hoveredEdge.data.id ? 15 : edge.width,
+            //     color: edge.id === hoveredEdge.data.id ? 'green' : 'red'
+            //   })));
+            // }
           }
         }
       } catch (error) {
