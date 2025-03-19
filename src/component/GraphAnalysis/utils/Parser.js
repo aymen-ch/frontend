@@ -109,7 +109,6 @@ export const createEdge = (rel, startId, endId) => ({
     },
   ],
   hovered: true,
-  selected: true,
 });
 
 // Utility function to parse nodes and edges from a subGraph

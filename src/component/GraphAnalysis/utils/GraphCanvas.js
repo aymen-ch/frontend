@@ -256,7 +256,7 @@ const GraphCanvas = ({
             if (combinedEdges.some(n => n.id === hoveredEdge.data.id)) {
               setEdges(combinedEdges.map((edge) => ({
                 ...edge,
-                width: edge.id === hoveredEdge.data.id ? 19 : edge.width,
+                width: edge.id === hoveredEdge.data.id ? 15 : edge.width,
                 color: edge.id === hoveredEdge.data.id ? 'green' : 'red'
               })));
             }
