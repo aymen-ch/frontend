@@ -20,7 +20,7 @@ const GraphVisualization = React.memo(({
   isPathFindingStarted,
   selectedNodes,
   setSelectedNodes,
-  ispath
+  ispath,setrelationtoshow
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [allPaths, setAllPaths] = useState([]);
@@ -325,6 +325,8 @@ const GraphVisualization = React.memo(({
         nodetoshow={nodetoshow}
         setnodetoshow={setnodetoshow}
         ispath={ispath}
+        setrelationtoshow={setrelationtoshow}
+        setEdges={setEdges}
       />
 
       {contextMenu && contextMenu.visible && (

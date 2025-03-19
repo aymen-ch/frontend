@@ -2,13 +2,13 @@
 import React, { useState,useEffect } from 'react';
 import axios from 'axios';
 import { AddNeighborhoodParser,parsePath } from '../../utils/Parser';
-
 import { BASE_URL } from '../../utils/Urls';
 
 const PathFinder = ({ nvlRef,setPathEdges,
     setPathNodes,
     setAllPaths,    
-    setCurrentPathIndex,setIsBoxPath,
+    setCurrentPathIndex,
+    setIsBoxPath,
     selectednodes}) => {
 
 const [depth, setDepth] = useState(1);

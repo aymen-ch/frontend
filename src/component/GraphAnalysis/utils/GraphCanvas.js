@@ -19,12 +19,14 @@ const GraphCanvas = ({
   setSelectedNodes,
   setContextMenu,
   setnodetoshow,
+  setrelationtoshow,
   ispath,
+  setEdges
 }) => {
   const [shiftPressed, setShiftPressed] = useState(false);
   const minimapContainerRef = useRef(null);
   const previouslyHoveredNodeRef = useRef(null); // Track the previously hovered node
-const [isnode,setnode] = useState(false)
+  const [isnode,setnode] = useState(false)
   // Handle Shift key press
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -162,70 +164,101 @@ const [isnode,setnode] = useState(false)
     });
 
     zoomInteraction.updateCallback('onZoom', () => console.log('Zooming'));
-
     hoverInteraction.updateCallback('onHover', (element, hitElements, event) => {
       try {
-        if (!hitElements || !hitElements.nodes || hitElements.nodes.length === 0) {
-          
-          // No nodes hovered, remove hover effect from the previously hovered node
-         /// setnodetoshow(null);
+        // Handle case when nothing is hovered
+        if (!hitElements || ((!hitElements.nodes || hitElements.nodes.length === 0) && 
+            (!hitElements.relationships || hitElements.relationships.length === 0))) {
+              setnodetoshow(null);
+              setEdges((prevEdges) =>
+                prevEdges.map((edge) => ({
+                  ...edge,
+                  width: 5,
+                  color: 'red'
+                }))
+              );
+          // Clear node effects
           if (previouslyHoveredNodeRef.current) {
             const shadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
             if (shadowEffect) {
               shadowEffect.remove();
-              if(isnode==true){
+              if (isnode === true) {
                 setnodetoshow(null);
               }
-              
             }
             previouslyHoveredNodeRef.current = null;
           }
+          setrelationtoshow(null); // Clear relation highlight
+         
+           
+          
           return;
         }
-
-        const hoveredNode = hitElements.nodes[0];
-        
-        if (hoveredNode && hoveredNode.data.id) {
-          // Remove hover effect from the previously hovered node
-          if (previouslyHoveredNodeRef.current) {
-            const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
-            if (previousShadowEffect) {
-              previousShadowEffect.remove();
-             
+    
+        // Handle node hovering
+        if (hitElements.nodes && hitElements.nodes.length > 0) {
+          const hoveredNode = hitElements.nodes[0];
+          console.log(hoveredNode)
+          if (hoveredNode && hoveredNode.data.id) {
+            // Remove previous node's effect
+            if (previouslyHoveredNodeRef.current) {
+              const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
+              if (previousShadowEffect) {
+                previousShadowEffect.remove();
+              }
+            }
+    
+            const hoverEffectPlaceholder = hoveredNode.data.html;
+            
+            if (hoverEffectPlaceholder) {
+              setnodetoshow(hoveredNode.data.id);
+              setrelationtoshow(null); // Clear any relation highlight when node is hovered
               
+              const centerWrapper = hoverEffectPlaceholder.querySelector('div[style*="transform: translate(-50%, -50%)"]');
               
+              if (centerWrapper) {
+                const shadowEffect = document.createElement('div');
+                shadowEffect.id = 'test';
+                shadowEffect.style.position = 'absolute';
+                shadowEffect.style.top = '43.2%';
+                shadowEffect.style.left = '43.2%';
+                shadowEffect.style.transform = 'translate(-50%, -50%)';
+                shadowEffect.style.width = '200px';
+                shadowEffect.style.height = '200px';
+                shadowEffect.style.borderRadius = '50%';
+                shadowEffect.style.border = '15px solid rgba(84, 207, 67, 0.8)';
+                shadowEffect.style.zIndex = '5';
+                shadowEffect.style.pointerEvents = 'none';
+                
+                centerWrapper.appendChild(shadowEffect);
+              }
+              
+              previouslyHoveredNodeRef.current = hoverEffectPlaceholder;
             }
           }
-          
-          // Add hover effect to the newly hovered node
-          const hoverEffectPlaceholder = hoveredNode.data.html;
-          console.log(hoveredNode);
-          
-          if (hoverEffectPlaceholder) {
-            setnodetoshow(hoveredNode.data.id);
-            
-            // Find the centerWrapper where we need to append our hover effect
-            const centerWrapper = hoverEffectPlaceholder.querySelector('div[style*="transform: translate(-50%, -50%)"]');
-            
-            if (centerWrapper) {
-              const shadowEffect = document.createElement('div');
-              shadowEffect.id = 'test';
-              shadowEffect.style.position = 'absolute';
-              shadowEffect.style.top = '43.2%';
-              shadowEffect.style.left = '43.2%';
-              shadowEffect.style.transform = 'translate(-50%, -50%)';
-              shadowEffect.style.width = '200px';
-              shadowEffect.style.height = '200px';
-              shadowEffect.style.borderRadius = '50%';
-              shadowEffect.style.border = '15px solid rgba(84, 207, 67, 0.8)';
-              shadowEffect.style.zIndex = '5';
-              shadowEffect.style.pointerEvents = 'none';
-              
-              centerWrapper.appendChild(shadowEffect);
+        }
+        // Handle relation/edge hovering
+      if (hitElements.relationships && hitElements.relationships.length > 0) {
+          const hoveredEdge = hitElements.relationships[0];
+          console.log(hoveredEdge)
+          if (hoveredEdge && hoveredEdge.data.id) {
+            // Clear any node highlights when hovering relation
+            if (previouslyHoveredNodeRef.current) {
+              const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
+              if (previousShadowEffect) {
+                previousShadowEffect.remove();
+              }
+              previouslyHoveredNodeRef.current = null;
             }
-            
-            // Update the previously hovered node reference
-            previouslyHoveredNodeRef.current = hoverEffectPlaceholder;
+            setnodetoshow(null);
+            setrelationtoshow(hoveredEdge.data.id); // Set the hovered relation ID
+            if (combinedEdges.some(n => n.id === hoveredEdge.data.id)) {
+              setEdges(combinedEdges.map((edge) => ({
+                ...edge,
+                width: edge.id === hoveredEdge.data.id ? 19 : edge.width,
+                color: edge.id === hoveredEdge.data.id ? 'green' : 'red'
+              })));
+            }
           }
         }
       } catch (error) {
@@ -249,7 +282,6 @@ const [isnode,setnode] = useState(false)
     panX: 100,
     panY: 100,
     disableTelemetry: true,
-    allowDynamicMinZoom: false, // Prevent dynamic minimum zoom
     physics: {
       enabled: true, // Enable physics simulation
       barnesHut: {
@@ -274,7 +306,6 @@ const [isnode,setnode] = useState(false)
           html: createNodeHtml(node.captionnode, node.group, selectedNodes.has(node.id) , node.selecte === true, 1 , node.id , IconPersonWithClass(node) ,"👑"),
         }))}
         allowDynamicMinZoom={true}
-       
         nvlOptions={nvlOptions}
         rels={combinedEdges}
         mouseEventCallbacks={{
