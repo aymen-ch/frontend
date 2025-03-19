@@ -48,10 +48,11 @@ export const handleLayoutChange = async (newLayoutType, nvlRef, combinedNodes, c
       nodesWithPositions = computeCytoscapeLayout(combinedNodes, combinedEdges, 5);
     } else {
       nvlRef.current.setLayout(newLayoutType);
+      nvlRef.current.fit(nvlRef.current.getNodes().map((n) => n.id),0.75)
       return;
     }
     nvlRef.current.setNodePositions(nodesWithPositions, true);
-    
+    nvlRef.current.fit(nvlRef.current.getNodes().map((n) => n.id),0.75)
   }
 };
 

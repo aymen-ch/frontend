@@ -20,6 +20,7 @@ const PathVisualization = React.memo(({
   setCurrentPathIndex,
   selectednodes,
   ispath,
+  setrelationtoshow,
   pathisempty,
   setPathisempty,
   setAllPaths
@@ -287,6 +288,7 @@ if (nvlRef && nvlRef.current) {
             nodetoshow={nodetoshow}
             setnodetoshow={setnodetoshow}
             ispath={ispath}
+            setrelationtoshow={setrelationtoshow}
           />
         </div>
       )}

@@ -309,47 +309,50 @@ const Aggregation = ({
 
   return (
     <div className="container-fluid p-3 bg-white shadow-sm rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Aggregation</h3>
+  <h3 className="text-lg font-semibold text-gray-800 mb-3">Aggregation</h3>
 
-      <div className="d-flex flex-wrap gap-2 mb-4">
-      {nodeTypes.map((type) => (
-  renderAggregationPath(type) ? (
-    <div key={type} className="form-check">
-      <input
-        type="checkbox"
-        className="form-check-input"
-        checked={!!activeAggregations[type]}
-        onChange={() => toggleAggregation(type)}
-      />
-      <label className="form-check-label">
-        {renderIconWithBackground(type)} {type}
-      </label>
-      <br />
-      {/* Display the aggregation path below each type */}
-      {renderAggregationPath(type)}
-    </div>
-  ) : null
-))}
-      </div>
+  <div className="d-flex flex-wrap gap-2 mb-4">
+    {nodeTypes.map((type) => (
+      renderAggregationPath(type) ? (
+        <div key={type} className="form-check form-switch" style={{ minWidth: '150px' }}>
+          <input
+            type="checkbox"
+            className="form-check-input"
+            role="switch"
+            checked={!!activeAggregations[type]}
+            onChange={() => toggleAggregation(type)}
+            id={`switch-${type}`} // Unique ID for accessibility
+          />
+          <label className="form-check-label" htmlFor={`switch-${type}`}>
+            {renderIconWithBackground(type)} {type}
+          </label>
+          <br />
+          {/* Display the aggregation path below each type */}
+          {renderAggregationPath(type)}
+        </div>
+      ) : null
+    ))}
+  </div>
 
-      {/* <div className="d-flex flex-column gap-3">
-        <button
-          className="btn btn-primary w-100"
-          onClick={() => handleAdvancedAggregation(depth)}
-        >
-          Advanced Aggregation
-        </button>
+  {/* Rest of your code remains the same */}
+  {/* <div className="d-flex flex-column gap-3">
+    <button
+      className="btn btn-primary w-100"
+      onClick={() => handleAdvancedAggregation(depth)}
+    >
+      Advanced Aggregation
+    </button>
 
-        <input
-          type="number"
-          value={depth}
-          onChange={(e) => setDepth(parseInt(e.target.value, 10))}
-          min="1"
-          placeholder="Enter depth"
-          className="form-control"
-        />
-      </div> */}
-    </div>
+    <input
+      type="number"
+      value={depth}
+      onChange={(e) => setDepth(parseInt(e.target.value, 10))}
+      min="1"
+      placeholder="Enter depth"
+      className="form-control"
+    />
+  </div> */}
+</div>
   );
 };
 

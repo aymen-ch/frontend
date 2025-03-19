@@ -70,7 +70,7 @@ const fetchNodeProperties = async (nodeId) => {
 };
 
 // Utility function to create a node object
-export const createNode = (nodeData, nodeType, properties, isSelected = false) => {
+export const createNode = (nodeData, nodeType, properties, isSelected = false,aggregatedproperties=null) => {
   // Create the base node object
   const node = {
     id: nodeData.identity.toString(),
@@ -81,6 +81,7 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false) =
     html: createNodeHtml(LabelManager(nodeType, properties), nodeType, isSelected, false, nodeData.identity.toString()),
     selecte: isSelected,
     captionnode: LabelManager(nodeType, properties),
+    aggregatedproperties:aggregatedproperties,
     hovered: true,
   };
 
@@ -88,8 +89,6 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false) =
   if (properties._class) {
     node._class = properties._class;
   }
-
-
   return node;
 };
 
@@ -100,24 +99,17 @@ export const createEdge = (rel, startId, endId) => ({
   to: endId.toString(),
   color: NODE_CONFIG.edgeColor,
   width: NODE_CONFIG.edgeWidth,
-  captionSize: NODE_CONFIG.captionSize,
+  captionSize: NODE_CONFIG.captionSize || 12, // Default size if not provided
   captionAlign: 'center',
   captions: [
     {
       value: rel.type,
-      styles: [
-        `font-size: ${NODE_CONFIG.captionFontSize}`,
-        `color: ${NODE_CONFIG.captionColor}`,
-        `background-color: ${NODE_CONFIG.captionBackgroundColor}`,
-        `padding: ${NODE_CONFIG.captionPadding}`,
-        `border-radius: ${NODE_CONFIG.captionBorderRadius}`,
-        `text-shadow: ${NODE_CONFIG.captionTextShadow}`,
-        'transform: translate(-50%, -50%)',
-      ],
+      styles: ['bold,italic'],
       key: rel.type,
     },
   ],
   hovered: true,
+  selected: true,
 });
 
 // Utility function to parse nodes and edges from a subGraph
@@ -179,7 +171,7 @@ export const parsePath = (path, selectedNodes) => {
 // Utility function to handle API responses for aggregation
 export const parseAggregationResponse = (responseData) => {
   const { nodes: newNodes, relationships: newEdges } = responseData;
-  const parsedNodes = newNodes.map((node) => createNode(node, node.type, node.properties));
+  const parsedNodes = newNodes.map((node) => createNode(node, node.type, node.properties,false,node.aggregated_properties));
   const parsedEdges = newEdges.map((rel) => createEdge(rel, rel.startId, rel.endId));
   return { nodes: parsedNodes, edges: parsedEdges };
 };
@@ -360,27 +352,11 @@ export const LabelManager = (node_type, properties) => {
 };
 
 // Edge caption HTML (unchanged for now, but can be parameterized similarly if needed)
-const createEdgeCaptionHtml = (captionText) => {
+const createEdgeCaptionHtml = () => {
   const container = document.createElement('div');
   container.style.position = 'absolute';
   container.style.pointerEvents = 'none';
-  container.style.textAlign = 'center';
+  container.style.backgroundColor = 'black';
 
-  const captionElement = document.createElement('div');
-  captionElement.innerText = captionText;
-  captionElement.style.fontSize = '16px';
-  captionElement.style.fontWeight = 'bold';
-  captionElement.style.color = '#2c3e50';
-  captionElement.style.padding = '2px 5px';
-  captionElement.style.backgroundColor = 'white';
-  captionElement.style.borderRadius = '5px';
-  captionElement.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-  captionElement.style.display = 'inline-block';
-  captionElement.style.position = 'relative';
-  captionElement.style.top = '300px';
-  captionElement.style.left = '50%';
-  captionElement.style.transform = 'translateX(-50%)';
-
-  container.appendChild(captionElement);
   return container;
 };
