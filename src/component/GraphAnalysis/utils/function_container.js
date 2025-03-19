@@ -276,12 +276,12 @@ export const ColorPersonWithClass = async (combinedNodes, setNodes) => {
   const updatedNodes = combinedNodes.map((node) => {
     // Check if the node is of type 'Personne'
     if (node.group === 'Personne' && node._class) {
-      let nodeColor = ""; // Variable to store the node color
+      let nodeColor = node.color; // Variable to store the node color
 
       // Determine the node color based on the _class
       if (node._class.includes('operationeel') && !node._class.includes('soutien') && !node._class.includes('leader')) {
         nodeColor = "#0000ff"; // Blue for 'operationeel'
-      } else if (node._class.includes('soutien') && !node._class.includes('leader') && !node._class.includes('operationeel')) {
+      } else if (node._class.includes('soutien') && !node._class.includes('leader') ) {
         nodeColor = "#ff00ff"; // Yellow for 'soutien'
       } else if (node._class.includes('leader')) {
         nodeColor = "#FFD700"; // Red for 'leader'

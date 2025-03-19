@@ -184,11 +184,12 @@ const ContextMenu = ({
     if (expandButtonRef.current) {
       const buttonRect = expandButtonRef.current.getBoundingClientRect();
       console.log('Button position:', buttonRect);
-  
+      
+      console.log("x : " ,buttonRect.x ," y ", buttonRect.y);
       // You can use buttonRect to set the sub-context menu position
       setSubContextMenu({
-        x: buttonRect.x +140 , // or buttonRect.left, depending on where you want the sub-menu
-        y: buttonRect.y -90, // or buttonRect.top
+        x: contextMenu.x +  buttonRect.width    , // or buttonRect.left, depending on where you want the sub-menu
+        y: contextMenu.y , // or buttonRect.top
         visible: true,
       });
     }
@@ -208,14 +209,19 @@ const ContextMenu = ({
           '--context-menu-y': `${contextMenu.y}px`,
           '--context-menu-x': `${contextMenu.x}px`,
         }}
+        
+        ref={expandButtonRef}
       >
+        {console.log( '--context-menu-x', `${contextMenu.x}px`, 
+           '--context-menu-y', `${contextMenu.y}px`
+         )}
         <div className="menu-header">
           Node Actions
         </div>
         
         <div className="menu-items">
         <button
-            ref={expandButtonRef} // Attach the ref here
+             // Attach the ref here
             className="menu-item"
             onClick={handleExpandClick}
           >

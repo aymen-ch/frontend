@@ -31,6 +31,7 @@ const Container_AlgorithmicAnalysis = () => {
   const [nodetoshow, setnodetoshow] = useState(null);
   const [relationtoshow, setrelationtoshow] = useState(null);
   const [selectedOption, setSelectedOption] = useState('option1');
+  const [pathisempty, setPathisempty] = useState(false);
   const [pathNodes, setPathNodes] = useState([]);
   const [pathEdges, setPathEdges] = useState([]);
   const [currentSubGraphIndex, setCurrentSubGraphIndex] = useState(0);
@@ -152,7 +153,6 @@ return (
                   setCurrentPathIndex={setCurrentPathIndex}
                   selectednodes={nvlRef.current?.getSelectedNodes()}
                   ispath={false}
-                  setrelationtoshow={setrelationtoshow}
                 />
               </div>
             </div>
@@ -197,6 +197,7 @@ return (
               {activeModule === 'Detection de Chemin' && (
                 <PathFinder
                   nvlRef={nvlRef}
+                  setPathisempty={setPathisempty}
                   setPathEdges={setPathEdges}
                   setPathNodes={setPathNodes}
                   setAllPaths={setAllPaths}

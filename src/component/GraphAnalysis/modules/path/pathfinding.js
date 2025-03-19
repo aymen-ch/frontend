@@ -9,7 +9,9 @@ const PathFinder = ({ nvlRef,setPathEdges,
     setAllPaths,    
     setCurrentPathIndex,
     setIsBoxPath,
-    selectednodes}) => {
+    selectednodes,
+    setPathisempty
+    }) => {
 
 const [depth, setDepth] = useState(1);
 const [isPathFindingStarted, setIsPathFindingStarted] = useState(true);
@@ -44,7 +46,12 @@ setPathEdges(formattedEdges);
 
         if (response.status === 200) {
           const paths = response.data.paths;
-          console.log(response)
+          if(response.data.paths.length == 0 ){
+            setPathisempty(true) ;
+            console.log("path is videdd ");
+          }
+          console.log("response path :" , response);
+          
           setAllPaths(paths);
           setCurrentPathIndex(0);
           updatePathNodesAndEdges(paths[0],nvlRef.current.getSelectedNodes());
