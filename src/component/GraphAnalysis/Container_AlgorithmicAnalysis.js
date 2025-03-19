@@ -153,6 +153,8 @@ return (
                   setCurrentPathIndex={setCurrentPathIndex}
                   selectednodes={nvlRef.current?.getSelectedNodes()}
                   ispath={false}
+                  setAllPaths={setAllPaths}
+                  setPathisempty={setPathisempty}
                 />
               </div>
             </div>
