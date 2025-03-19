@@ -19,7 +19,10 @@ const PathVisualization = React.memo(({
   currentPathIndex,
   setCurrentPathIndex,
   selectednodes,
-  ispath
+  ispath,
+  pathisempty,
+  setPathisempty,
+  setAllPaths
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedNodes, setSelectedNodes] = useState(new Set());
@@ -136,8 +139,15 @@ if (nvlRef && nvlRef.current) {
 
   const updatePathNodesAndEdges = (path) => {
     const { nodes: formattedNodes, edges: formattedEdges } = parsePath(path, selectednodes);
-    setPathNodes(formattedNodes);
-    setPathEdges(formattedEdges);
+    setPathNodes([]);
+    setPathEdges([]);
+    nvlRef.current.restart();
+     // Wait for 0.5 seconds before updating the nodes and edges
+    setTimeout(() => {
+      setPathNodes(formattedNodes);
+      setPathEdges(formattedEdges);
+    }, 50); // 500 milliseconds = 0.5 seconds
+
   };
 
   const selectPath = (index) => {
@@ -150,6 +160,9 @@ if (nvlRef && nvlRef.current) {
     setIsBoxPath(false);
     setPathNodes([]);
     setPathEdges([]);
+    setAllPaths([]);
+    setCurrentPathIndex(0);
+    setPathisempty(false);
   };
 
   // Function to truncate path data for display
@@ -170,12 +183,13 @@ if (nvlRef && nvlRef.current) {
       onMouseDown={handleMouseDown}
       onMouseOver={() => document.body.style.cursor = isDragging ? 'grabbing' : 'auto'}
     >
+      {/* // { console.log( "pathisempty" , pathisempty ) } // */}
       {/* Title Bar - Made draggable */}
       <div
         className="path-title-bar"
         data-draggable="true"
       >
-        <h5 className="path-title">Path Visualization</h5>
+        <h5 className="path-title">Path Visualization </h5>
         <div className="path-controls">
           <button
             className="control-button"
@@ -250,7 +264,7 @@ if (nvlRef && nvlRef.current) {
       )}
 
       {/* Loading State */}
-      {isLoading && (
+      {isLoading && !pathisempty && (
         <div className="loading-container">
           <div className="loading-spinner" />
           <div>Loading paths...</div>

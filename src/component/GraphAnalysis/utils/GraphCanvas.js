@@ -97,6 +97,7 @@ const [isnode,setnode] = useState(false)
           y: event.clientY - 200,
           node,
         });
+        console.log(" this from main context menue : " , "x :" ,event.clientX -230, " y ",event.clientY - 200);
       } catch (error) {
         console.error('Error in onNodeRightClick:', { error, node, event });
       }
