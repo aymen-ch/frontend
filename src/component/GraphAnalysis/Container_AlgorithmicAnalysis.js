@@ -124,7 +124,6 @@ return (
             nvlRef={nvlRef}
             isFullscreen={isFullscreen}
             toggleFullscreen={toggleFullscreen}
-            nodetoshow={nodetoshow}
             setnodetoshow={setnodetoshow}
             setPathEdges={setPathEdges}
             setPathNodes={setPathNodes}

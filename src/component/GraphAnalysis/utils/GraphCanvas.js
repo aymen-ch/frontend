@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
-import {createNodeHtml }  from './Parser';
-import {IconPersonWithClass} from '..//utils/function_container';
+import { createNodeHtml } from './Parser';
+import { IconPersonWithClass } from '../utils/function_container';
 import {
   PanInteraction,
   ZoomInteraction,
@@ -25,20 +25,16 @@ const GraphCanvas = ({
 }) => {
   const [shiftPressed, setShiftPressed] = useState(false);
   const minimapContainerRef = useRef(null);
-  const previouslyHoveredNodeRef = useRef(null); // Track the previously hovered node
-  const [isnode,setnode] = useState(false)
-  // Handle Shift key press
+  const previouslyHoveredNodeRef = useRef(null);
+  const selectedNodeRef = useRef(null); // Track the selected node
+
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Shift') {
-        setShiftPressed(true);
-      }
+      if (event.key === 'Shift') setShiftPressed(true);
     };
 
     const handleKeyUp = (event) => {
-      if (event.key === 'Shift') {
-        setShiftPressed(false);
-      }
+      if (event.key === 'Shift') setShiftPressed(false);
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -50,9 +46,6 @@ const GraphCanvas = ({
     };
   }, []);
 
-  
-
-  // Interaction handlers
   useEffect(() => {
     if (!nvlRef.current) return;
 
@@ -62,23 +55,13 @@ const GraphCanvas = ({
     const zoomInteraction = new ZoomInteraction(nvlRef.current);
     const dragNodeInteraction = new DragNodeInteraction(nvlRef.current);
     const hoverInteraction = new HoverInteraction(nvlRef.current);
-    dragNodeInteraction.mouseDownNode=null;
-
-    // console.log('dragNodeInteraction.mouseDownNode', dragNodeInteraction);
-
-    
- 
 
     if (shiftPressed) {
-      boxSelectInteraction.updateCallback('onBoxSelect', ({nodes}) => {
+      boxSelectInteraction.updateCallback('onBoxSelect', ({ nodes }) => {
         setSelectedNodes((prevSelected) => {
           const newSelected = new Set(prevSelected);
           nodes.forEach((node) => {
-            if (newSelected.has(node.id)) {
-              newSelected.delete(node.id);
-            } else {
-              newSelected.add(node.id);
-            }
+            newSelected.has(node.id) ? newSelected.delete(node.id) : newSelected.add(node.id);
           });
           return newSelected;
         });
@@ -88,8 +71,6 @@ const GraphCanvas = ({
       panInteraction.updateCallback('onPan', () => console.log('onPan'));
       boxSelectInteraction.destroy();
     }
-   
-
     clickInteraction.updateCallback('onNodeRightClick', (node, hitElements, event) => {
       try {
         event.preventDefault();
@@ -104,34 +85,20 @@ const GraphCanvas = ({
         console.error('Error in onNodeRightClick:', { error, node, event });
       }
     });
-
     clickInteraction.updateCallback('onNodeClick', (node, hitElements, event) => {
       try {
         if (node && node.id) {
+          // Set as selected node
+          setSelectedNodes((prevSelected) => {
+            const newSelected = new Set(prevSelected);
+            newSelected.add(node.id); // Add new node to existing selection
+            return newSelected;
+          });
+          selectedNodeRef.current = node.id;
           setnodetoshow(node.id);
-          setnode(true)
-          //// to do a add the style like the one added on hover on teh node 
-          const clickEffectPlaceholder = node.html;
-          if (clickEffectPlaceholder) {
-            const centerWrapper = clickEffectPlaceholder.querySelector('div[style*="transform: translate(-50%, -50%)"]');
-            
-            if (centerWrapper) {
-              const clickEffect = document.createElement('div');
-              clickEffect.id = 'click-effect';
-              clickEffect.style.position = 'absolute';
-              clickEffect.style.top = '43.2%';
-              clickEffect.style.left = '43.2%';
-              clickEffect.style.transform = 'translate(-50%, -50%)';
-              clickEffect.style.width = '200px';
-              clickEffect.style.height = '200px';
-              clickEffect.style.borderRadius = '50%';
-              clickEffect.style.border = '15px solid rgba(84, 207, 67, 0.8)'; // Same as hover
-              clickEffect.style.zIndex = '5';
-              clickEffect.style.pointerEvents = 'none';
-
-              centerWrapper.appendChild(clickEffect);
-            }
-          }
+          
+          // Add click effect
+        
         }
       } catch (error) {
         console.error('Error in onNodeClick:', { error, node, event });
@@ -142,81 +109,45 @@ const GraphCanvas = ({
       try {
         if (!event.hitElements || event.hitElements.length === 0) {
           setSelectedNodes(new Set());
+          selectedNodeRef.current = null;
+          setnodetoshow(null);
         }
       } catch (error) {
         console.error('Error in onCanvasClick:', { error, event });
       }
     });
 
-    clickInteraction.updateCallback('onCanvasRightClick', (event) => {
-      try {
-         console.log(" canvas !!! ")
-      } catch (error) {
-        console.error('Error in onCanvasRightClick:', { error, event });
-      }
-    });
-  
-    clickInteraction.updateCallback('onRelationshipRightClick', (relationship, hitElements, event) => {
-      try {
-         console.log("relation context menu::  ")
-      } catch (error) {
-        console.error('Error in onRelationshipRightClick:', { error, relationship, event });
-      }
-    });
-
-    zoomInteraction.updateCallback('onZoom', () => console.log('Zooming'));
     hoverInteraction.updateCallback('onHover', (element, hitElements, event) => {
       try {
-        // Handle case when nothing is hovered
+        // When nothing is hovered
         if (!hitElements || ((!hitElements.nodes || hitElements.nodes.length === 0) && 
             (!hitElements.relationships || hitElements.relationships.length === 0))) {
-              setnodetoshow(null);
-              // setEdges((prevEdges) =>
-              //   prevEdges.map((edge) => ({
-              //     ...edge,
-              //     width: 5,
-              //     color: 'red'
-              //   }))
-              // );
-          // Clear node effects
           if (previouslyHoveredNodeRef.current) {
             const shadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
-            if (shadowEffect) {
-              shadowEffect.remove();
-              if (isnode === true) {
-                setnodetoshow(null);
-              }
-            }
+            if (shadowEffect) shadowEffect.remove();
             previouslyHoveredNodeRef.current = null;
           }
-          setrelationtoshow(null); // Clear relation highlight
-         
-           
-          
+          setrelationtoshow(null);
+          // Show selected node when not hovering anything
+          setnodetoshow(selectedNodeRef.current);
           return;
         }
-    
+
         // Handle node hovering
         if (hitElements.nodes && hitElements.nodes.length > 0) {
           const hoveredNode = hitElements.nodes[0];
-          console.log(hoveredNode)
           if (hoveredNode && hoveredNode.data.id) {
-            // Remove previous node's effect
             if (previouslyHoveredNodeRef.current) {
               const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
-              if (previousShadowEffect) {
-                previousShadowEffect.remove();
-              }
+              if (previousShadowEffect) previousShadowEffect.remove();
             }
-    
+
             const hoverEffectPlaceholder = hoveredNode.data.html;
-            
             if (hoverEffectPlaceholder) {
               setnodetoshow(hoveredNode.data.id);
-              setrelationtoshow(null); // Clear any relation highlight when node is hovered
-              
+              setrelationtoshow(null);
+
               const centerWrapper = hoverEffectPlaceholder.querySelector('div[style*="transform: translate(-50%, -50%)"]');
-              
               if (centerWrapper) {
                 const shadowEffect = document.createElement('div');
                 shadowEffect.id = 'test';
@@ -230,36 +161,24 @@ const GraphCanvas = ({
                 shadowEffect.style.border = '15px solid rgba(84, 207, 67, 0.8)';
                 shadowEffect.style.zIndex = '5';
                 shadowEffect.style.pointerEvents = 'none';
-                
                 centerWrapper.appendChild(shadowEffect);
               }
-              
               previouslyHoveredNodeRef.current = hoverEffectPlaceholder;
             }
           }
         }
-        // Handle relation/edge hovering
-      if (hitElements.relationships && hitElements.relationships.length > 0) {
+
+        // Handle relationship hovering
+        if (hitElements.relationships && hitElements.relationships.length > 0) {
           const hoveredEdge = hitElements.relationships[0];
-          console.log(hoveredEdge)
           if (hoveredEdge && hoveredEdge.data.id) {
-            // Clear any node highlights when hovering relation
             if (previouslyHoveredNodeRef.current) {
               const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
-              if (previousShadowEffect) {
-                previousShadowEffect.remove();
-              }
+              if (previousShadowEffect) previousShadowEffect.remove();
               previouslyHoveredNodeRef.current = null;
             }
             setnodetoshow(null);
-            setrelationtoshow(hoveredEdge.data.id); // Set the hovered relation ID
-            // if (combinedEdges.some(n => n.id === hoveredEdge.data.id)) {
-            //   setEdges(combinedEdges.map((edge) => ({
-            //     ...edge,
-            //     width: edge.id === hoveredEdge.data.id ? 15 : edge.width,
-            //     color: edge.id === hoveredEdge.data.id ? 'green' : 'red'
-            //   })));
-            // }
+            setrelationtoshow(hoveredEdge.data.id);
           }
         }
       } catch (error) {
@@ -275,7 +194,7 @@ const GraphCanvas = ({
       dragNodeInteraction.destroy();
       hoverInteraction.destroy();
     };
-  }, [nvlRef, shiftPressed, setSelectedNodes, setContextMenu, setnodetoshow]);
+  }, [nvlRef, shiftPressed, setSelectedNodes, setContextMenu, setnodetoshow, setrelationtoshow]);
 
   const nvlOptions = {
     minimapContainer: minimapContainerRef.current,
@@ -284,17 +203,16 @@ const GraphCanvas = ({
     panY: 100,
     disableTelemetry: true,
     physics: {
-      enabled: true, // Enable physics simulation
+      enabled: true,
       barnesHut: {
-        gravitationalConstant: -5000, // Stronger repulsion between nodes
-        centralGravity: 0.008, // Nodes are pulled toward the center
-        springLength: 500, // Ideal length of edges (springs)
-        springConstant: 0.1, // Strength of the spring force
-        damping: 0.05, // Less damping for faster movement
-        avoidOverlap: 0.99, // Prevents nodes from overlapping
+        gravitationalConstant: -5000,
+        centralGravity: 0.008,
+        springLength: 500,
+        springConstant: 0.1,
+        damping: 0.05,
+        avoidOverlap: 0.99,
       },
     },
-   
   };
 
   return (
@@ -304,7 +222,7 @@ const GraphCanvas = ({
         nodes={combinedNodes.map((node) => ({
           ...node,
           selected: selectedNodes.has(node.id),
-          html: createNodeHtml(node.captionnode, node.group, selectedNodes.has(node.id) , node.selecte === true, 1 , node.id , IconPersonWithClass(node) ,"👑"),
+          html: createNodeHtml(node.captionnode, node.group, selectedNodes.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "👑"),
         }))}
         allowDynamicMinZoom={true}
         nvlOptions={nvlOptions}
@@ -315,19 +233,17 @@ const GraphCanvas = ({
             event.preventDefault();
             setContextMenu({
               visible: true,
-              x: nvlRef.current.getPositionById(node.id).x+1000,
+              x: nvlRef.current.getPositionById(node.id).x + 1000,
               y: nvlRef.current.getPositionById(node.id).y,
               node,
             });
           },
         }}
-        onError={(error) => {
-          console.error('NVL Error:', error);        }}
+        onError={(error) => console.error('NVL Error:', error)}
         style={{ width: '100%', height: '100%', border: '1px solid lightgray' }}
       />
-
       <div
-        ref={ispath ? minimapContainerRef:null}
+        ref={ispath ? minimapContainerRef : null}
         style={{
           position: 'absolute',
           bottom: '100px',
@@ -338,7 +254,7 @@ const GraphCanvas = ({
           border: '1px solid lightgray',
           borderRadius: '4px',
           overflow: 'hidden',
-          display: ispath?'block':'none',
+          display: ispath ? 'block' : 'none',
         }}
       />
     </div>

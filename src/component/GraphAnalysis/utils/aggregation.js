@@ -328,7 +328,7 @@ const Aggregation = ({
           </label>
           <br />
           {/* Display the aggregation path below each type */}
-          {renderAggregationPath(type)}
+          Result : {renderAggregationPath(type)}
         </div>
       ) : null
     ))}

@@ -12,7 +12,6 @@ const GraphVisualization = React.memo(({
   isFullscreen,
   toggleFullscreen,
   setnodetoshow,
-  nodetoshow,
   setPathEdges,
   setPathNodes,
   setIsBoxPath,
@@ -322,7 +321,6 @@ const GraphVisualization = React.memo(({
         selectedNodes={selectedNodes}
         setSelectedNodes={setSelectedNodes}
         setContextMenu={setContextMenu}
-        nodetoshow={nodetoshow}
         setnodetoshow={setnodetoshow}
         ispath={ispath}
         setrelationtoshow={setrelationtoshow}
