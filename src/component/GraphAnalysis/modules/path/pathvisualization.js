@@ -141,7 +141,7 @@ if (nvlRef && nvlRef.current) {
     const { nodes: formattedNodes, edges: formattedEdges } = parsePath(path, selectednodes);
     setPathNodes([]);
     setPathEdges([]);
-    nvlRef.current.restart();
+    // nvlRef.current.restart();
      // Wait for 0.5 seconds before updating the nodes and edges
     setTimeout(() => {
       setPathNodes(formattedNodes);
