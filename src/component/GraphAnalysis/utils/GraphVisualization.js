@@ -1,10 +1,15 @@
+// src/components/GraphVisualization.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import ContextMenu from '../modules/contextmenu/ContextMenu';
 import GraphCanvas from './Visualization/GraphCanvas';
+// import PersonProfileWindow from '../modules/windows/Actions/PersonProfileWindow/PersonProfileWindow';
+import PersonProfileWindow from "../modules/Windows/Actions/PersonProfileWindow/PersonProfileWindow"; // Import the window component
 import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaProjectDiagram, FaLayerGroup, FaSitemap, FaBezierCurve } from 'react-icons/fa';
 import { d3ForceLayoutType, ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from './function_container';
 import { FaDiaspora } from "react-icons/fa6";
+import globalWindowState from './globalWindowState'; // Import global state
+
 const GraphVisualization = React.memo(({
   setEdges,
   edges,
@@ -38,10 +43,22 @@ const GraphVisualization = React.memo(({
   });
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeWindow, setActiveWindow] = useState(null); // Local state to reflect global state
 
   useEffect(() => {
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
   }, [nodes.length]);
+
+  // Effect to sync with global window state
+  useEffect(() => {
+    const checkWindowState = () => {
+      setActiveWindow(globalWindowState.activeWindow); // Update local state when global state changes
+    };
+    // Check immediately and then poll (for simplicity; ideally use an event system or Context)
+    checkWindowState();
+    const interval = setInterval(checkWindowState, 100); // Poll every 100ms
+    return () => clearInterval(interval); // Cleanup
+  }, []);
 
   const handleSearch = (e) => {
     const query = e.target.value;
@@ -87,8 +104,12 @@ const GraphVisualization = React.memo(({
     setShowSettings(!showSettings);
   };
 
+  const handleCloseWindow = () => {
+    globalWindowState.clearWindow(); // Clear global state
+    setActiveWindow(null); // Clear local state
+  };
+
   const buttonStyle = { 
-   
     zIndex: 1001,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     border: '1px solid #ccc',
@@ -101,12 +122,12 @@ const GraphVisualization = React.memo(({
     width: '35px',
     height: '35px',
     transition: 'background-color 0.2s',
-    marginRight: '5px', // Space between buttons
+    marginRight: '5px',
   };
 
   const activeButtonStyle = {
     ...buttonStyle,
-    backgroundColor: 'rgba(66, 153, 225, 0.8)', // Highlight active layout
+    backgroundColor: 'rgba(66, 153, 225, 0.8)',
     color: '#fff',
   };
 
@@ -114,7 +135,7 @@ const GraphVisualization = React.memo(({
     position: 'absolute',
     zIndex: 1001,
     top: '10px',
-    left: '60px', // Positioned to the right of the Save button
+    left: '60px',
     display: 'flex',
     flexDirection: 'row',
   };
@@ -347,6 +368,11 @@ const GraphVisualization = React.memo(({
           depth={depth}
           isPathFindingStarted={isPathFindingStarted}
         />
+      )}
+
+      {/* Render PersonProfileWindow based on global state */}
+      {activeWindow === 'PersonProfile' && (
+        <PersonProfileWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
     </div>
   );
