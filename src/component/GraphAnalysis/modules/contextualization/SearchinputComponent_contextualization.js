@@ -5,6 +5,7 @@ import { BASE_URL } from '../../utils/Urls';
 
 const SearchinputComponent = ({ setContextData }) => {
 
+    const [affaireTypes, setaffaireTypes] = useState([]);
     const [nodeData, setNodeData] = useState([]);
     const [error, setError] = useState(null);
     const [selectedNodeTypes, setSelectedNodeTypes] = useState([]);
@@ -206,6 +207,28 @@ const SearchinputComponent = ({ setContextData }) => {
     }, [selectedDaira]);
 
 
+    useEffect(() => {
+        const fetchall_affaire_types = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await axios.get(BASE_URL+'/all_affaire_types/', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                if (response.status !== 200) {
+                    throw new Error('Network response was not ok');
+                }
+                setaffaireTypes(response.data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                setError(error.message || 'An error occurred');
+            }
+        };
+        fetchall_affaire_types();
+    }, []);
+
+
     return (
         <div className="container mt-4">
                 {/* Wilaya Dropdown */}
@@ -289,19 +312,28 @@ const SearchinputComponent = ({ setContextData }) => {
             </div>
             {error && <div className="alert alert-danger">{error}</div>}
 
-            {/* Dropdown list */}
-            <div className="mb-3">
-                <label htmlFor="categorySelect" className="form-label">Category</label>
-                <select
-                    className="form-select"
-                    id="categorySelect"
-                    value={formValues.Affaire_type}
-                    onChange={handleCategoryChange}
-                >
-                    <option value="">Select Category</option>
-                    <option value="مخدرات">مخدرات</option>
-                </select>
-            </div>
+   {/* Dropdown list */}
+        <div className="mb-3">
+            <label htmlFor="categorySelect" className="form-label">Category</label>
+            {console.log("affaireTypes :", affaireTypes.affaire_types)}
+            <select
+                className="form-select"
+                id="categorySelect"
+                value={formValues.Affaire_type}
+                onChange={handleCategoryChange}
+            >
+                <option value="">Select Category</option>
+                {affaireTypes.affaire_types && affaireTypes.affaire_types.length > 0 ? (
+                    affaireTypes.affaire_types.map((type, index) => (
+                        <option key={index} value={type}>
+                            {type}
+                        </option>
+                    ))
+                ) : (
+                    <option value="" disabled>No categories available</option>
+                )}
+            </select>
+        </div>
 
             {/* Start Date, End Date, and Depth Inputs */}
             <div className="col-4">
