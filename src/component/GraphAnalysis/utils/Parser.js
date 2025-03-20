@@ -82,7 +82,7 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false,ag
     selecte: isSelected,
     captionnode: LabelManager(nodeType, properties),
     aggregatedproperties:aggregatedproperties,
-    hovered: true,
+    //hovered:true,
   };
 
 
@@ -269,7 +269,7 @@ export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpa
   captionElement.innerText = captionText;
   captionElement.style.position = 'absolute';
   captionElement.style.width = '200px';
-  captionElement.style.height = '50px';
+  captionElement.style.height = 'fit-content';
   captionElement.style.left = NODE_CONFIG.captionLeft;
   captionElement.style.top = NODE_CONFIG.captionTop;
   captionElement.style.transform = 'translateX(-50%)';

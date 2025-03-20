@@ -196,24 +196,13 @@ const useNvlVisualization = ({
   const nvlOptions = {
     minimapContainer: minimapContainerRef.current,
     relationshipThreshold: 0,
-    panX: 100,
-    panY: 100,
     disableTelemetry: true,
-    physics: {
-      enabled: true,
-      barnesHut: {
-        gravitationalConstant: -5000,
-        centralGravity: 0.008,
-        springLength: 500,
-        springConstant: 0.1,
-        damping: 0.05,
-        avoidOverlap: 0.99,
-      },
-    },
-    styling: {
-      nodeDefaultBorderColor: 'orange',
-      selectedBorderColor: 'lightblue',
-    },
+    styling : {
+        disabledItemFontColor: '#808080',    // Medium gray for disabled text (readable but muted)
+        minimapViewportBoxColor: '#FFD700',  // Bright gold for minimap viewport (stands out clearly)
+        selectedBorderColor: 'rgba(71, 39, 134, 0.9)', // Bright orange for inner selected border (complements outer border)
+        dropShadowColor: 'green'
+      }
   };
 
   const getVisualizationComponent = (hoveredEdge) => {

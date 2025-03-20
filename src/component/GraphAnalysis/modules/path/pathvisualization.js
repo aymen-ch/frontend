@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import GraphCanvas from '../../utils/Visualization/GraphCanvas';
-import { FaExpand, FaCompress, FaArrowLeft, FaArrowRight, FaList, FaTimes } from 'react-icons/fa';
+import { FaExpand, FaCompress, FaArrowLeft, FaArrowRight, FaList, FaTimes, FaProjectDiagram, FaBezierCurve, FaLayerGroup, FaSitemap, FaPlus, FaObjectGroup } from 'react-icons/fa';
 import { AddNeighborhoodParser, getNodeIcon, getNodeColor, parsePath } from '../../utils/Parser';
 import './PathVisualization.css';
 import { computeLinearLayout } from '../layout/layout';
-import { FreeLayoutType } from '@neo4j-nvl/base';
+import { d3ForceLayoutType, ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType } from '@neo4j-nvl/base';
+import { handleLayoutChange } from '../../utils/function_container';
 
 const PathVisualization = React.memo(({
   edges,
@@ -23,12 +24,15 @@ const PathVisualization = React.memo(({
   setrelationtoshow,
   pathisempty,
   setPathisempty,
-  setAllPaths
+  setAllPaths,
+  setNodes,
+  setEdges
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showPathList, setShowPathList] = useState(false);
+  const [layoutType, setLayoutType] = useState(FreeLayoutType); // Default layout type
 
   // State for tracking position, size and interactions
   const [position, setPosition] = useState({ x: 500, y: 50 });
@@ -100,30 +104,22 @@ const PathVisualization = React.memo(({
       setIsLoading(false);
     } else {
       setIsLoading(true);
-
     }
   }, [allPaths]);
+
+  // Apply layout when nodes, edges, or layoutType changes
   useEffect(() => {
-    console.log('Applying layout...');
-if (nvlRef && nvlRef.current) {
-  const nodesWithPositions = computeLinearLayout(nodes, edges, 400);
-  console.log('Nodes with positions:', nodesWithPositions);
-  nvlRef.current.setLayout(FreeLayoutType);
-  nvlRef.current.setNodePositions(nodesWithPositions, true);
-  console.log('Layout applied successfully!');
-} else {
-  console.log('nvlRef is not ready.');
-}
-  }, [nodes, edges, nvlRef]);
+    if (nvlRef && nvlRef.current && nodes.length > 0) {
+      applyLayout(layoutType);
+    }
+  }, [nodes, edges, nvlRef, layoutType]);
+
   const handleNextPath = () => {
     if (currentPathIndex < allPaths.length - 1) {
       const nextIndex = currentPathIndex + 1;
       setCurrentPathIndex(nextIndex);
       updatePathNodesAndEdges(allPaths[nextIndex]);
-      const nodesWithPositions = computeLinearLayout(nodes,edges,400)
-      nvlRef.current.setLayout(FreeLayoutType);
-            nvlRef.current.setNodePositions(nodesWithPositions, true);
-      console.log("layout applied!")
+      applyLayout(layoutType);
     }
   };
 
@@ -132,9 +128,7 @@ if (nvlRef && nvlRef.current) {
       const prevIndex = currentPathIndex - 1;
       setCurrentPathIndex(prevIndex);
       updatePathNodesAndEdges(allPaths[prevIndex]);
-      const nodesWithPositions = computeLinearLayout(nodes,edges,400)
-      nvlRef.current.setLayout(FreeLayoutType);
-      nvlRef.current.setNodePositions(nodesWithPositions, true);
+      applyLayout(layoutType);
     }
   };
 
@@ -142,19 +136,68 @@ if (nvlRef && nvlRef.current) {
     const { nodes: formattedNodes, edges: formattedEdges } = parsePath(path, selectednodes);
     setPathNodes([]);
     setPathEdges([]);
-    // nvlRef.current.restart();
-     // Wait for 0.5 seconds before updating the nodes and edges
     setTimeout(() => {
       setPathNodes(formattedNodes);
       setPathEdges(formattedEdges);
-    }, 50); // 500 milliseconds = 0.5 seconds
+      applyLayout(layoutType);
+    }, 50);
+  };
 
+  const applyLayout = (type) => {
+    if (nvlRef && nvlRef.current) {
+      if (type === 'computeLinearLayout') {
+        const nodesWithPositions = computeLinearLayout(nodes, edges, 400);
+        nvlRef.current.setLayout(FreeLayoutType);
+        nvlRef.current.setNodePositions(nodesWithPositions, true);
+        console.log('Applied computeLinearLayout');
+      } else {
+        handleLayoutChange(type, nvlRef, nodes, edges, setLayoutType);
+        console.log(`Applied layout: ${type}`);
+      }
+    } else {
+      console.log('nvlRef is not ready.');
+    }
+  };
+
+  const handleLayoutSelect = (type) => {
+    setLayoutType(type);
+    applyLayout(type);
   };
 
   const selectPath = (index) => {
     setCurrentPathIndex(index);
     updatePathNodesAndEdges(allPaths[index]);
-    setShowPathList(false);
+  };
+
+  const showAllPathsAsSubgraph = () => {
+    if (allPaths.length > 0) {
+      let allNodes = [];
+      let allEdges = [];
+
+      // Combine all paths into one subgraph
+      allPaths.forEach((path) => {
+        const { nodes: pathNodes, edges: pathEdges } = parsePath(path, selectednodes);
+        allNodes = [...allNodes, ...pathNodes];
+        allEdges = [...allEdges, ...pathEdges];
+      });
+
+      // Remove duplicates
+      const uniqueNodes = Array.from(new Map(allNodes.map(node => [node.id, node])).values());
+      const uniqueEdges = Array.from(new Map(allEdges.map(edge => [`${edge.from}-${edge.to}`, edge])).values());
+
+      // Update the visualization
+      setPathNodes([]);
+      setPathEdges([]);
+      setTimeout(() => {
+        setPathNodes(uniqueNodes);
+        setPathEdges(uniqueEdges);
+        applyLayout(layoutType);
+        setCurrentPathIndex(-1); // Indicate no single path is selected
+        //setShowPathList(false);
+      }, 50);
+
+      console.log('Displayed all paths as a single subgraph');
+    }
   };
 
   const closePathBox = () => {
@@ -166,11 +209,100 @@ if (nvlRef && nvlRef.current) {
     setPathisempty(false);
   };
 
-  // Function to truncate path data for display
+  const addCurrentPathToVisualization = () => {
+    let nodesToAdd = [];
+    let edgesToAdd = [];
+
+    if (currentPathIndex === -1) {
+      // Handle the subgraph case
+      if (allPaths.length > 0) {
+        allPaths.forEach((path) => {
+          const { nodes: pathNodes, edges: pathEdges } = parsePath(path, selectednodes);
+          nodesToAdd = [...nodesToAdd, ...pathNodes];
+          edgesToAdd = [...edgesToAdd, ...pathEdges];
+        });
+
+        // Remove duplicates from the combined subgraph
+        nodesToAdd = Array.from(new Map(nodesToAdd.map(node => [node.id, node])).values());
+        edgesToAdd = Array.from(new Map(edgesToAdd.map(edge => [`${edge.from}-${edge.to}`, edge])).values());
+
+        console.log('Adding all paths subgraph to main visualization');
+      }
+    } else if (allPaths[currentPathIndex]) {
+      // Handle single path case
+      const { nodes: currentNodes, edges: currentEdges } = parsePath(allPaths[currentPathIndex], selectednodes);
+      nodesToAdd = currentNodes;
+      edgesToAdd = currentEdges;
+      console.log(`Adding Path ${currentPathIndex + 1} to main visualization`);
+    }
+
+    if (nodesToAdd.length > 0 || edgesToAdd.length > 0) {
+      // Append nodes, avoiding duplicates by checking IDs
+      setNodes((prevNodes) => {
+        const existingNodeIds = new Set(prevNodes.map(node => node.id));
+        const newNodes = nodesToAdd.filter(node => !existingNodeIds.has(node.id));
+        return [...prevNodes, ...newNodes];
+      });
+
+      // Append edges, avoiding duplicates by checking from and to
+      setEdges((prevEdges) => {
+        const existingEdgeKeys = new Set(prevEdges.map(edge => `${edge.from}-${edge.to}`));
+        const newEdges = edgesToAdd.filter(edge => !existingEdgeKeys.has(`${edge.from}-${edge.to}`));
+        return [...prevEdges, ...newEdges];
+      });
+    }
+  };
+
   const getPathSummary = (path) => {
     if (!path || path.length === 0) return "Empty path";
     return `(${path["nodes"].length} nodes)`;
   };
+
+  const buttonStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+    padding: '6px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '30px',
+    height: '30px',
+    transition: 'background-color 0.2s',
+    marginLeft: '5px',
+  };
+
+  const activeButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: 'rgba(66, 153, 225, 0.8)', // Highlight active layout
+    color: '#fff',
+  };
+
+  const layoutControlStyle = {
+    position: 'absolute',
+    top: '10px',
+    right: '10px',
+    display: 'flex',
+    flexDirection: 'row',
+    zIndex: 1001,
+  };
+
+  const addButtonStyle = {
+    ...buttonStyle,
+    position: 'absolute',
+    bottom: '10px',
+    left: '10px',
+    zIndex: 1001,
+    marginLeft: '0',
+  };
+
+  const layouts = [
+    { type: 'computeLinearLayout', icon: <FaProjectDiagram size={14} />, title: 'Linear Layout' },
+    { type: ForceDirectedLayoutType, icon: <FaBezierCurve size={14} />, title: 'Force Directed' },
+    { type: FreeLayoutType, icon: <FaLayerGroup size={14} />, title: 'Free Layout' },
+    { type: HierarchicalLayoutType, icon: <FaSitemap size={14} />, title: 'Hierarchical Layout' },
+  ];
 
   return (
     <div
@@ -184,13 +316,9 @@ if (nvlRef && nvlRef.current) {
       onMouseDown={handleMouseDown}
       onMouseOver={() => document.body.style.cursor = isDragging ? 'grabbing' : 'auto'}
     >
-      {/* // { console.log( "pathisempty" , pathisempty ) } // */}
       {/* Title Bar - Made draggable */}
-      <div
-        className="path-title-bar"
-        data-draggable="true"
-      >
-        <h5 className="path-title">Path Visualization </h5>
+      <div className="path-title-bar" data-draggable="true">
+        <h5 className="path-title">Path Visualization</h5>
         <div className="path-controls">
           <button
             className="control-button"
@@ -246,8 +374,21 @@ if (nvlRef && nvlRef.current) {
             <h6 className="path-list-title">All Paths ({allPaths.length})</h6>
           </div>
           <div className="path-list-content">
+            {/* "Show All Paths as Subgraph" as the first item */}
+            <div
+              onClick={showAllPathsAsSubgraph}
+              className={`path-list-item ${currentPathIndex === -1 ? 'active' : ''}`}
+            >
+              <div className={`path-list-item-title ${currentPathIndex === -1 ? 'active' : 'inactive'}`}>
+                <FaObjectGroup style={{ marginRight: '5px', verticalAlign: 'middle' }} /> All Paths Subgraph
+              </div>
+              <div className="path-list-item-summary">
+                ({allPaths.reduce((sum, path) => sum + (path["nodes"]?.length || 0), 0)} nodes)
+              </div>
+            </div>
+            {/* Individual paths */}
             {allPaths.map((path, index) => (
-              <div 
+              <div
                 key={index}
                 onClick={() => selectPath(index)}
                 className={`path-list-item ${currentPathIndex === index ? 'active' : ''}`}
@@ -276,8 +417,35 @@ if (nvlRef && nvlRef.current) {
       {!isLoading && (
         <div
           className="visualization-content"
-          style={{ marginLeft: showPathList ? '250px' : '0' }}
+          style={{ marginLeft: showPathList ? '250px' : '0', position: 'relative' }}
         >
+          {/* Layout Control */}
+          <div style={layoutControlStyle}>
+            {layouts.map((layout) => (
+              <button
+                key={layout.type}
+                style={layoutType === layout.type ? activeButtonStyle : buttonStyle}
+                onClick={() => handleLayoutSelect(layout.type)}
+                title={layout.title}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = layoutType === layout.type ? 'rgba(66, 153, 225, 0.8)' : 'rgba(255, 255, 255, 0.8)'}
+              >
+                {layout.icon}
+              </button>
+            ))}
+          </div>
+
+          {/* Add Current Path Button */}
+          <button
+            style={addButtonStyle}
+            onClick={addCurrentPathToVisualization}
+            title="Add Current Path to Visualization"
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
+          >
+            <FaPlus size={14} />
+          </button>
+
           <GraphCanvas
             nvlRef={nvlRef}
             combinedNodes={nodes}
@@ -302,10 +470,7 @@ if (nvlRef && nvlRef.current) {
       )}
 
       {/* Resize Handle */}
-      <div
-        className="resize-handle"
-        onMouseDown={handleResizeStart}
-      >
+      <div className="resize-handle" onMouseDown={handleResizeStart}>
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
           <path d="M1 9L9 1M5 9L9 5M9 9L9 9" stroke="#666" strokeWidth="1.5" strokeLinecap="round" />
         </svg>

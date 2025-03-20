@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { BASE_URL } from './Urls';
 import { parseAggregationResponse,SubGraphParser } from './Parser';
 import axios from 'axios';
-import { computeDagreLayout_1, computeCytoscapeLayout, computeForceDirectedLayout ,Operationnelle_Soutien_Leader } from "../modules/layout/layout";
+import { computeDagreLayout_1, computeCytoscapeLayout, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout } from "../modules/layout/layout";
 import { FreeLayoutType } from '@neo4j-nvl/base';
 
 export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
@@ -44,15 +44,19 @@ export const handleLayoutChange = async (newLayoutType, nvlRef, combinedNodes, c
       nvlRef.current.setLayout(FreeLayoutType);
       nodesWithPositions = computeForceDirectedLayout(combinedNodes, combinedEdges);
     } else if (newLayoutType === 'computeCytoscapeLayout') {
+    const nodesWithPositions = computeCytoscapeLayout(combinedNodes, combinedEdges, 5);
+    } 
+    else if (newLayoutType === 'computeLinearLayout') {
       nvlRef.current.setLayout(FreeLayoutType);
-      nodesWithPositions = computeCytoscapeLayout(combinedNodes, combinedEdges, 5);
-    } else {
+      nodesWithPositions = computeLinearLayout(combinedNodes, combinedEdges, 300);
+    }
+    else {
       nvlRef.current.setLayout(newLayoutType);
-     // nvlRef.current.fit(nvlRef.current.getNodes().map((n) => n.id),0.25)
+     // nvlRef.current.fit(nvlRef.current.getNodes().map((n) => n.id))
       return;
     }
-    nvlRef.current.setNodePositions(nodesWithPositions, true);
-   // nvlRef.current.fit(nvlRef.current.getNodes().map((n) => n.id),0.25)
+    nvlRef.current.setNodePositions(nodesWithPositions);
+    //nvlRef.current.fit(nvlRef.current.getNodes().map((n) => n.id))
   }
 };
 
