@@ -113,11 +113,15 @@ const ContextMenu = ({
   const handleContextMenuAction = async (action, relationType = null) => {
     if (contextMenu && contextMenu.node) {
       if (action === 'Delete Node') {
-        setNodes((prevNodes) => prevNodes.filter((node) => node.id !== contextMenu.node.id));
+        const nodeIdToDelete = contextMenu.node.id;
+        setNodes((prevNodes) => prevNodes.filter((node) => node.id !== nodeIdToDelete));
+        setEdges((prevEdges) => prevEdges.filter((edge) => edge.from !== nodeIdToDelete && edge.to !== nodeIdToDelete));
       }
       if (action === 'Delete Selected Nodes') {
-        setNodes((prevNodes) => prevNodes.filter((node) => !selectedNodes.has(node.id)));
-        setSelectedNodes(new Set());
+        const selectedNodeIds = new Set(selectedNodes); // Copy the set of IDs to delete
+        setNodes((prevNodes) => prevNodes.filter((node) => !selectedNodeIds.has(node.id)));
+        setEdges((prevEdges) => prevEdges.filter((edge) => !selectedNodeIds.has(edge.from) && !selectedNodeIds.has(edge.to)));
+        setSelectedNodes(new Set()); // Clear the selection
       }
       if (action === 'View Neighborhood' || action === 'Expand Specific Relation') {
         const token = localStorage.getItem('authToken');

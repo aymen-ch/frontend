@@ -109,7 +109,7 @@ export const createEdge = (rel, startId, endId) => ({
     },
   ],
   group:rel.type,
-  hovered: true,
+  //hovered: true,
 });
 
 // Utility function to parse nodes and edges from a subGraph
@@ -247,7 +247,7 @@ export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpa
 
   if (isSelected || isinpath) {
     border.style.boxShadow = '0 0 20px 8px rgba(104, 35, 157, 0.7)';
-    border.style.border = '2px solid rgba(71, 39, 134, 0.9)';
+    border.style.border = '8px solid rgba(71, 39, 134, 0.9)';
     border.style.backgroundColor = 'rgba(255, 255, 0, 0.05)';
   } else if (groupCount > 1) {
     border.style.border = '3px dashed rgba(0, 128, 255, 0.8)';
