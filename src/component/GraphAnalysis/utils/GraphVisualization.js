@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ContextMenu from '../modules/contextmenu/ContextMenu';
-import GraphCanvas from './GraphCanvas';
-import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaProjectDiagram, FaCog ,FaSearch} from 'react-icons/fa';
-
+import GraphCanvas from './Visualization/GraphCanvas';
+import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaProjectDiagram, FaLayerGroup, FaSitemap, FaBezierCurve } from 'react-icons/fa';
+import { d3ForceLayoutType, ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType } from '@neo4j-nvl/base';
+import { handleLayoutChange } from './function_container';
+import { FaDiaspora } from "react-icons/fa6";
 const GraphVisualization = React.memo(({
   setEdges,
   edges,
@@ -19,12 +21,14 @@ const GraphVisualization = React.memo(({
   isPathFindingStarted,
   selectedNodes,
   setSelectedNodes,
-  ispath,setrelationtoshow
+  ispath,
+  setrelationtoshow
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [allPaths, setAllPaths] = useState([]);
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
   const [render, setRenderer] = useState("canvas");
+  const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [layoutOptions, setLayoutOptions] = useState({
     enableCytoscape: true,
     enableVerlet: false,
@@ -32,17 +36,19 @@ const GraphVisualization = React.memo(({
     intelWorkaround: true,
     simulationStopVelocity: 0.1,
   });
-  const [showSettings, setShowSettings] = useState(false); // Toggle settings panel
-  const [searchQuery, setSearchQuery] = useState(''); // Added state for search
+  const [showSettings, setShowSettings] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Add search handler
+  useEffect(() => {
+    handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
+  }, [nodes.length]);
+
   const handleSearch = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    // Add your search logic here
-    // For example: filter nodes based on search query
     console.log('Search query:', query);
   };
+
   const handleSave = () => {
     nvlRef.current.saveFullGraphToLargeFile({
       backgroundColor: "white",
@@ -61,7 +67,6 @@ const GraphVisualization = React.memo(({
   };
 
   const handlewebgl = () => {
-    console.log(render);
     if (render === 'WebGL') {
       nvlRef.current.setRenderer("canvas");
       setRenderer("canvas");
@@ -71,24 +76,19 @@ const GraphVisualization = React.memo(({
     }
   };
 
-  const handleLayoutChange = (options) => {
-    setLayoutOptions(options);
-    nvlRef.current.setLayoutOptions(options);
+  const updateLayoutOption = (key, value) => {
+    const updatedOptions = { ...layoutOptions, [key]: value };
+    setLayoutOptions(updatedOptions);
+    nvlRef.current.setLayoutOptions(updatedOptions);
+    console.log("layout seted");
   };
 
   const toggleSettingsPanel = () => {
     setShowSettings(!showSettings);
   };
 
-  const updateLayoutOption = (key, value) => {
-    const updatedOptions = { ...layoutOptions, [key]: value };
-    setLayoutOptions(updatedOptions);
-    nvlRef.current.setLayoutOptions(updatedOptions);
-    console.log("layout seted")
-  };
-
-  const buttonStyle = {
-    position: 'absolute',
+  const buttonStyle = { 
+   
     zIndex: 1001,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     border: '1px solid #ccc',
@@ -101,33 +101,52 @@ const GraphVisualization = React.memo(({
     width: '35px',
     height: '35px',
     transition: 'background-color 0.2s',
+    marginRight: '5px', // Space between buttons
+  };
+
+  const activeButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: 'rgba(66, 153, 225, 0.8)', // Highlight active layout
+    color: '#fff',
+  };
+
+  const layoutControlStyle = {
+    position: 'absolute',
+    zIndex: 1001,
+    top: '10px',
+    left: '60px', // Positioned to the right of the Save button
+    display: 'flex',
+    flexDirection: 'row',
   };
 
   const searchStyle = {
     position: 'absolute',
     zIndex: 1001,
-    top: '15px', // Slightly increased from 10px for better spacing
+    top: '15px',
     left: '50%',
     transform: 'translateX(-50%)',
     display: 'flex',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)', // More opaque for better contrast
-    border: 'none', // Removing basic border for a cleaner look
-    borderRadius: '25px', // More pronounced rounded corners
-    padding: '6px 12px', // Slightly more padding for comfort
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05)', // Soft, layered shadow
-    transition: 'all 0.3s ease', // Smooth transition for all animated properties
-    minWidth: '250px', // Minimum width to ensure it doesn't look cramped
-    maxWidth: '400px', // Maximum width to prevent it from getting too wide
-    '&:hover': { // Adding hover effect (note: this works in styled-components, for inline you'll need to handle it differently)
-      boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 5px rgba(0, 0, 0, 0.07)',
-      backgroundColor: 'rgba(255, 255, 255, 1)',
-    },
-    '&:focus-within': { // Expands slightly when focused
-      minWidth: '280px',
-      boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 5px rgba(0, 0, 0, 0.07), 0 0 0 3px rgba(66, 153, 225, 0.3)', // Subtle focus ring
-    },
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: '25px',
+    padding: '6px 12px',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.3s ease',
+    minWidth: '250px',
+    maxWidth: '400px',
   };
+
+  const layouts = [
+    { type: d3ForceLayoutType, icon: <FaProjectDiagram size={16} />, title: 'D3 Force Layout' },
+    { type: ForceDirectedLayoutType, icon: <FaDiaspora size={16} />, title: 'Force Directed' },
+    { type: 'Operationnelle_Soutien_Leader', icon: <FaLayerGroup size={16} />, title: 'Free Layout' },
+    { type: "dagre", icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
+  ];
+
+  const handleLayoutSelect = (type) => {
+    handleLayoutChange(type, nvlRef, nodes, edges, setLayoutType);
+  };
+
   return (
     <div
       style={{
@@ -143,33 +162,37 @@ const GraphVisualization = React.memo(({
         margin: '0',
       }}
     >
-
-<div
-        style={searchStyle}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-      >
+      {/* Search Bar */}
+      <div style={searchStyle}>
         <FaSearch style={{ marginRight: '5px' }} />
         <input
           type="text"
           value={searchQuery}
           onChange={handleSearch}
           placeholder="Search nodes..."
-          style={{
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            width: '200px',
-          }}
+          style={{ border: 'none', outline: 'none', background: 'transparent', width: '200px' }}
         />
       </div>
+
+      {/* Layout Control */}
+      <div style={layoutControlStyle}>
+        {layouts.map((layout) => (
+          <button
+            key={layout.type}
+            style={layoutType === layout.type ? activeButtonStyle : buttonStyle}
+            onClick={() => handleLayoutSelect(layout.type)}
+            title={layout.title}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = layoutType === layout.type ? 'rgba(66, 153, 225, 0.8)' : 'rgba(255, 255, 255, 0.8)'}
+          >
+            {layout.icon}
+          </button>
+        ))}
+      </div>
+
       {/* Fullscreen Toggle Button */}
       <button
-        style={{
-          ...buttonStyle,
-          top: '200px',
-          left: '10px',
-        }}
+        style={{ ...buttonStyle, position: 'absolute', top: '200px', left: '10px' }}
         onClick={toggleFullscreen}
         title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -180,11 +203,7 @@ const GraphVisualization = React.memo(({
 
       {/* Save Button */}
       <button
-        style={{
-          ...buttonStyle,
-          top: '10px',
-          left: '10px',
-        }}
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '10px' }}
         onClick={handleSave}
         title="Save"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -195,11 +214,7 @@ const GraphVisualization = React.memo(({
 
       {/* Back Button */}
       <button
-        style={{
-          ...buttonStyle,
-          top: '55px',
-          left: '10px',
-        }}
+        style={{ ...buttonStyle, position: 'absolute', top: '55px', left: '10px' }}
         onClick={handleBack}
         title="Back"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -210,11 +225,7 @@ const GraphVisualization = React.memo(({
 
       {/* Earth/Global View Button */}
       <button
-        style={{
-          ...buttonStyle,
-          top: '100px',
-          left: '10px',
-        }}
+        style={{ ...buttonStyle, position: 'absolute', top: '100px', left: '10px' }}
         onClick={handleEarth}
         title="Global View"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -225,11 +236,7 @@ const GraphVisualization = React.memo(({
 
       {/* WebGL/Canvas Toggle Button */}
       <button
-        style={{
-          ...buttonStyle,
-          top: '150px',
-          left: '10px',
-        }}
+        style={{ ...buttonStyle, position: 'absolute', top: '150px', left: '10px' }}
         onClick={handlewebgl}
         title="Toggle Renderer"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -240,11 +247,7 @@ const GraphVisualization = React.memo(({
 
       {/* Settings Button */}
       <button
-        style={{
-          ...buttonStyle,
-          top: '250px',
-          left: '10px',
-        }}
+        style={{ ...buttonStyle, position: 'absolute', top: '250px', left: '10px' }}
         onClick={toggleSettingsPanel}
         title="Layout Settings"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}

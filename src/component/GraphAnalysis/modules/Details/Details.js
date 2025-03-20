@@ -1,6 +1,6 @@
 // DetailsModule.js
 import React from 'react';
-import { NodeTypeVisibilityControl } from '../../utils/NodeTypeVisibilityControl';
+import { NodeTypeVisibilityControl } from './NodeTypeVisibilityControl';
 import { getNodeColor,getNodeIcon } from '../../utils/Parser';
 
 const DetailsModule = ({
@@ -11,7 +11,7 @@ const DetailsModule = ({
   combinedNodes,
   combinedEdges,
   relationtoshow,
-SelectecRelationData
+  SelectecRelationData
 }) => {
   return (
     <>
