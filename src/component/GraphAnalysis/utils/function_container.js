@@ -73,6 +73,23 @@ export const fetchNodeProperties = async (nodeId, setSelectedNodeData) => {
       return null;
     }
   };
+  export const fetchNoderelation = async (edgid, setSelectecRelationData) => {
+    try {
+      const response = await axios.post(
+        BASE_URL + "/getrelationData/",
+        { "identity": parseInt(edgid, 10) },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setSelectecRelationData(response.data);
+    } catch (error) {
+      console.error("Error fetching node properties:", error.response?.data || error.message);
+      return null;
+    }
+  };
 export const getAggregationPath = (type) => {
     switch (type) {
       case "Phone":

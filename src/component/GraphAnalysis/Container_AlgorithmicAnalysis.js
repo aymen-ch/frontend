@@ -13,7 +13,7 @@ import LayoutControl from './modules/layout/Layoutcontrol';
 import Analysis from './modules/analysis/analysis';
 import DetailsModule from './modules/Details/Details';
 import InterrogationModule from './modules/interogation/interrogation';
-import { useAggregation, fetchNodeProperties, handleLayoutChange, drawCirclesOnPersonneNodes, ColorPersonWithClass } from './utils/function_container';
+import { useAggregation, fetchNodeProperties, handleLayoutChange, drawCirclesOnPersonneNodes, ColorPersonWithClass ,fetchNoderelation} from './utils/function_container';
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
@@ -27,8 +27,9 @@ const Container_AlgorithmicAnalysis = () => {
   const [edges, setEdges] = useState([]);
   const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedNodeData, setSelectedNodeData] = useState("null");
-  const [nodetoshow, setnodetoshow] = useState(null);
+  const [selectedNodeData, setSelectedNodeData] = useState(null);
+  const [SelectecRelationData, setSelectecRelationData] = useState(null);
+  const [nodetoshow, setnodetoshow] = useState();
   const [relationtoshow, setrelationtoshow] = useState(null);
   const [selectedOption, setSelectedOption] = useState('option1');
   const [pathisempty, setPathisempty] = useState(false);
@@ -70,10 +71,17 @@ const Container_AlgorithmicAnalysis = () => {
 
   useEffect(() => {
     if (nodetoshow) {
+      console.log(nodetoshow)
       fetchNodeProperties(nodetoshow, setSelectedNodeData)
       console.log(selectedNodeData)
     }
   }, [nodetoshow]);
+
+  useEffect(() => {
+    if (relationtoshow) {
+      fetchNoderelation(relationtoshow, setSelectecRelationData)
+    }
+  }, [relationtoshow]);
 
   const extractAffaires = () => {
     return SubGrapgTable.results.map((result, index) => ({
@@ -230,6 +238,8 @@ return (
                   selectedNodeData={selectedNodeData}
                   combinedNodes={combinedNodes}
                   relationtoshow={relationtoshow}
+                  SelectecRelationData={SelectecRelationData}
+                  combinedEdges={combinedEdges}
                 />
               )}
               

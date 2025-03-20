@@ -27,7 +27,9 @@ const GraphCanvas = ({
   const minimapContainerRef = useRef(null);
   const previouslyHoveredNodeRef = useRef(null);
   const selectedNodeRef = useRef(null); // Track the selected node
-
+  const selectedRelationRef = useRef(null); // Track the selected node
+  const [hoveredEdge, sethoverEdge] = useState(null);
+  const [selectedEdges, setselectedEdges] = useState(new Set());
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Shift') setShiftPressed(true);
@@ -56,8 +58,11 @@ const GraphCanvas = ({
     const dragNodeInteraction = new DragNodeInteraction(nvlRef.current);
     const hoverInteraction = new HoverInteraction(nvlRef.current);
 
+    dragNodeInteraction.mouseDownNode = null;
+
     if (shiftPressed) {
-      boxSelectInteraction.updateCallback('onBoxSelect', ({ nodes }) => {
+      boxSelectInteraction.updateCallback('onBoxSelect', ({ nodes,rels }) => {
+        console.log(rels)
         setSelectedNodes((prevSelected) => {
           const newSelected = new Set(prevSelected);
           nodes.forEach((node) => {
@@ -65,7 +70,18 @@ const GraphCanvas = ({
           });
           return newSelected;
         });
+        
+        setselectedEdges((prevSelected) => {
+          const newSelected = new Set(prevSelected);
+          rels.forEach((rel) => {
+            newSelected.has(rel.id) ? newSelected.delete(rel.id) : newSelected.add(rel.id);
+          });
+          return newSelected;
+        });
+        
       });
+
+      
       panInteraction.destroy();
     } else {
       panInteraction.updateCallback('onPan', () => console.log('onPan'));
@@ -91,8 +107,8 @@ const GraphCanvas = ({
           // Set as selected node
           setSelectedNodes((prevSelected) => {
             const newSelected = new Set(prevSelected);
-            newSelected.add(node.id); // Add new node to existing selection
-            return newSelected;
+            newSelected.add(node.id); // Add new node to existing selection   
+                     return newSelected;
           });
           selectedNodeRef.current = node.id;
           setnodetoshow(node.id);
@@ -105,11 +121,30 @@ const GraphCanvas = ({
       }
     });
 
+
+    clickInteraction.updateCallback('onRelationshipClick', (edge, hitElements, event) => {
+      try {
+        if (edge && edge.id) {
+          // Set as selected node
+          setselectedEdges((prevSelected) => {
+            const newSelected = new Set(prevSelected);
+            newSelected.add(edge.id); // Add new node to existing selection   
+                     return newSelected;
+          });
+          selectedRelationRef.current=edge.id
+        }
+      } catch (error) {
+        console.error('Error in onNodeClick:', { error, edge, event });
+      }
+    });
+
     clickInteraction.updateCallback('onCanvasClick', (event) => {
       try {
         if (!event.hitElements || event.hitElements.length === 0) {
           setSelectedNodes(new Set());
+          setselectedEdges(new Set());
           selectedNodeRef.current = null;
+          selectedRelationRef.current = null;
           setnodetoshow(null);
         }
       } catch (error) {
@@ -127,7 +162,8 @@ const GraphCanvas = ({
             if (shadowEffect) shadowEffect.remove();
             previouslyHoveredNodeRef.current = null;
           }
-          setrelationtoshow(null);
+          setrelationtoshow(selectedRelationRef.current);
+          sethoverEdge(null)
           // Show selected node when not hovering anything
           setnodetoshow(selectedNodeRef.current);
           return;
@@ -179,6 +215,7 @@ const GraphCanvas = ({
             }
             setnodetoshow(null);
             setrelationtoshow(hoveredEdge.data.id);
+            sethoverEdge(hoveredEdge.data.id)
           }
         }
       } catch (error) {
@@ -213,6 +250,10 @@ const GraphCanvas = ({
         avoidOverlap: 0.99,
       },
     },
+    styling: {
+      nodeDefaultBorderColor: 'orange',
+      selectedBorderColor: 'lightblue'
+    }
   };
 
   return (
@@ -226,7 +267,12 @@ const GraphCanvas = ({
         }))}
         allowDynamicMinZoom={true}
         nvlOptions={nvlOptions}
-        rels={combinedEdges}
+        rels={combinedEdges.map(edge => ({
+          ...edge,
+          selected: selectedEdges.has(edge.id),
+          color: edge.id === hoveredEdge||selectedEdges.has(edge.id) ? '#B771E5' : (edge.color || '#808080'),
+          width: edge.id === hoveredEdge||selectedEdges.has(edge.id) ? 15 : (edge.width || 1)
+        }))}
         mouseEventCallbacks={{
           onMultiSelect: shiftPressed,
           onContextMenu: (event, node) => {
