@@ -42,7 +42,7 @@ const NODE_CONFIG = {
 
   // Edge styling
   edgeColor: 'red',
-  edgeWidth: 5,
+  edgeWidth: 7,
   captionSize: 5,
   captionFontSize: '40px',
   captionColor: 'rgb(211, 70, 54)',
@@ -108,6 +108,7 @@ export const createEdge = (rel, startId, endId) => ({
       key: rel.type,
     },
   ],
+  group:rel.type,
   hovered: true,
 });
 

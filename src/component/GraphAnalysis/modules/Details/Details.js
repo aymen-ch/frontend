@@ -1,6 +1,6 @@
 // DetailsModule.js
 import React from 'react';
-import { NodeTypeVisibilityControl } from '../../utils/NodeTypeVisibilityControl';
+import { NodeTypeVisibilityControl } from './NodeTypeVisibilityControl';
 import { getNodeColor,getNodeIcon } from '../../utils/Parser';
 
 const DetailsModule = ({
@@ -9,7 +9,9 @@ const DetailsModule = ({
   nodetoshow,
   selectedNodeData,
   combinedNodes,
-  relationtoshow
+  combinedEdges,
+  relationtoshow,
+  SelectecRelationData
 }) => {
   return (
     <>
@@ -18,15 +20,70 @@ const DetailsModule = ({
         toggleNodeTypeVisibility={toggleNodeTypeVisibility} 
       />
 
-      {relationtoshow && (
+{relationtoshow && SelectecRelationData && (
         <div className="properties-container">
-          <div>
-            <span>{relationtoshow}</span>
-          </div>
+          {(() => {
+            console.log(combinedEdges)
+            const matchedNode = combinedEdges.find(node => 
+              node.id === SelectecRelationData.identity.toString()
+            );
+            const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
+            const nodeColor ='#B771E5';
+
+            return (
+              <>
+                Relation Properties
+                <div 
+                  className="node-type-header" 
+                  style={{ 
+                    backgroundColor: nodeColor,
+                    padding: '8px',
+                    borderRadius: '4px',
+                    marginBottom: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: '#fff'
+                  }}
+                >
+                  <span>{nodeGroup}</span>
+                </div>
+
+                {matchedNode && matchedNode.aggregationType && (
+                  <div 
+                    className="aggregation-type"
+                    style={{
+                      backgroundColor: '#f5f5f5',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      marginBottom: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <strong>Aggregation Type:</strong>
+                    <span>{matchedNode.aggregationType}</span>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+          
+          <ul className="list-group properties-list">
+            {Object.entries(SelectecRelationData).map(([key, value], index) => (
+              <li key={key} className="list-group-item property-item">
+                <strong className="property-key">{key}:</strong> 
+                <span className="property-value">
+                  {typeof value === 'object' ? JSON.stringify(value) : value}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}      
 
       {nodetoshow && selectedNodeData && (
+
         <div className="properties-container">
           {(() => {
             console.log(combinedNodes)
@@ -39,6 +96,7 @@ const DetailsModule = ({
 
             return (
               <>
+               Node Properties
                 <div 
                   className="node-type-header" 
                   style={{ 

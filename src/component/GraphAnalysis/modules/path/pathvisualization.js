@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import GraphCanvas from '../../utils/GraphCanvas';
+import GraphCanvas from '../../utils/Visualization/GraphCanvas';
 import { FaExpand, FaCompress, FaArrowLeft, FaArrowRight, FaList, FaTimes } from 'react-icons/fa';
 import { AddNeighborhoodParser, getNodeIcon, getNodeColor, parsePath } from '../../utils/Parser';
 import './PathVisualization.css';

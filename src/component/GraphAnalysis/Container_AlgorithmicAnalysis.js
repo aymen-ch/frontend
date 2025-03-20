@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './Container_AlgorithmicAnalysis.css';
 import ContextManagerComponent from './modules/contextualization/ContextManagerComponent';
 import GraphVisualization from './utils/GraphVisualization';
-import { d3ForceLayoutType, ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType } from '@neo4j-nvl/base';
 import Aggregation from './utils/aggregation';
 import TimelineBar from './utils/timline';
 import PathVisualization from './modules/path/pathvisualization';
@@ -13,7 +12,7 @@ import LayoutControl from './modules/layout/Layoutcontrol';
 import Analysis from './modules/analysis/analysis';
 import DetailsModule from './modules/Details/Details';
 import InterrogationModule from './modules/interogation/interrogation';
-import { useAggregation, fetchNodeProperties, handleLayoutChange, drawCirclesOnPersonneNodes, ColorPersonWithClass } from './utils/function_container';
+import { useAggregation, fetchNodeProperties,drawCirclesOnPersonneNodes, ColorPersonWithClass ,fetchNoderelation} from './utils/function_container';
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
@@ -25,10 +24,10 @@ const Container_AlgorithmicAnalysis = () => {
   const nvlRefPath = useRef(null);
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
-  const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedNodeData, setSelectedNodeData] = useState("null");
-  const [nodetoshow, setnodetoshow] = useState(null);
+  const [selectedNodeData, setSelectedNodeData] = useState(null);
+  const [SelectecRelationData, setSelectecRelationData] = useState(null);
+  const [nodetoshow, setnodetoshow] = useState();
   const [relationtoshow, setrelationtoshow] = useState(null);
   const [selectedOption, setSelectedOption] = useState('option1');
   const [pathisempty, setPathisempty] = useState(false);
@@ -70,10 +69,17 @@ const Container_AlgorithmicAnalysis = () => {
 
   useEffect(() => {
     if (nodetoshow) {
+      console.log(nodetoshow)
       fetchNodeProperties(nodetoshow, setSelectedNodeData)
       console.log(selectedNodeData)
     }
   }, [nodetoshow]);
+
+  useEffect(() => {
+    if (relationtoshow) {
+      fetchNoderelation(relationtoshow, setSelectecRelationData)
+    }
+  }, [relationtoshow]);
 
   const extractAffaires = () => {
     return SubGrapgTable.results.map((result, index) => ({
@@ -107,11 +113,7 @@ const Container_AlgorithmicAnalysis = () => {
   const combinedNodes = [...nodes].filter((node) => !node.hidden);
   const combinedEdges = [...edges].filter((edge) => !edge.hidden);
 
-  useEffect(() => {
-    handleLayoutChange(layoutType, nvlRef, combinedNodes, combinedEdges, setLayoutType)
-    console.log(combinedNodes.length)
-    console.log(combinedEdges.length)
-  }, [combinedNodes.length]);
+ 
 return (
     <div className="container-fluid test">
       <div className="row flex-grow-1 m-0 p-0">
@@ -164,7 +166,7 @@ return (
         {true && (
           <div className="side-nav">
             <div className="side-nav-inner">
-              {['Details', 'interogation', 'Detection de Chemin', 'Aggregation', 'Contextualization', 'Analysis', 'Layout'].map((module) => (
+              {['Details', 'interogation', 'Contextualization', 'Detection de Chemin', 'Aggregation', 'Analysis',].map((module) => (
                 <div
                   key={module}
                   className={`side-nav-item ${activeModule === module ? 'active' : ''}`}
@@ -230,6 +232,8 @@ return (
                   selectedNodeData={selectedNodeData}
                   combinedNodes={combinedNodes}
                   relationtoshow={relationtoshow}
+                  SelectecRelationData={SelectecRelationData}
+                  combinedEdges={combinedEdges}
                 />
               )}
               
@@ -245,7 +249,7 @@ return (
                 />
               )}
               
-              {activeModule === 'Layout' && (
+              {/* {activeModule === 'Layout' && (
                 <LayoutControl
                   layoutType={layoutType}
                   handleLayoutChange={handleLayoutChange}
@@ -254,7 +258,7 @@ return (
                   combinedEdges={combinedEdges}
                   setLayoutType={setLayoutType}
                 />
-              )}
+              )} */}
 
               {activeModule === 'Analysis' && (
                 <div className="analysis-module">
