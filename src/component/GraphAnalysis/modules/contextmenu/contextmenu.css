@@ -102,3 +102,55 @@
   font-style: italic;
 }
 
+
+/* contextmenu.css */
+.context-menu-container {
+  position: absolute;
+  top: var(--context-menu-y);
+  left: var(--context-menu-x);
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.sub-context-menu {
+  position: absolute;
+  top: var(--sub-context-menu-y);
+  left: var(--sub-context-menu-x);
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1001; /* Higher than main menu */
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 5px 0;
+}
+
+.no-relations {
+  padding: 8px 12px;
+  color: #888;
+}
