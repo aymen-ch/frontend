@@ -1,0 +1,59 @@
+/* src/components/personProfileWindow.css */
+.profile-window-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  }
+  
+  .profile-window {
+    background: #fff;
+    width: 500px;
+    max-height: 80vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+  }
+  
+  .window-header {
+    background: #4361ee;
+    color: #fff;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .window-header span {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .close-button {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .window-content {
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  .window-content h3 {
+    margin-top: 0;
+    color: #333;
+  }
+  
+  .window-content p {
+    margin: 5px 0;
+    color: #555;
+  }

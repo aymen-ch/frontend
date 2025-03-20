@@ -1,6 +1,7 @@
-import React, { useState, useEffect , useRef } from 'react';
+// src/components/ContextMenu.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { AddNeighborhoodParser, parsePath,createNode,createEdge } from '../../utils/Parser';
+import { AddNeighborhoodParser, parsePath, createNode, createEdge } from '../../utils/Parser';
 import { 
   FaExpand, 
   FaEdit, 
@@ -13,11 +14,11 @@ import {
   FaArrowRight,
   FaInfoCircle,
   FaTimesCircle,
-  
 } from 'react-icons/fa'; 
-import { FaLocationDot ,FaCodeFork} from "react-icons/fa6";
+import { FaLocationDot, FaCodeFork } from "react-icons/fa6";
 import { BASE_URL } from '../../utils/Urls';
-import './contextmenu.css'; // Import the CSS file
+import globalWindowState from '../../utils/globalWindowState'; // Import global state
+import './contextmenu.css';
 
 const ContextMenu = ({
   contextMenu,
@@ -34,15 +35,15 @@ const ContextMenu = ({
 }) => {
   const [possibleRelations, setPossibleRelations] = useState([]);
   const [subContextMenu, setSubContextMenu] = useState(null);
-  const expandButtonRef = useRef(null);
   const [actionsSubMenu, setActionsSubMenu] = useState(null);
+  const expandButtonRef = useRef(null);
   const actionsButtonRef = useRef(null);
+
   useEffect(() => {
     if (contextMenu && contextMenu.node && contextMenu.visible) {
       fetchPossibleRelations(contextMenu.node);
     }
   }, [contextMenu]);
-
 
   const handleActionsClick = (event) => {
     if (actionsButtonRef.current) {
@@ -52,32 +53,32 @@ const ContextMenu = ({
         y: contextMenu.y,
         visible: true,
       });
+      setSubContextMenu(null); // Close the Expand sub-menu when Actions is opened
     }
   };
 
   const handleActionSelect = async (action) => {
     console.log(`Selected ${action}`);
     if (contextMenu.node) {
-      try {
-        // Call the aggregate_hira API with the selected node’s identity
-        const response = await axios.post(BASE_URL+'/personne_criminal_network/');
-
-        const paths = response.data; // Expecting an array of { nodes, relations }
-        console.log('Paths from API:', paths);
-
-      //// to be implmentted
-        // Update graph state
-        // setNodes(allNodes);
-        // setEdges(allEdges);
-      } catch (error) {
-        console.error('Error fetching paths:', error);
+      if (action === 'Show Person Profile') {
+        // Set global state to show PersonProfileWindow
+        globalWindowState.setWindow('PersonProfile', contextMenu.node);
+        setActionsSubMenu(null);
+        setContextMenu(null);
+      } else {
+        try {
+          const response = await axios.post(BASE_URL + '/personne_criminal_network/');
+          const paths = response.data;
+          console.log('Paths from API:', paths);
+        } catch (error) {
+          console.error('Error fetching paths:', error);
+        }
+        setActionsSubMenu(null);
+        setContextMenu(null);
       }
     }
-    setActionsSubMenu(null);
-    setContextMenu(null);
-   
-
   };
+
   if (!contextMenu || !contextMenu.visible) return null;
 
   const fetchPossibleRelations = async (node) => {
@@ -157,7 +158,6 @@ const ContextMenu = ({
       }
       if (action === 'Select Node') {
         setSelectedNodes((prevSelected) => new Set([...prevSelected, contextMenu.node.id]));
-    
       }
       if (action === 'Deselect Node') {
         setSelectedNodes((prevSelected) => {
@@ -169,12 +169,10 @@ const ContextMenu = ({
       if (action === 'Edit Node') {
         console.log('Edit Node:', contextMenu.node);
       }
-
       if (action === 'all connections') {
         setIsBoxPath(true);
         if (true) {
           const nodeIds = Array.from(selectedNodes).map((id) => parseInt(id, 10));
-
           try {
             const response = await axios.post(
               BASE_URL + '/get_all_connections/',
@@ -202,6 +200,7 @@ const ContextMenu = ({
 
       setContextMenu(null);
       setSubContextMenu(null);
+      setActionsSubMenu(null);
     }
   };
 
@@ -222,21 +221,17 @@ const ContextMenu = ({
   const handleExpandClick = (event) => {
     if (expandButtonRef.current) {
       const buttonRect = expandButtonRef.current.getBoundingClientRect();
-      console.log('Button position:', buttonRect);
-      
-      console.log("x : " ,buttonRect.x ," y ", buttonRect.y);
-      // You can use buttonRect to set the sub-context menu position
       setSubContextMenu({
-        x: contextMenu.x +  buttonRect.width    , // or buttonRect.left, depending on where you want the sub-menu
-        y: contextMenu.y , // or buttonRect.top
+        x: contextMenu.x + buttonRect.width,
+        y: contextMenu.y,
         visible: true,
       });
+      setActionsSubMenu(null);
     }
   };
 
   const handleInspectNode = () => {
     console.log('Inspect Node:', contextMenu.node);
-    // Implementation for node inspection
   };
 
   return (
@@ -248,19 +243,14 @@ const ContextMenu = ({
           '--context-menu-y': `${contextMenu.y}px`,
           '--context-menu-x': `${contextMenu.x}px`,
         }}
-        
         ref={expandButtonRef}
       >
-        {console.log( '--context-menu-x', `${contextMenu.x}px`, 
-           '--context-menu-y', `${contextMenu.y}px`
-         )}
         <div className="menu-header">
           Node Actions
         </div>
         
         <div className="menu-items">
-        <button
-             // Attach the ref here
+          <button
             className="menu-item"
             onClick={handleExpandClick}
           >
@@ -270,10 +260,10 @@ const ContextMenu = ({
           </button>
           
           <button
-  ref={actionsButtonRef}
-  className="menu-item"
-  onClick={handleActionsClick}
->
+            ref={actionsButtonRef}
+            className="menu-item"
+            onClick={handleActionsClick}
+          >
             <FaExpand style={{ marginRight: '10px', color: '#4361ee' }} />
             Actions
           </button>
@@ -306,14 +296,6 @@ const ContextMenu = ({
             </button>
           ) : null}
           
-          <button
-            className="menu-item"
-            onClick={handleInspectNode}
-          >
-            <FaInfoCircle style={{ marginRight: '10px', color: '#4361ee' }} />
-            Inspect Node Details
-          </button>
-
           <div className="menu-divider"></div>
 
           <button
@@ -344,7 +326,7 @@ const ContextMenu = ({
         </div>
       </div>
 
-      {/* Sub-Context Menu */}
+      {/* Expand Sub-Context Menu */}
       {subContextMenu && subContextMenu.visible && (
         <div
           className="sub-context-menu"
@@ -386,42 +368,45 @@ const ContextMenu = ({
         </div>
       )}
 
-{actionsSubMenu && actionsSubMenu.visible && (
-  <div
-    className="sub-context-menu"
-    style={{
-      '--sub-context-menu-y': `${actionsSubMenu.y}px`,
-      '--sub-context-menu-x': `${actionsSubMenu.x}px`,
-    }}
-  >
-    <div className="menu-header">
-      Action Options
-    </div>
-    <div className="menu-items">
-      <button
-        className="menu-item"
-        onClick={() => handleActionSelect('Copy Node')}
-      >
-        <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
-        Affaire dans la meme region
-      </button>
-      <button
-        className="menu-item"
-        onClick={() => handleActionSelect('Export Data')}
-      >
-        <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
-        Pepole who knows
-      </button>
-      <button
-        className="menu-item"
-        onClick={() => handleActionSelect('Add Note')}
-      >
-        <FaCodeFork style={{ marginRight: '10px', color: '#4361ee' }} />
-        show tree of criminal
-      </button>
-    </div>
-  </div>
-)}
+      {/* Actions Sub-Context Menu */}
+      {actionsSubMenu && actionsSubMenu.visible && (
+        <div
+          className="sub-context-menu"
+          style={{
+            '--sub-context-menu-y': `${actionsSubMenu.y}px`,
+            '--sub-context-menu-x': `${actionsSubMenu.x}px`,
+          }}
+        >
+          <div className="menu-header">
+            Action Options
+          </div>
+          <div className="menu-items">
+            <button
+              className="menu-item"
+              onClick={() => handleActionSelect('Copy Node')}
+            >
+              <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
+              Affaire dans la meme region
+            </button>
+            {contextMenu.node.group === 'Personne' && (
+              <button
+                className="menu-item"
+                onClick={() => handleActionSelect('Show Person Profile')}
+              >
+                <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
+                Show Person Profile
+              </button>
+            )}
+            <button
+              className="menu-item"
+              onClick={() => handleActionSelect('Add Note')}
+            >
+              <FaCodeFork style={{ marginRight: '10px', color: '#4361ee' }} />
+              Show tree of criminal
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

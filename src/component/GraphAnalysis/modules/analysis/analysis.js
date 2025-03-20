@@ -53,6 +53,27 @@ const Analysis = ({
     }
   };
 
+  const handleSecteurActiviti = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.post(BASE_URL + '/Secteur_Activite/', {
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+       console.error(response);
+      } else {
+        console.error('handleSecteurActiviti failed.');
+      }
+    } catch (error) {
+      console.error('Error during handleSecteurActiviti:', error);
+    }
+  };
+
   return (
     <div className="container-fluid p-3 bg-white shadow-sm rounded-lg">
       <h3 className="text-lg font-semibold text-gray-800 mb-3">Aggregation</h3>
@@ -101,6 +122,14 @@ const Analysis = ({
           onClose={() => setShowNodeClassification(false)}
         />
       )}
+
+        <button
+          className="btn btn-secondary  w-100"
+          onClick={() => handleSecteurActiviti()}
+        >
+          SecteurActiviti
+        </button>
+
     </div>
   );
 };
