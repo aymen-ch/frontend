@@ -1,5 +1,5 @@
 // NvlVisualization.js
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef,useState } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
 import {
   PanInteraction,
@@ -31,10 +31,18 @@ const useNvlVisualization = ({
   const selectedNodeRef = useRef(null);
   const selectedRelationRef = useRef(null);
   const minimapContainerRef = useRef(null);
+  const [isMinimapReady, setIsMinimapReady] = useState(false);
+
+  useEffect(() => {
+    if (minimapContainerRef.current) {
+      setIsMinimapReady(true);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (!nvlRef.current) return;
-
+    
     // Initialize interaction handlers
     const panInteraction = new PanInteraction(nvlRef.current);
     const boxSelectInteraction = new BoxSelectInteraction(nvlRef.current);
@@ -114,7 +122,7 @@ const useNvlVisualization = ({
         selectedNodeRef.current = null;
         selectedRelationRef.current = null;
         setnodetoshow(null);
-        setContextMenu(null)
+        setContextMenu(null);
       }
     });
 
@@ -191,25 +199,24 @@ const useNvlVisualization = ({
       dragNodeInteraction.destroy();
       hoverInteraction.destroy();
     };
+    
   }, [nvlRef, shiftPressed, setSelectedNodes, setContextMenu, setnodetoshow, setrelationtoshow, setselectedEdges, sethoverEdge]);
-
   const nvlOptions = {
-    minimapContainer: minimapContainerRef.current,
+    minimapContainer: minimapContainerRef.current, // Reference to the DOM element for the minimap
     relationshipThreshold: 0,
-    disableTelemetry: true,
-    styling : {
-        disabledItemFontColor: '#808080',    // Medium gray for disabled text (readable but muted)
-        minimapViewportBoxColor: '#FFD700',  // Bright gold for minimap viewport (stands out clearly)
-        selectedBorderColor: 'rgba(71, 39, 134, 0.9)', // Bright orange for inner selected border (complements outer border)
-        dropShadowColor: 'green'
-      }
+    disableTelemetry:true,
+    styling: {
+      disabledItemFontColor: '#808080',
+      selectedBorderColor: 'rgba(71, 39, 134, 0.9)',
+      dropShadowColor: 'green',
+    },
   };
 
   const getVisualizationComponent = (hoveredEdge) => {
     const nvlProps = {
       nodes: combinedNodes.map((node) => ({
         ...node,
-        Activated:node.Activated,
+        Activated: node.Activated,
         selected: selectedNodes.has(node.id),
         html: createNodeHtml(node.captionnode, node.group, selectedNodes.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "👑"),
       })),
@@ -219,33 +226,45 @@ const useNvlVisualization = ({
         color: edge.id === hoveredEdge || selectedEdges.has(edge.id) ? '#B771E5' : (edge.color || '#808080'),
         width: edge.id === hoveredEdge || selectedEdges.has(edge.id) ? 15 : (edge.width || 1),
       })),
-      nvlOptions,
-      mouseEventCallbacks: {
-        onMultiSelect: shiftPressed,
-        onContextMenu: (event, node) => {
-          event.preventDefault();
-          setContextMenu({
-            visible: true,
-            x: nvlRef.current.getPositionById(node.id).x + 1000,
-            y: nvlRef.current.getPositionById(node.id).y,
-            node,
-          });
-        },
-      },
+ 
+
     };
 
     return (
-      <InteractiveNvlWrapper
-        ref={nvlRef}
-        {...nvlProps}
-        allowDynamicMinZoom={true}
-        onError={(error) => console.error('NVL Error:', error)}
-        style={{ width: '100%', height: '100%', border: '1px solid lightgray' }}
-      />
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        {/* Main visualization */}
+        <div
+          ref={minimapContainerRef}
+          style={{
+            position: 'absolute',
+            bottom: '100px',
+            right: '80px',
+            width: '200px',
+            height: '150px',
+            backgroundColor: 'white',
+            border: '1px solid lightgray',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            display: ispath ? 'block' : 'none', // Conditional display based on ispath
+          }}
+        />
+        {isMinimapReady && (
+          <InteractiveNvlWrapper
+            ref={nvlRef}
+            {...nvlProps}
+            nvlOptions={nvlOptions}
+            allowDynamicMinZoom={true}
+            onError={(error) => console.error('NVL Error:', error)}
+            style={{ width: '100%', height: '100%', border: '1px solid lightgray' }}
+          />
+        )}
+        {/* Minimap container */}
+        
+      </div>
     );
   };
 
-  return { getVisualizationComponent, minimapContainerRef };
+  return { getVisualizationComponent };
 };
 
 export default useNvlVisualization;

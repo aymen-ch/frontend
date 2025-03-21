@@ -13,6 +13,7 @@ const GraphCanvas = ({
   setrelationtoshow,
   ispath,
   setEdges,
+  
 }) => {
   const [shiftPressed, setShiftPressed] = useState(false);
   const [hoveredEdge, sethoverEdge] = useState(null);
@@ -38,7 +39,7 @@ const GraphCanvas = ({
   }, []);
 
   // Use the NVL visualization hook
-  const { getVisualizationComponent, minimapContainerRef } = useNvlVisualization({
+  const { getVisualizationComponent } = useNvlVisualization({
     nvlRef,
     combinedNodes,
     combinedEdges,
@@ -59,21 +60,6 @@ const GraphCanvas = ({
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       {VisualizationComponent}
-      <div
-        ref={ispath ? minimapContainerRef : null}
-        style={{
-          position: 'absolute',
-          bottom: '100px',
-          right: '20px',
-          width: '200px',
-          height: '150px',
-          backgroundColor: 'white',
-          border: '1px solid lightgray',
-          borderRadius: '4px',
-          overflow: 'hidden',
-          display: ispath ? 'block' : 'none',
-        }}
-      />
     </div>
   );
 };
