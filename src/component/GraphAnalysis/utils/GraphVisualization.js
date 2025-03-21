@@ -27,7 +27,7 @@ const GraphVisualization = React.memo(({
   selectedNodes,
   setSelectedNodes,
   ispath,
-  setrelationtoshow
+  setrelationtoshow,
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [allPaths, setAllPaths] = useState([]);
@@ -42,13 +42,16 @@ const GraphVisualization = React.memo(({
     simulationStopVelocity: 0.1,
   });
   const [showSettings, setShowSettings] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeWindow, setActiveWindow] = useState(null); // Local state to reflect global state
 
+  const [activeWindow, setActiveWindow] = useState(null); // Local state to reflect global state
+  
+  const [inputValue, setInputValue] = useState('');
   useEffect(() => {
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
   }, [nodes.length]);
 
+
+ 
   // Effect to sync with global window state
   useEffect(() => {
     const checkWindowState = () => {
@@ -60,11 +63,26 @@ const GraphVisualization = React.memo(({
     return () => clearInterval(interval); // Cleanup
   }, []);
 
-  const handleSearch = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    console.log('Search query:', query);
+  const handleSearchClick = () => {
+    console.log("click search")
+    const newFilteredNodes = filterNodesByQuery(nodes, inputValue);
+    console.log(newFilteredNodes);
+    // Update nodes with activated property based on whether they are in newFilteredNodes
+    const updatedNodes = nodes.map(node => {
+      const isActivated = newFilteredNodes.some(filteredNode => filteredNode.id === node.id);
+      return {
+        ...node,
+        hovered:isActivated,
+        activated: isActivated // Set activated to true if node is in filtered results, false otherwise
+      };
+    });
+  console.log(updatedNodes)
+  setNodes(updatedNodes); // Set the updated nodes with activated property
   };
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value); // Update input value as user types
+  };
+
 
   const handleSave = () => {
     nvlRef.current.saveFullGraphToLargeFile({
@@ -91,6 +109,18 @@ const GraphVisualization = React.memo(({
       nvlRef.current.setRenderer("webgl");
       setRenderer("WebGL");
     }
+  };
+
+  const filterNodesByQuery = (nodes, query) => {
+    if (!query) return []; // Return all nodes if query is empty
+    const lowerQuery = query.toLowerCase();
+    return nodes.filter(node => 
+      node.properties && 
+      Object.values(node.properties).some(value => 
+        value && 
+        value.toString().toLowerCase().includes(lowerQuery)
+      )
+    );
   };
 
   const updateLayoutOption = (key, value) => {
@@ -153,7 +183,7 @@ const GraphVisualization = React.memo(({
     padding: '6px 12px',
     boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05)',
     transition: 'all 0.3s ease',
-    minWidth: '250px',
+    minWidth: '550px',
     maxWidth: '400px',
   };
 
@@ -185,12 +215,15 @@ const GraphVisualization = React.memo(({
     >
       {/* Search Bar */}
       <div style={searchStyle}>
-        <FaSearch style={{ marginRight: '5px' }} />
+        <FaSearch 
+          style={{ marginRight: '5px', cursor: 'pointer' }} 
+          onClick={handleSearchClick} // Trigger search on click
+        />
         <input
           type="text"
-          value={searchQuery}
-          onChange={handleSearch}
-          placeholder="Search nodes..."
+          value={inputValue} // Use inputValue instead of searchQuery
+          onChange={handleInputChange} // Update inputValue as user types
+          placeholder="Search nodes by any property..."
           style={{ border: 'none', outline: 'none', background: 'transparent', width: '200px' }}
         />
       </div>
