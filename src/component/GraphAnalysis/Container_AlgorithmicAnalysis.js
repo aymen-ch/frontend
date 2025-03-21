@@ -280,7 +280,7 @@ return (
         )}
       </div>
       
-      {SubGrapgTable.results.length > 0 && (
+      {SubGrapgTable.results.length > 0 && combinedNodes.length>0 && (
         <div className="timeline-container">
           <TimelineBar 
             affaires={extractAffaires()}

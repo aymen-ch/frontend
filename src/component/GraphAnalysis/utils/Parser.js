@@ -2,31 +2,24 @@ import axios from 'axios';
 import { BASE_URL } from './Urls';
 
 // Configuration object for node and edge styling
-const NODE_CONFIG = {
+export const NODE_CONFIG = {
   // Node sizes
-  defaultNodeSize: 90,
+  defaultNodeSize: 120,
   groupNodeSize: 70,
-  defaultNodeWidth: '200px',
-  defaultNodeHeight: '200px',
+  defaultNodeWidth: '200px',/// for 90 it 200 for 120 it 250
+  defaultNodeHeight: '200px',/// for 
   groupNodeWidth: '220px',
   groupNodeHeight: '220px',
   centerWrapperWidth: '160px',
   centerWrapperHeight: '160px',
   groupCenterWrapperWidth: '180px',
   groupCenterWrapperHeight: '180px',
-
   // Image sizes
-  defaultImageWidth: '80px',
-  defaultImageHeight: '80px',
+  defaultImageWidth: '120px',
+  defaultImageHeight: '120px',
   groupImageWidth: '100px',
   groupImageHeight: '100px',
-
-
-
-  captionTop: '90%',
-  captionLeft: '43%',
   captionBottom: '-45px',
-
   // Colors (can override getNodeColor if needed)
   nodeColors: {
     Daira: '#FF5733',      // Orange
@@ -55,6 +48,13 @@ NODE_CONFIG.borderTop = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 30}%
 NODE_CONFIG.borderLeft = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 30}%`;
 NODE_CONFIG.iconTop = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 33}%`;
 NODE_CONFIG.iconLeft = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 33}%`;
+NODE_CONFIG.borderTop = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 30}%`;
+NODE_CONFIG.Nodewidth = `${(NODE_CONFIG.defaultNodeSize *2)+10}px`;
+NODE_CONFIG.Nodehight = `${(NODE_CONFIG.defaultNodeSize *2)+10}px`;
+NODE_CONFIG.captionTop=`${(NODE_CONFIG.defaultNodeSize)}%`;//////   for node 90 it 90% and for node 120 it become 120% 
+NODE_CONFIG.captionLeft= `${(NODE_CONFIG.defaultNodeSize /2)-2}%`;//////   for node 90 it 43 and for node 120 it become 55
+NODE_CONFIG.defaultImageWidth= `${(NODE_CONFIG.defaultNodeSize)}px`;
+NODE_CONFIG.defaultImageHeight=`${(NODE_CONFIG.defaultNodeSize)}px`;
 // Fetch node properties from the server
 const fetchNodeProperties = async (nodeId) => {
   try {
@@ -83,6 +83,7 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false,ag
     captionnode: LabelManager(nodeType, properties),
     aggregatedproperties:aggregatedproperties,
     //hovered:true,
+    properties:properties
   };
 
 
@@ -240,14 +241,14 @@ export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpa
   border.style.top = NODE_CONFIG.borderTop;
   border.style.left = NODE_CONFIG.borderLeft;
   border.style.transform = 'translate(-50%, -50%)';
-  border.style.width = groupCount > 1 ? NODE_CONFIG.groupNodeWidth : NODE_CONFIG.defaultNodeWidth;
-  border.style.height = groupCount > 1 ? NODE_CONFIG.groupNodeHeight : NODE_CONFIG.defaultNodeHeight;
+  border.style.width = groupCount > 1 ? NODE_CONFIG.groupNodeWidth : NODE_CONFIG.Nodewidth;
+  border.style.height = groupCount > 1 ? NODE_CONFIG.groupNodeHeight : NODE_CONFIG.Nodehight;
   border.style.borderRadius = '50%';
   border.style.transition = 'all 0.3s ease';
 
   if (isSelected || isinpath) {
-    border.style.boxShadow = '0 0 20px 8px rgba(104, 35, 157, 0.7)';
-    border.style.border = '8px solid rgba(71, 39, 134, 0.9)';
+   border.style.boxShadow = '0 0 20px 8px rgba(104, 35, 157, 0.7)';
+   border.style.border = '8px solid rgba(71, 39, 134, 0.9)';
     border.style.backgroundColor = 'rgba(255, 255, 0, 0.05)';
   } else if (groupCount > 1) {
     border.style.border = '3px dashed rgba(0, 128, 255, 0.8)';

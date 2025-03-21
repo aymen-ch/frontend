@@ -114,6 +114,7 @@ const GraphVisualization = React.memo(({
   const filterNodesByQuery = (nodes, query) => {
     if (!query) return []; // Return all nodes if query is empty
     const lowerQuery = query.toLowerCase();
+    console.log(nodes)
     return nodes.filter(node => 
       node.properties && 
       Object.values(node.properties).some(value => 

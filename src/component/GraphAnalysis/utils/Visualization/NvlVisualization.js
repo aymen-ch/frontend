@@ -9,7 +9,7 @@ import {
   ClickInteraction,
   HoverInteraction,
 } from '@neo4j-nvl/interaction-handlers';
-import { createNodeHtml } from '../Parser';
+import { createNodeHtml,NODE_CONFIG } from '../Parser';
 import { IconPersonWithClass } from '../function_container';
 
 const useNvlVisualization = ({
@@ -159,11 +159,11 @@ const useNvlVisualization = ({
               const shadowEffect = document.createElement('div');
               shadowEffect.id = 'test';
               shadowEffect.style.position = 'absolute';
-              shadowEffect.style.top = '43.2%';
-              shadowEffect.style.left = '43.2%';
+              shadowEffect.style.top = NODE_CONFIG.borderTop;
+              shadowEffect.style.left = NODE_CONFIG.borderTop;
               shadowEffect.style.transform = 'translate(-50%, -50%)';
-              shadowEffect.style.width = '200px';
-              shadowEffect.style.height = '200px';
+              shadowEffect.style.width = NODE_CONFIG.Nodewidth;
+              shadowEffect.style.height = NODE_CONFIG.Nodewidth;
               shadowEffect.style.borderRadius = '50%';
               shadowEffect.style.border = '15px solid rgba(84, 207, 67, 0.8)';
               shadowEffect.style.zIndex = '5';
@@ -233,8 +233,20 @@ const useNvlVisualization = ({
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
         {/* Main visualization */}
+       
+        {(isMinimapReady || !ispath) && (
+          <InteractiveNvlWrapper
+            ref={nvlRef}
+            {...nvlProps}
+            nvlOptions={nvlOptions}
+            allowDynamicMinZoom={true}
+            onError={(error) => console.error('NVL Error:', error)}
+            style={{ width: '100%', height: '100%', border: '1px solid lightgray' }}
+          />
+        )}
+        {/* Minimap container */}
         <div
-          ref={minimapContainerRef}
+          ref={ispath ?  minimapContainerRef:null}
           style={{
             position: 'absolute',
             bottom: '100px',
@@ -248,18 +260,6 @@ const useNvlVisualization = ({
             display: ispath ? 'block' : 'none', // Conditional display based on ispath
           }}
         />
-        {isMinimapReady && (
-          <InteractiveNvlWrapper
-            ref={nvlRef}
-            {...nvlProps}
-            nvlOptions={nvlOptions}
-            allowDynamicMinZoom={true}
-            onError={(error) => console.error('NVL Error:', error)}
-            style={{ width: '100%', height: '100%', border: '1px solid lightgray' }}
-          />
-        )}
-        {/* Minimap container */}
-        
       </div>
     );
   };
