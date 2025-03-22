@@ -210,6 +210,7 @@ const useNvlVisualization = ({
       selectedBorderColor: 'rgba(71, 39, 134, 0.9)',
       dropShadowColor: 'green',
     },
+    initialZoom:1
   };
 
   const getVisualizationComponent = (hoveredEdge) => {
