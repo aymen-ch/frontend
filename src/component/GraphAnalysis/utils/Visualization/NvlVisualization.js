@@ -200,7 +200,7 @@ const useNvlVisualization = ({
       hoverInteraction.destroy();
     };
     
-  }, [nvlRef, shiftPressed, setSelectedNodes, setContextMenu, setnodetoshow, setrelationtoshow, setselectedEdges, sethoverEdge]);
+  }, [nvlRef, shiftPressed, setSelectedNodes, setContextMenu, setnodetoshow, setrelationtoshow, setselectedEdges, sethoverEdge,isMinimapReady]);
   const nvlOptions = {
     minimapContainer: minimapContainerRef.current, // Reference to the DOM element for the minimap
     relationshipThreshold: 0,
