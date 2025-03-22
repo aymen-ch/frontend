@@ -248,7 +248,8 @@ const PathVisualization = React.memo(({
       setEdges((prevEdges) => {
         const existingEdgeKeys = new Set(prevEdges.map(edge => `${edge.from}-${edge.to}`));
         const newEdges = edgesToAdd.filter(edge => !existingEdgeKeys.has(`${edge.from}-${edge.to}`));
-        return [...prevEdges, ...newEdges];
+        const newed = newEdges.filter(edge => !existingEdgeKeys.has(`${edge.to}-${edge.from}`));
+        return [...prevEdges, ...newed];
       });
     }
   };

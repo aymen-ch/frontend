@@ -272,7 +272,7 @@ export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpa
   border.style.borderRadius = '50%';
   border.style.transition = 'all 0.3s ease';
 
-  if (isSelected || isinpath) {
+  if (isSelected ) {
    border.style.boxShadow = '0 0 20px 8px rgba(104, 35, 157, 0.7)';
    border.style.border = '8px solid rgba(71, 39, 134, 0.9)';
     border.style.backgroundColor = 'rgba(255, 255, 0, 0.05)';
@@ -281,6 +281,11 @@ export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpa
     border.style.backgroundColor = 'rgba(0, 128, 255, 0.1)';
   }
 
+  if ( isinpath) {
+    border.style.boxShadow = '0 0 20px 8px rgba(59, 173, 46, 0.7)';
+    border.style.border = '8px solid rgba(111, 213, 48, 0.9)';
+     border.style.backgroundColor = 'rgba(255, 255, 0, 0.05)';
+   } 
   const iconElement = document.createElement('img');
   iconElement.src = getNodeIcon(nodetype);
   iconElement.style.position = 'absolute';
@@ -308,9 +313,16 @@ export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpa
   captionElement.style.textAlign = 'center';
   captionElement.style.transition = 'all 0.3s ease';
 
-  if (isSelected || isinpath) {
+  if (isSelected) {
     captionElement.style.backgroundColor = 'rgba(69, 36, 157, 0.7)';
     captionElement.style.boxShadow = '0 2px 4px rgba(152, 115, 52, 0.1)';
+    captionElement.style.color = 'rgba(255, 255, 255, 0.9)';
+  } else if (groupCount > 1) {
+    captionElement.style.color = 'rgba(0, 128, 255, 0.9)';
+  }
+  if (isinpath) {
+    captionElement.style.backgroundColor = 'rgba(94, 208, 56, 0.7)';
+    captionElement.style.boxShadow = '0 2px 4px rgba(84, 195, 53, 0.1)';
     captionElement.style.color = 'rgba(255, 255, 255, 0.9)';
   } else if (groupCount > 1) {
     captionElement.style.color = 'rgba(0, 128, 255, 0.9)';
