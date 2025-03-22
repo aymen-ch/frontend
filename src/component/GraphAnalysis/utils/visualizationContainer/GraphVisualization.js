@@ -1,5 +1,6 @@
 // src/components/GraphVisualization.jsx
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import ContextMenu from '../../modules/contextmenu/ContextMenu';
 import GraphCanvas from '../Visualization/GraphCanvas';
 import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWindow/PersonProfileWindow";
@@ -14,11 +15,13 @@ import {
   layoutControlStyle, 
   searchStyle, 
   containerStyle,
-  settingsPanelStyle 
+  settingsPanelStyle,
+  searchSelectStyle 
 } from './GraphVisualizationStyles';
 import { filterNodesByQuery, updateLayoutOption } from './GraphVisualizationUtils';
 import { FaProjectDiagram, FaLayerGroup, FaSitemap } from 'react-icons/fa';
-
+import { BASE_URL } from '../Urls';
+import { getNodeColor,getNodeIcon ,createNode} from '../Parser';
 const GraphVisualization = React.memo(({
   setEdges,
   edges,
@@ -54,6 +57,7 @@ const GraphVisualization = React.memo(({
   const [showSettings, setShowSettings] = useState(false);
   const [activeWindow, setActiveWindow] = useState(null);
   const [inputValue, setInputValue] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
@@ -68,7 +72,7 @@ const GraphVisualization = React.memo(({
     return () => clearInterval(interval);
   }, []);
 
-  const handleSearchClick = () => {
+  const handleSearchClick = async () => {
     if (searchtype === "current_graph") {
       const newFilteredNodes = filterNodesByQuery(nodes, inputValue);
       const updatedNodes = nodes.map(node => {
@@ -80,14 +84,57 @@ const GraphVisualization = React.memo(({
         };
       });
       setNodes(updatedNodes);
+      nvlRef.current.fit(
+        newFilteredNodes.map((n) => n.id), 
+        {
+          animated: true,    // Smooth animation during the fit
+          maxZoom: 1.0,      // Maximum zoom level allowed
+          minZoom: 0.5,      // Minimum zoom level allowed
+          noPan: false,      // Allow panning to center the nodes
+          outOnly: false     // Zoom out or in as needed (not just out)
+        }
+      );
+      setSearchResults([]);
     } else {
-      // Add database search logic here
-      console.log('Database search to be implemented for query:', inputValue);
+      try {
+        const response = await axios.post(BASE_URL+'/searchonnode/', {
+          query: inputValue
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        // Response.data will be array of {node: {...}, score: number}
+        setSearchResults(response.data);
+        console.log(response.data)
+      } catch (error) {
+        console.error('Error searching database:', error);
+        setSearchResults([{ node: { id: 'error', label: 'Error performing search' }, score: 0 }]);
+      }
     }
+  };
+
+  const handleAddNodeToCanvas = (result) => {
+    
+    setNodes(prevNodes => {
+      const node =createNode(result.properties,result.type,result.properties); // Extract the node object from the result
+      if (prevNodes.some(n => n.id === node.id)) {
+        return prevNodes;
+      }
+      return [...prevNodes, {
+        ...node,
+        x: Math.random() * 800,
+        y: Math.random() * 600,
+      }];
+    });
+
+     setSearchResults([])
   };
 
   const handleSearchTypeChange = (e) => {
     setsearchtype(e.target.value);
+    setSearchResults([]);
   };
 
   const handleInputChange = (e) => {
@@ -157,19 +204,85 @@ const GraphVisualization = React.memo(({
         <select
           value={searchtype}
           onChange={handleSearchTypeChange}
-          style={{
-            background: 'rgba(255, 255, 255, 0.8)',
-            border: '1px solid rgba(0, 0, 0, 0.1)',
-            borderRadius: '4px',
-            padding: '4px',
-            cursor: 'pointer'
-          }}
+          style={searchSelectStyle}
         >
           <option value="current_graph">Current Graph</option>
           <option value="database">Database</option>
         </select>
       </div>
 
+      {searchResults.length > 0 && (
+        <div style={{
+          position: 'absolute',
+          zIndex: 1002,
+          top: '60px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+          borderRadius: '8px',
+          padding: '10px',
+          maxHeight: '300px',
+          overflowY: 'auto',
+          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+          width: '350px', // Increased width to accommodate new layout
+          border: '1px solid rgba(0, 0, 0, 0.05)',
+        }}>
+          {searchResults.map((result, index) => {
+            const nodeType =  result.type; // Assuming node has a type property
+            const iconSrc = getNodeIcon(nodeType);
+            const backgroundColor = getNodeColor(nodeType) ;
+
+            return (
+              <div
+                key={result.identity || index}
+                style={{
+                  padding: '8px',
+                  cursor: 'pointer',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  '&:hover': {
+                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                  }
+                }}
+                onClick={() => handleAddNodeToCanvas(result)}
+              >
+                <div style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  backgroundColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '10px',
+                }}>
+                  <img 
+                    src={iconSrc} 
+                    alt={nodeType} 
+                    style={{ width: '20px', height: '20px' }} 
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
+                    {nodeType}
+                  </div>
+                  <div style={{ fontSize: '12px' }}>
+                    {result.properties && Object.entries(result.properties).map(([key, value]) => (
+                      <div key={key}>
+                        <strong>{key}:</strong> {value}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    Score: {result.score.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
       <div style={layoutControlStyle}>
         {layouts.map((layout) => (
           <button
@@ -185,7 +298,6 @@ const GraphVisualization = React.memo(({
         ))}
       </div>
 
-      {/* Rest of the buttons remain unchanged */}
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '200px', left: '10px' }}
         onClick={toggleFullscreen}
