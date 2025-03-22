@@ -157,6 +157,32 @@ const parseNeighborhood = (neighborhoodData, contextNode) => {
   return { nodes, edges };
 };
 
+export const parseNetworkData = (networkData) => {
+  // Check if the data is valid
+  console.log("hi from parser1 " ,networkData);
+  if (!networkData || !Array.isArray(networkData.nodes) || !Array.isArray(networkData.edges)) {
+    return { nodes: [], edges: [] };
+  }
+
+  const nodes = [];
+  const edges = [];
+
+  console.log("hi from parser 2");
+
+  // Process nodes
+  networkData.nodes.forEach((node) => {
+    nodes.push(createNode(node.properties , node.labels[0] , node.properties));
+  });
+
+  // Process edges
+  networkData.edges.forEach((edge) => {
+    edges.push(createEdge(edge.type , edge.startNode ,edge.endNode));
+  });
+ 
+  console.log("hi from parser3 ");
+  return { nodes, edges };
+};
+
 // Utility function to parse nodes and edges from path data
 export const parsePath = (path, selectedNodes) => {
   const selectedNodeIds = new Set(selectedNodes.map((node) => node.id));

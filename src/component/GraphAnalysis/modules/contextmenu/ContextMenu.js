@@ -241,29 +241,33 @@ const ContextMenu = ({
         >
           <div className="menu-header">Action Options</div>
           <div className="menu-items">
+          {contextMenu.node.group === 'Affaire' && (
             <button
               className="menu-item"
-              onClick={() => handleActionSelect('Copy Node', contextMenu.node, setActionsSubMenu, setContextMenu)}
+              onClick={() => handleActionSelect('Copy Node', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges)}
             >
               <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
               Affaire dans la meme region
             </button>
+          )}
             {contextMenu.node.group === 'Personne' && (
               <button
                 className="menu-item"
-                onClick={() => handleActionSelect('Show Person Profile', contextMenu.node, setActionsSubMenu, setContextMenu)}
+                onClick={() => handleActionSelect('Show Person Profile', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges)}
               >
                 <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
                 Show Person Profile
               </button>
             )}
+             {contextMenu.node.group === 'Personne' && (
             <button
               className="menu-item"
-              onClick={() => handleActionSelect('Add Note', contextMenu.node, setActionsSubMenu, setContextMenu)}
+              onClick={() => handleActionSelect('Show tree of criminal', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges)}
             >
               <FaCodeFork style={{ marginRight: '10px', color: '#4361ee' }} />
               Show tree of criminal
             </button>
+               )}
           </div>
         </div>
       )}
