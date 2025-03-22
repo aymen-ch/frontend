@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Button, Spinner, Container } from 'react-bootstrap';
 import { getNodeIcon, getNodeColor, parseAggregationResponse, parseAggregationResponse_advanced } from '../../utils/Parser';
 import { BASE_URL } from '../../utils/Urls';
-import NodeClasificationBackEnd from './NodeClasificationBackEnd/NodeClasificationBackEnd'; // Import the new component
+import NodeClasificationBackEnd from './NodeClasificationBackEnd/NodeClasificationBackEnd';
 
 const Analysis = ({
   setEdges,
@@ -17,7 +18,8 @@ const Analysis = ({
   const [depth, setDepth] = useState(1);
   const [nodeTypes, setNodeTypes] = useState([]);
   const [selectedAffaires, setSelectedAffaires] = useState([]);
-  const [showNodeClassification, setShowNodeClassification] = useState(false); // State to control visibility of the pop-up
+  const [showNodeClassification, setShowNodeClassification] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const types = [...new Set(nodes.map((node) => node.group))];
@@ -55,6 +57,7 @@ const Analysis = ({
 
   const handleSecteurActiviti = async () => {
     try {
+      setIsLoading(true);
       const token = localStorage.getItem('authToken');
       const response = await axios.post(BASE_URL + '/Secteur_Activite/', {
       }, {
@@ -65,33 +68,54 @@ const Analysis = ({
       });
 
       if (response.status === 200) {
-       console.error(response);
+        console.log(response.data);
       } else {
         console.error('handleSecteurActiviti failed.');
       }
     } catch (error) {
       console.error('Error during handleSecteurActiviti:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Styles for the divs
+  const primarySectionStyle = {
+    backgroundColor: '#f8f9fa',
+    padding: '15px',
+    borderRadius: '8px',
+    border: '1px solid #dee2e6',
+    marginBottom: '20px'
+  };
+
+  const secondarySectionStyle = {
+    backgroundColor: '#e9ecef',
+    padding: '15px',
+    borderRadius: '8px',
+    border: '1px solid #ced4da'
+  };
+
   return (
-    <div className="container-fluid p-3 bg-white shadow-sm rounded-lg">
+    <Container fluid className="p-3 bg-white shadow-sm rounded-lg">
       <h3 className="text-lg font-semibold text-gray-800 mb-3">Aggregation</h3>
 
-      <div className="d-flex flex-column gap-3">
-        <button
-          className="btn btn-info w-100"
+      {/* First div with Aggregation with Algorithme, Color node with class, and input */}
+      <div style={primarySectionStyle} className="d-flex flex-column gap-3">
+        <Button
+          variant="info"
+          className="w-100"
           onClick={() => handleAggregationWithAlgorithm(depth)}
         >
           Aggregation with Algorithme
-        </button>
+        </Button>
 
-        <button
-          className="btn btn-warning w-100"
+        <Button
+          variant="warning"
+          className="w-100"
           onClick={() => ColorPersonWithClass(nodes, setNodes)}
         >
           Color node with class
-        </button>
+        </Button>
 
         <input
           type="number"
@@ -101,36 +125,48 @@ const Analysis = ({
           placeholder="Enter depth"
           className="form-control"
         />
+      </div>
 
-        {/* <button
-          className="btn btn-danger w-100"
-          onClick={() => drawCirclesOnPersonneNodes(nodes, setNodes)}
-        >
-          Highlight Personnes with Crimes
-        </button> */}
-
-        <button
-          className="btn btn-danger w-100"
+      {/* Second div with NodeClasificationBackEnd and SecteurActiviti */}
+      <div style={secondarySectionStyle} className="d-flex flex-column gap-3">
+        <Button
+          variant="danger"
+          className="w-100"
           onClick={() => setShowNodeClassification(true)}
         >
           NodeClasificationBackEnd
-        </button>
-      </div>
+        </Button>
 
-      {showNodeClassification && (
-        <NodeClasificationBackEnd
-          onClose={() => setShowNodeClassification(false)}
-        />
-      )}
+        {showNodeClassification && (
+          <NodeClasificationBackEnd
+            onClose={() => setShowNodeClassification(false)}
+          />
+        )}
 
-        <button
-          className="btn btn-secondary  w-100"
+        <Button
+          variant="secondary"
+          className="w-100"
           onClick={() => handleSecteurActiviti()}
+          disabled={isLoading}
         >
-          SecteurActiviti
-        </button>
-
-    </div>
+          {isLoading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+                className="me-2"
+              />
+              Loading...
+            </>
+          ) : (
+            'SecteurActivitiBackEnd'
+          )}
+        </Button>
+      </div>
+    </Container>
   );
 };
 
