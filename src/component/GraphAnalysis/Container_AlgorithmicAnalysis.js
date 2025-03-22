@@ -3,7 +3,7 @@ import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './Container_AlgorithmicAnalysis.css';
 import ContextManagerComponent from './modules/contextualization/ContextManagerComponent';
-import GraphVisualization from './utils/GraphVisualization';
+import GraphVisualization from './utils/visualizationContainer/GraphVisualization';
 import Aggregation from './utils/aggregation';
 import TimelineBar from './utils/timline';
 import PathVisualization from './modules/path/pathvisualization';
@@ -280,7 +280,7 @@ return (
         )}
       </div>
       
-      {SubGrapgTable.results.length > 0 && (
+      {SubGrapgTable.results.length > 0 && combinedNodes.length>0 && (
         <div className="timeline-container">
           <TimelineBar 
             affaires={extractAffaires()}

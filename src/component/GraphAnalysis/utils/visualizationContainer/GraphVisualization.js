@@ -1,14 +1,23 @@
 // src/components/GraphVisualization.jsx
-import React, { useState, useRef, useEffect } from 'react';
-import ContextMenu from '../modules/contextmenu/ContextMenu';
-import GraphCanvas from './Visualization/GraphCanvas';
-// import PersonProfileWindow from '../modules/windows/Actions/PersonProfileWindow/PersonProfileWindow';
-import PersonProfileWindow from "../modules/Windows/Actions/PersonProfileWindow/PersonProfileWindow"; // Import the window component
-import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaProjectDiagram, FaLayerGroup, FaSitemap, FaBezierCurve } from 'react-icons/fa';
-import { d3ForceLayoutType, ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType } from '@neo4j-nvl/base';
-import { handleLayoutChange } from './function_container';
+import React, { useState, useEffect } from 'react';
+import ContextMenu from '../../modules/contextmenu/ContextMenu';
+import GraphCanvas from '../Visualization/GraphCanvas';
+import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWindow/PersonProfileWindow";
+import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch } from 'react-icons/fa';
 import { FaDiaspora } from "react-icons/fa6";
-import globalWindowState from './globalWindowState'; // Import global state
+import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
+import { handleLayoutChange } from '../function_container';
+import globalWindowState from '../globalWindowState';
+import { 
+  buttonStyle, 
+  activeButtonStyle, 
+  layoutControlStyle, 
+  searchStyle, 
+  containerStyle,
+  settingsPanelStyle 
+} from './GraphVisualizationStyles';
+import { filterNodesByQuery, updateLayoutOption } from './GraphVisualizationUtils';
+import { FaProjectDiagram, FaLayerGroup, FaSitemap } from 'react-icons/fa';
 
 const GraphVisualization = React.memo(({
   setEdges,
@@ -34,6 +43,7 @@ const GraphVisualization = React.memo(({
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
   const [render, setRenderer] = useState("canvas");
   const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
+  const [searchtype, setsearchtype] = useState("current_graph");
   const [layoutOptions, setLayoutOptions] = useState({
     enableCytoscape: true,
     enableVerlet: false,
@@ -42,54 +52,53 @@ const GraphVisualization = React.memo(({
     simulationStopVelocity: 0.1,
   });
   const [showSettings, setShowSettings] = useState(false);
-
-  const [activeWindow, setActiveWindow] = useState(null); // Local state to reflect global state
-  
+  const [activeWindow, setActiveWindow] = useState(null);
   const [inputValue, setInputValue] = useState('');
+
   useEffect(() => {
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
   }, [nodes.length]);
 
-
- 
-  // Effect to sync with global window state
   useEffect(() => {
     const checkWindowState = () => {
-      setActiveWindow(globalWindowState.activeWindow); // Update local state when global state changes
+      setActiveWindow(globalWindowState.activeWindow);
     };
-    // Check immediately and then poll (for simplicity; ideally use an event system or Context)
     checkWindowState();
-    const interval = setInterval(checkWindowState, 100); // Poll every 100ms
-    return () => clearInterval(interval); // Cleanup
+    const interval = setInterval(checkWindowState, 100);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSearchClick = () => {
-    console.log("click search")
-    const newFilteredNodes = filterNodesByQuery(nodes, inputValue);
-    console.log(newFilteredNodes);
-    // Update nodes with activated property based on whether they are in newFilteredNodes
-    const updatedNodes = nodes.map(node => {
-      const isActivated = newFilteredNodes.some(filteredNode => filteredNode.id === node.id);
-      return {
-        ...node,
-        hovered:isActivated,
-        activated: isActivated // Set activated to true if node is in filtered results, false otherwise
-      };
-    });
-  console.log(updatedNodes)
-  setNodes(updatedNodes); // Set the updated nodes with activated property
-  };
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value); // Update input value as user types
+    if (searchtype === "current_graph") {
+      const newFilteredNodes = filterNodesByQuery(nodes, inputValue);
+      const updatedNodes = nodes.map(node => {
+        const isActivated = newFilteredNodes.some(filteredNode => filteredNode.id === node.id);
+        return {
+          ...node,
+          hovered: isActivated,
+          activated: isActivated
+        };
+      });
+      setNodes(updatedNodes);
+    } else {
+      // Add database search logic here
+      console.log('Database search to be implemented for query:', inputValue);
+    }
   };
 
+  const handleSearchTypeChange = (e) => {
+    setsearchtype(e.target.value);
+  };
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+  };
 
   const handleSave = () => {
     nvlRef.current.saveFullGraphToLargeFile({
       backgroundColor: "white",
       filename: "test.png"
     });
-    console.log('Save functionality to be implemented');
   };
 
   const handleBack = () => {
@@ -111,80 +120,13 @@ const GraphVisualization = React.memo(({
     }
   };
 
-  const filterNodesByQuery = (nodes, query) => {
-    if (!query) return []; // Return all nodes if query is empty
-    const lowerQuery = query.toLowerCase();
-    return nodes.filter(node => 
-      node.properties && 
-      Object.values(node.properties).some(value => 
-        value && 
-        value.toString().toLowerCase().includes(lowerQuery)
-      )
-    );
-  };
-
-  const updateLayoutOption = (key, value) => {
-    const updatedOptions = { ...layoutOptions, [key]: value };
-    setLayoutOptions(updatedOptions);
-    nvlRef.current.setLayoutOptions(updatedOptions);
-    console.log("layout seted");
-  };
-
   const toggleSettingsPanel = () => {
     setShowSettings(!showSettings);
   };
 
   const handleCloseWindow = () => {
-    globalWindowState.clearWindow(); // Clear global state
-    setActiveWindow(null); // Clear local state
-  };
-
-  const buttonStyle = { 
-    zIndex: 1001,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
-    padding: '8px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '35px',
-    height: '35px',
-    transition: 'background-color 0.2s',
-    marginRight: '5px',
-  };
-
-  const activeButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: 'rgba(66, 153, 225, 0.8)',
-    color: '#fff',
-  };
-
-  const layoutControlStyle = {
-    position: 'absolute',
-    zIndex: 1001,
-    top: '10px',
-    left: '60px',
-    display: 'flex',
-    flexDirection: 'row',
-  };
-
-  const searchStyle = {
-    position: 'absolute',
-    zIndex: 1001,
-    top: '15px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: '25px',
-    padding: '6px 12px',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05)',
-    transition: 'all 0.3s ease',
-    minWidth: '550px',
-    maxWidth: '400px',
+    globalWindowState.clearWindow();
+    setActiveWindow(null);
   };
 
   const layouts = [
@@ -199,36 +141,35 @@ const GraphVisualization = React.memo(({
   };
 
   return (
-    <div
-      style={{
-        width: isFullscreen ? '100vw' : '100%',
-        height: isFullscreen ? '100vh' : '100%',
-        border: '1px solid lightgray',
-        position: isFullscreen ? 'fixed' : 'relative',
-        top: isFullscreen ? 0 : 'auto',
-        left: isFullscreen ? 0 : 'auto',
-        zIndex: isFullscreen ? 20000 : 'auto',
-        backgroundColor: isFullscreen ? '#fff' : 'transparent',
-        padding: '0px',
-        margin: '0',
-      }}
-    >
-      {/* Search Bar */}
-      <div style={searchStyle}>
+    <div style={containerStyle(isFullscreen)}>
+      <div style={{ ...searchStyle, display: 'flex', alignItems: 'center' }}>
         <FaSearch 
           style={{ marginRight: '5px', cursor: 'pointer' }} 
-          onClick={handleSearchClick} // Trigger search on click
+          onClick={handleSearchClick}
         />
         <input
           type="text"
-          value={inputValue} // Use inputValue instead of searchQuery
-          onChange={handleInputChange} // Update inputValue as user types
+          value={inputValue}
+          onChange={handleInputChange}
           placeholder="Search nodes by any property..."
-          style={{ border: 'none', outline: 'none', background: 'transparent', width: '200px' }}
+          style={{ border: 'none', outline: 'none', background: 'transparent', width: '200px', marginRight: '10px' }}
         />
+        <select
+          value={searchtype}
+          onChange={handleSearchTypeChange}
+          style={{
+            background: 'rgba(255, 255, 255, 0.8)',
+            border: '1px solid rgba(0, 0, 0, 0.1)',
+            borderRadius: '4px',
+            padding: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="current_graph">Current Graph</option>
+          <option value="database">Database</option>
+        </select>
       </div>
 
-      {/* Layout Control */}
       <div style={layoutControlStyle}>
         {layouts.map((layout) => (
           <button
@@ -244,7 +185,7 @@ const GraphVisualization = React.memo(({
         ))}
       </div>
 
-      {/* Fullscreen Toggle Button */}
+      {/* Rest of the buttons remain unchanged */}
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '200px', left: '10px' }}
         onClick={toggleFullscreen}
@@ -255,7 +196,6 @@ const GraphVisualization = React.memo(({
         {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
       </button>
 
-      {/* Save Button */}
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '10px' }}
         onClick={handleSave}
@@ -266,7 +206,6 @@ const GraphVisualization = React.memo(({
         <FaSave size={16} />
       </button>
 
-      {/* Back Button */}
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '55px', left: '10px' }}
         onClick={handleBack}
@@ -277,7 +216,6 @@ const GraphVisualization = React.memo(({
         <FaUndo size={16} />
       </button>
 
-      {/* Earth/Global View Button */}
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '100px', left: '10px' }}
         onClick={handleEarth}
@@ -288,7 +226,6 @@ const GraphVisualization = React.memo(({
         <FaTrash size={16} />
       </button>
 
-      {/* WebGL/Canvas Toggle Button */}
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '150px', left: '10px' }}
         onClick={handlewebgl}
@@ -299,7 +236,6 @@ const GraphVisualization = React.memo(({
         <FaAdn size={16} />
       </button>
 
-      {/* Settings Button */}
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '250px', left: '10px' }}
         onClick={toggleSettingsPanel}
@@ -310,66 +246,6 @@ const GraphVisualization = React.memo(({
         <FaCog size={16} />
       </button>
 
-      {/* Settings Panel */}
-      {showSettings && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '300px',
-            left: '10px',
-            zIndex: 1002,
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            padding: '10px',
-            width: '200px',
-          }}
-        >
-          <h4>Layout Settings</h4>
-          <div>
-            <label>
-              Gravity:
-              <input
-                type="number"
-                step="0.1"
-                value={layoutOptions.gravity}
-                onChange={(e) => updateLayoutOption('gravity', parseFloat(e.target.value))}
-              />
-            </label>
-          </div>
-          <div>
-            <label>
-              Simulation Stop Velocity:
-              <input
-                type="number"
-                step="0.1"
-                value={layoutOptions.simulationStopVelocity}
-                onChange={(e) => updateLayoutOption('simulationStopVelocity', parseFloat(e.target.value))}
-              />
-            </label>
-          </div>
-          <div>
-            <label>
-              Enable Cytoscape:
-              <input
-                type="checkbox"
-                checked={layoutOptions.enableCytoscape}
-                onChange={(e) => updateLayoutOption('enableCytoscape', e.target.checked)}
-              />
-            </label>
-          </div>
-          <div>
-            <label>
-              Enable Verlet:
-              <input
-                type="checkbox"
-                checked={layoutOptions.enableVerlet}
-                onChange={(e) => updateLayoutOption('enableVerlet', e.target.checked)}
-              />
-            </label>
-          </div>
-        </div>
-      )}
 
       <GraphCanvas
         nvlRef={nvlRef}
@@ -403,7 +279,6 @@ const GraphVisualization = React.memo(({
         />
       )}
 
-      {/* Render PersonProfileWindow based on global state */}
       {activeWindow === 'PersonProfile' && (
         <PersonProfileWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
