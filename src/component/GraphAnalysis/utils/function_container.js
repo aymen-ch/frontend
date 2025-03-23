@@ -319,7 +319,7 @@ export const BetweennessCentrality = async (combinedNodes, setNodes) => {
     // }
 
     // Define constants
-    const BASE_SIZE = 120;  // Default base size for nodes
+    const BASE_SIZE = 90;  // Default base size for nodes
     const FACTOR = 1000;    // Scaling factor for centrality visualization
 
     const updatedNodes = combinedNodes.map((node) => {
