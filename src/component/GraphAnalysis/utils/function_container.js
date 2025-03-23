@@ -291,6 +291,47 @@ export const drawCirclesOnPersonneNodes = async (combinedNodes, setNodes) => {
 };
 
 
+export const BetweennessCentrality = async (combinedNodes, setNodes) => {
+  try {
+    // Validate input parameters
+    // if (!Array.isArray(combinedNodes)) {
+    //   throw new Error('combinedNodes must be an array');
+    // }
+    // if (typeof setNodes !== 'function') {
+    //   throw new Error('setNodes must be a function');
+    // }
+
+    // Define constants
+    const BASE_SIZE = 120;  // Default base size for nodes
+    const FACTOR = 1000;    // Scaling factor for centrality visualization
+
+    const updatedNodes = combinedNodes.map((node) => {
+      // Verify node structure
+  
+
+      // Check if node is of type 'Personne' and has betweenness centrality
+      if (node.group === 'Personne' &&  node._betweennessCentrality ) {
+        // Calculate new size based on centrality
+        const newSize = BASE_SIZE + FACTOR * node._betweennessCentrality;
+        
+        return {
+          ...node,
+          size: Math.max(BASE_SIZE, newSize),  // Ensure minimum size
+        };
+      }
+
+      // Return unchanged node if conditions aren't met
+      return node;
+    });
+
+    // Update nodes state
+    setNodes(updatedNodes);
+  } catch (error) {
+    console.error('Error in BetweennessCentrality:', error);
+    throw error;  // Re-throw to allow caller to handle
+  }
+};
+
 
 
 export const ColorPersonWithClass = async (combinedNodes, setNodes) => {
