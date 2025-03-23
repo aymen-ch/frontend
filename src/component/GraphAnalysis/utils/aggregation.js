@@ -88,11 +88,13 @@ const Aggregation = ({
         const updatedEdges = parsedEdges.map(edge => ({
           ...edge,
           aggregationType: aggregationType,
+          aggregationpath:type
         }));
 
         const updatedNodes = parsedNodes.map(edge => ({
           ...edge,
           aggregationType: aggregationType,
+          aggregationpath:type
         }));
         
         const intermediateTypes = getIntermediateTypes(type);        

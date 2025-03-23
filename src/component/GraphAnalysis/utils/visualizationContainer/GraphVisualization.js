@@ -90,7 +90,7 @@ const GraphVisualization = React.memo(({
           animated: true,    // Smooth animation during the fit
           maxZoom: 1.0,      // Maximum zoom level allowed
           minZoom: 0.5,      // Minimum zoom level allowed
-          noPan: false,      // Allow panning to center the nodes
+           // Allow panning to center the nodes
           outOnly: false     // Zoom out or in as needed (not just out)
         }
       );
@@ -123,9 +123,7 @@ const GraphVisualization = React.memo(({
         return prevNodes;
       }
       return [...prevNodes, {
-        ...node,
-        x: Math.random() * 800,
-        y: Math.random() * 600,
+        ...node
       }];
     });
 
