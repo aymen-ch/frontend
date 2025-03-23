@@ -10,8 +10,7 @@ const ContextManagerComponent = ({
 }) => {
   const [ContextData, setContextData] = useState([]);
   const [showAggregation, setShowAggregation] = useState(false); // State to control visibility of Aggregation component
-
-
+  const [loading, setLoading] = useState(false); // Loading state
 
   useEffect(() => {
     console.log(ContextData);
@@ -22,6 +21,7 @@ const ContextManagerComponent = ({
     e.preventDefault();
 
     const token = localStorage.getItem('authToken');
+    setLoading(true); // Set loading to true when request starts
 
     try {
       const response = await axios.post(
@@ -44,6 +44,8 @@ const ContextManagerComponent = ({
       }
     } catch (error) {
       console.error('Error during submission:', error);
+    } finally {
+      setLoading(false); // Set loading to false when request completes (success or error)
     }
   };
 
@@ -69,12 +71,21 @@ const ContextManagerComponent = ({
       </div>
 
       <div className="d-flex justify-content-center mt-3">
-        <button className="btn btn-primary w-50" onClick={handleSubmit}>
-          Submit
+        <button 
+          className="btn btn-primary w-50" 
+          onClick={handleSubmit}
+          disabled={loading} // Disable button while loading
+        >
+          {loading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Loading...
+            </>
+          ) : (
+            'Submit'
+          )}
         </button>
       </div>
-
-     
     </div>
   );
 };
