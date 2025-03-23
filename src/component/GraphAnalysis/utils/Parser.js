@@ -4,7 +4,7 @@ import { BASE_URL } from './Urls';
 // Configuration object for node and edge styling
 export const NODE_CONFIG = {
   // Node sizes
-  defaultNodeSize: 120,
+  defaultNodeSize: 160,
   groupNodeSize: 70,
   defaultNodeWidth: '200px',/// for 90 it 200 for 120 it 250
   defaultNodeHeight: '200px',/// for 
