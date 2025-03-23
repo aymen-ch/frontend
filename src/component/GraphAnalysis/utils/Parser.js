@@ -92,6 +92,9 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false,ag
   if (properties._class) {
     node._class = properties._class;
   }
+  if (properties._betweennessCentrality) {
+    node._betweennessCentrality = properties._betweennessCentrality;
+  }
   return node;
 };
 

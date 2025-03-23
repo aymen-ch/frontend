@@ -109,7 +109,7 @@ export const updatePathNodesAndEdges = (path, setPathNodes, setPathEdges) => {
 export const handleCriminalTree = async (node, setNodes, setEdges) => {
   const token = localStorage.getItem('authToken');
   const properties = { identity: parseInt(node.id, 10) };
-
+  console.log("handleCriminalTree");
   try {
     const response = await axios.post(
       BASE_URL + '/personne_criminal_network/',
