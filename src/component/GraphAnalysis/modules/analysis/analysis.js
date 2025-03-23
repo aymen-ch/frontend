@@ -19,7 +19,8 @@ const Analysis = ({
   const [nodeTypes, setNodeTypes] = useState([]);
   const [selectedAffaires, setSelectedAffaires] = useState([]);
   const [showNodeClassification, setShowNodeClassification] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // For SecteurActiviti
+  const [isAggLoading, setIsAggLoading] = useState(false); // For Aggregation with Algorithm
 
   useEffect(() => {
     const types = [...new Set(nodes.map((node) => node.group))];
@@ -32,6 +33,7 @@ const Analysis = ({
 
   const handleAggregationWithAlgorithm = async (depth) => {
     try {
+      setIsAggLoading(true); // Set aggregation-specific loading state
       const token = localStorage.getItem('authToken');
       const response = await axios.post(BASE_URL + '/aggregate_with_algo/', {
         id_affaires: selectedAffaires,
@@ -52,6 +54,8 @@ const Analysis = ({
       }
     } catch (error) {
       console.error('Error during advanced aggregation:', error);
+    } finally {
+      setIsAggLoading(false); // Reset aggregation-specific loading state
     }
   };
 
@@ -97,7 +101,8 @@ const Analysis = ({
 
   return (
     <Container fluid className="p-3 bg-white shadow-sm rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Aggregation</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-3">
+      Analysis Module</h3>
 
       {/* First div with Aggregation with Algorithme, Color node with class, and input */}
       <div style={primarySectionStyle} className="d-flex flex-column gap-3">
@@ -105,8 +110,23 @@ const Analysis = ({
           variant="info"
           className="w-100"
           onClick={() => handleAggregationWithAlgorithm(depth)}
+          disabled={isAggLoading}
         >
-          Aggregation with Algorithme
+          {isAggLoading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+                className="me-2"
+              />
+              Loading...
+            </>
+          ) : (
+            'Aggregation with Algorithme'
+          )}
         </Button>
 
         <Button
