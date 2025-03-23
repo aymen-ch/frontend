@@ -1,13 +1,12 @@
-// src/components/GraphVisualization.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ContextMenu from '../../modules/contextmenu/ContextMenu';
 import GraphCanvas from '../Visualization/GraphCanvas';
 import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWindow/PersonProfileWindow";
-import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch } from 'react-icons/fa';
+import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa'; // Added FaSpinner
 import { FaDiaspora } from "react-icons/fa6";
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
-import { handleLayoutChange } from '../function_container';
+import { handleLayoutChange, fetchNodeProperties } from '../function_container';
 import globalWindowState from '../globalWindowState';
 import { 
   buttonStyle, 
@@ -21,7 +20,8 @@ import {
 import { filterNodesByQuery, updateLayoutOption } from './GraphVisualizationUtils';
 import { FaProjectDiagram, FaLayerGroup, FaSitemap } from 'react-icons/fa';
 import { BASE_URL } from '../Urls';
-import { getNodeColor,getNodeIcon ,createNode} from '../Parser';
+import { getNodeColor, getNodeIcon, createNode } from '../Parser';
+
 const GraphVisualization = React.memo(({
   setEdges,
   edges,
@@ -58,6 +58,10 @@ const GraphVisualization = React.memo(({
   const [activeWindow, setActiveWindow] = useState(null);
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
+
+  const searchRef = useRef(null);
+  const resultsRef = useRef(null);
 
   useEffect(() => {
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
@@ -87,47 +91,47 @@ const GraphVisualization = React.memo(({
       nvlRef.current.fit(
         newFilteredNodes.map((n) => n.id), 
         {
-          animated: true,    // Smooth animation during the fit
-          maxZoom: 1.0,      // Maximum zoom level allowed
-          minZoom: 0.5,      // Minimum zoom level allowed
-           // Allow panning to center the nodes
-          outOnly: false     // Zoom out or in as needed (not just out)
+          animated: true,
+          maxZoom: 1.0,
+          minZoom: 0.5,
+          outOnly: false
         }
       );
       setSearchResults([]);
     } else {
+      setIsLoading(true); // Start loading
       try {
-        const response = await axios.post(BASE_URL+'/searchonnode/', {
+        const response = await axios.post(BASE_URL + '/recherche/', {
           query: inputValue
         }, {
           headers: {
             'Content-Type': 'application/json',
           }
         });
-
-        // Response.data will be array of {node: {...}, score: number}
         setSearchResults(response.data);
-        console.log(response.data)
+        console.log(response.data);
       } catch (error) {
         console.error('Error searching database:', error);
         setSearchResults([{ node: { id: 'error', label: 'Error performing search' }, score: 0 }]);
+      } finally {
+        setIsLoading(false); // Stop loading
       }
     }
   };
 
   const handleAddNodeToCanvas = (result) => {
-    
     setNodes(prevNodes => {
-      const node =createNode(result.properties,result.type,result.properties); // Extract the node object from the result
+      const node = createNode(result.properties, result.type, result.properties);
       if (prevNodes.some(n => n.id === node.id)) {
         return prevNodes;
       }
-      return [...prevNodes, {
-        ...node
-      }];
+      return [...prevNodes, { ...node }];
     });
+  };
 
-     setSearchResults([])
+  const handleClearSearch = () => {
+    setSearchResults([]);
+    setInputValue('');
   };
 
   const handleSearchTypeChange = (e) => {
@@ -187,7 +191,7 @@ const GraphVisualization = React.memo(({
 
   return (
     <div style={containerStyle(isFullscreen)}>
-      <div style={{ ...searchStyle, display: 'flex', alignItems: 'center' }}>
+      <div ref={searchRef} style={{ ...searchStyle, display: 'flex', alignItems: 'center' }}>
         <FaSearch 
           style={{ marginRight: '5px', cursor: 'pointer' }} 
           onClick={handleSearchClick}
@@ -197,8 +201,19 @@ const GraphVisualization = React.memo(({
           value={inputValue}
           onChange={handleInputChange}
           placeholder="Search nodes by any property..."
-          style={{ border: 'none', outline: 'none', background: 'transparent', width: '200px', marginRight: '10px' }}
+          style={{ border: 'none', outline: 'none', background: 'transparent', width: '200px', marginRight: '5px' }}
         />
+        {isLoading ? (
+          <FaSpinner
+            style={{ marginRight: '5px', color: '#666', animation: 'spin 1s linear infinite' }}
+          />
+        ) : inputValue && (
+          <FaTimes
+            style={{ marginRight: '5px', cursor: 'pointer', color: '#666' }}
+            onClick={handleClearSearch}
+            title="Clear search"
+          />
+        )}
         <select
           value={searchtype}
           onChange={handleSearchTypeChange}
@@ -210,25 +225,28 @@ const GraphVisualization = React.memo(({
       </div>
 
       {searchResults.length > 0 && (
-        <div style={{
-          position: 'absolute',
-          zIndex: 1002,
-          top: '60px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: 'rgba(255, 255, 255, 0.98)',
-          borderRadius: '8px',
-          padding: '10px',
-          maxHeight: '300px',
-          overflowY: 'auto',
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
-          width: '350px', // Increased width to accommodate new layout
-          border: '1px solid rgba(0, 0, 0, 0.05)',
-        }}>
+        <div 
+          ref={resultsRef}
+          style={{
+            position: 'absolute',
+            zIndex: 1002,
+            top: '60px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+            borderRadius: '8px',
+            padding: '10px',
+            maxHeight: '300px',
+            overflowY: 'auto',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+            width: '350px',
+            border: '1px solid rgba(0, 0, 0, 0.05)',
+          }}
+        >
           {searchResults.map((result, index) => {
-            const nodeType =  result.type; // Assuming node has a type property
+            const nodeType = result.type;
             const iconSrc = getNodeIcon(nodeType);
-            const backgroundColor = getNodeColor(nodeType) ;
+            const backgroundColor = getNodeColor(nodeType);
 
             return (
               <div
@@ -355,7 +373,6 @@ const GraphVisualization = React.memo(({
       >
         <FaCog size={16} />
       </button>
-
 
       <GraphCanvas
         nvlRef={nvlRef}

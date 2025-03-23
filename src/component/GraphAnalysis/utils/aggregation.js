@@ -45,8 +45,8 @@ const Aggregation = ({
     switch (type) {
       case "Phone":
         return ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"];
-      // case "Affaire":
-      //   return ["Personne", "Impliquer", "Affaire", "Impliquer", "Personne"];
+       case "Affaire":
+         return ["Personne", "Impliquer", "Affaire", "Impliquer", "Personne"];
       case "Personne":
         return ["Phone", "Proprietaire", "Personne", "Impliquer", "Affaire"];
       case "Unite":

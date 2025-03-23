@@ -4,7 +4,7 @@ import { BASE_URL } from './Urls';
 // Configuration object for node and edge styling
 export const NODE_CONFIG = {
   // Node sizes
-  defaultNodeSize: 120,
+  defaultNodeSize: 90,
   groupNodeSize: 70,
   defaultNodeWidth: '200px',/// for 90 it 200 for 120 it 250
   defaultNodeHeight: '200px',/// for 
@@ -249,7 +249,19 @@ export const AddNeighborhoodParser = (neighborhoodData, contextNode) => {
 };
 
 // Create HTML for nodes
-export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpath = false, groupCount = 1,id , AddIcon = false , Icon ="") => {
+export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpath = false, groupCount = 1,id , AddIcon = false , Icon ="",node_size=90) => {
+  NODE_CONFIG.borderTop = `${(node_size - 70) * (13 / 20) + 30}%`;
+NODE_CONFIG.borderLeft = `${(node_size - 70) * (13 / 20) + 30}%`;
+NODE_CONFIG.iconTop = `${(node_size - 70) * (13 / 20) + 33}%`;
+NODE_CONFIG.iconLeft = `${(node_size - 70) * (13 / 20) + 33}%`;
+NODE_CONFIG.borderTop = `${(node_size - 70) * (13 / 20) + 30}%`;
+NODE_CONFIG.Nodewidth = `${(node_size *2)+10}px`;
+NODE_CONFIG.Nodehight = `${(node_size *2)+10}px`;
+NODE_CONFIG.captionTop=`${(node_size)}%`;//////   for node 90 it 90% and for node 120 it become 120% 
+NODE_CONFIG.captionLeft= `${(node_size /2)-2}%`;//////   for node 90 it 43 and for node 120 it become 55
+NODE_CONFIG.defaultImageWidth= `${(node_size)}px`;
+NODE_CONFIG.defaultImageHeight=`${(node_size)}px`;
+
   const container = document.createElement('div');
   container.style.position = 'relative';
   container.style.display = 'inline-block';
