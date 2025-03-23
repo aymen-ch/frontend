@@ -65,6 +65,7 @@ setPathEdges(formattedEdges);
   };
 
   return (
+    <>
     <div
       style={{
         padding: '10px',
@@ -92,7 +93,7 @@ setPathEdges(formattedEdges);
       <button
         onClick={startPathFinding}
         style={{
-          background: '#28a745',
+          background: 'rgb(95 124 87)',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
@@ -104,6 +105,21 @@ setPathEdges(formattedEdges);
       </button>
 
     </div>
+    <button
+onClick={startPathFinding}
+style={{
+  background: 'rgb(95 124 87)',
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  padding: '5px 10px',
+  cursor: 'pointer',
+}}
+>
+shortest path
+</button>
+
+  </>
   );
 };
 

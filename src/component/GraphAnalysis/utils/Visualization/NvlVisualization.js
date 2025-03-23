@@ -35,6 +35,10 @@ const useNvlVisualization = ({
   const [isMinimapReady, setIsMinimapReady] = useState(false);
   const [hoverdnode, sethovernode] = useState(null);
 
+  const layoutoptions={
+    direction:"up",
+    packing: "bin"
+}
   useEffect(() => {
     if (minimapContainerRef.current) {
       setIsMinimapReady(true);
@@ -190,7 +194,8 @@ const useNvlVisualization = ({
             previouslyHoveredNodeRef.current = null;
           }
           setnodetoshow(null);
-          setrelationtoshow(hoveredEdge.data.id);
+          console.log(hoveredEdge.data)
+          setrelationtoshow(hoveredEdge.data);
           sethoverEdge(hoveredEdge.data.id);
         }
       }
@@ -216,7 +221,8 @@ const useNvlVisualization = ({
       selectedBorderColor: 'rgba(71, 39, 134, 0.9)',
       dropShadowColor: 'rgba(85, 83, 174, 0.5)'
         },
-    initialZoom:1
+    initialZoom:1,
+    layoutOptions:layoutoptions
   };
 
   const getVisualizationComponent = (hoveredEdge) => {

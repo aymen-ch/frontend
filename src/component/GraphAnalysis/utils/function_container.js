@@ -94,11 +94,14 @@ export const fetchNodeProperties = async (nodeId, setSelectedNodeData) => {
       return null;
     }
   };
-  export const fetchNoderelation = async (edgid, setSelectecRelationData) => {
+  export const fetchNoderelation = async (rel, setSelectecRelationData) => {
+    console.log(rel)
     try {
       const response = await axios.post(
         BASE_URL + "/getrelationData/",
-        { "identity": parseInt(edgid, 10) },
+        { "identity": rel.id,
+          "path":rel.aggregationpath,
+         },
         {
           headers: {
             "Content-Type": "application/json",

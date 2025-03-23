@@ -77,6 +77,7 @@ const Container_AlgorithmicAnalysis = () => {
 
   useEffect(() => {
     if (relationtoshow) {
+      console.log(relationtoshow)
       fetchNoderelation(relationtoshow, setSelectecRelationData)
     }
   }, [relationtoshow]);

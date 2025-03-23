@@ -54,6 +54,7 @@ const GraphVisualization = React.memo(({
     intelWorkaround: true,
     simulationStopVelocity: 0.1,
   });
+  
   const [showSettings, setShowSettings] = useState(false);
   const [activeWindow, setActiveWindow] = useState(null);
   const [inputValue, setInputValue] = useState('');
