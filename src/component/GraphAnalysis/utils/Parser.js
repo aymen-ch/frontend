@@ -32,6 +32,17 @@ export const NODE_CONFIG = {
     Personne: '#33AEE8',   // Light Blue
     default: '#CCCCCC',    // Gray
   },
+  nodesize: {
+    Daira: 90,      // Orange
+    Commune: 90,    // Green
+    Wilaya: 90,     // Blue
+    Unite: 90,      // Pink
+    Affaire: 90,    // Purple
+    Virtuel: 90,    // Cyan
+    Phone: 90,      // Yellow
+    Personne: 90,   // Light Blue
+    default: 90,    // Gray
+  },
 
   // Edge styling
   edgeColor: 'red',
@@ -44,17 +55,7 @@ export const NODE_CONFIG = {
   captionBorderRadius: '3px',
   captionTextShadow: '1px 1px 2px #000',
 };
-NODE_CONFIG.borderTop = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 30}%`;
-NODE_CONFIG.borderLeft = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 30}%`;
-NODE_CONFIG.iconTop = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 33}%`;
-NODE_CONFIG.iconLeft = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 33}%`;
-NODE_CONFIG.borderTop = `${(NODE_CONFIG.defaultNodeSize - 70) * (13 / 20) + 30}%`;
-NODE_CONFIG.Nodewidth = `${(NODE_CONFIG.defaultNodeSize *2)+10}px`;
-NODE_CONFIG.Nodehight = `${(NODE_CONFIG.defaultNodeSize *2)+10}px`;
-NODE_CONFIG.captionTop=`${(NODE_CONFIG.defaultNodeSize)}%`;//////   for node 90 it 90% and for node 120 it become 120% 
-NODE_CONFIG.captionLeft= `${(NODE_CONFIG.defaultNodeSize /2)-2}%`;//////   for node 90 it 43 and for node 120 it become 55
-NODE_CONFIG.defaultImageWidth= `${(NODE_CONFIG.defaultNodeSize)}px`;
-NODE_CONFIG.defaultImageHeight=`${(NODE_CONFIG.defaultNodeSize)}px`;
+
 // Fetch node properties from the server
 const fetchNodeProperties = async (nodeId) => {
   try {
@@ -71,6 +72,7 @@ const fetchNodeProperties = async (nodeId) => {
 
 // Utility function to create a node object
 export const createNode = (nodeData, nodeType, properties, isSelected = false,aggregatedproperties=null) => {
+    console.log("create node have been called")
   // Create the base node object
   const node = {
     id: nodeData.identity.toString(),
@@ -78,7 +80,7 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false,ag
     shape: 'circularImage',
     size: NODE_CONFIG.defaultNodeSize,
     color: NODE_CONFIG.nodeColors[nodeType] || NODE_CONFIG.nodeColors.default,
-    html: createNodeHtml(LabelManager(nodeType, properties), nodeType, isSelected, false, nodeData.identity.toString()),
+    html: createNodeHtml(LabelManager(nodeType, properties), nodeType, isSelected, false, nodeData.identity.toString(), NODE_CONFIG.defaultNodeSize),
     selecte: isSelected,
     captionnode: LabelManager(nodeType, properties),
     aggregatedproperties:aggregatedproperties,
@@ -247,21 +249,35 @@ export const SubGraphParser = (subGraphs) => {
 export const AddNeighborhoodParser = (neighborhoodData, contextNode) => {
   return parseNeighborhood(neighborhoodData, contextNode);
 };
+export const calculateNodeConfig = (node_size) => {
+  // Validate input
+  if (typeof node_size !== 'number' || node_size < 0) {
+    throw new Error('node_size must be a positive number');
+  }
+
+  // Calculate all properties based on node_size
+  const borderOffset = (node_size - 70) * (13 / 20) + 30;
+  const iconOffset = (node_size - 70) * (13 / 20) + 33;
+
+  return {
+    borderTop: `${borderOffset}%`,
+    borderLeft: `${borderOffset}%`,
+    iconTop: `${iconOffset}%`,
+    iconLeft: `${iconOffset}%`,
+    Nodewidth: `${(node_size * 2) + 10}px`,
+    Nodehight: `${(node_size * 2) + 10}px`,
+    captionTop: `${node_size}%`,
+    captionLeft: `${(node_size / 2) - 2}%`,
+    defaultImageWidth: `${node_size}px`,
+    defaultImageHeight: `${node_size}px`
+  };
+};
 
 // Create HTML for nodes
 export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpath = false, groupCount = 1,id , AddIcon = false , Icon ="",node_size=90) => {
-  NODE_CONFIG.borderTop = `${(node_size - 70) * (13 / 20) + 30}%`;
-NODE_CONFIG.borderLeft = `${(node_size - 70) * (13 / 20) + 30}%`;
-NODE_CONFIG.iconTop = `${(node_size - 70) * (13 / 20) + 33}%`;
-NODE_CONFIG.iconLeft = `${(node_size - 70) * (13 / 20) + 33}%`;
-NODE_CONFIG.borderTop = `${(node_size - 70) * (13 / 20) + 30}%`;
-NODE_CONFIG.Nodewidth = `${(node_size *2)+10}px`;
-NODE_CONFIG.Nodehight = `${(node_size *2)+10}px`;
-NODE_CONFIG.captionTop=`${(node_size)}%`;//////   for node 90 it 90% and for node 120 it become 120% 
-NODE_CONFIG.captionLeft= `${(node_size /2)-2}%`;//////   for node 90 it 43 and for node 120 it become 55
-NODE_CONFIG.defaultImageWidth= `${(node_size)}px`;
-NODE_CONFIG.defaultImageHeight=`${(node_size)}px`;
-
+   //NODE_CONFIG.defaultNodeSize=node_size
+ console.log(node_size)
+  const nodeconfig=calculateNodeConfig(node_size)
   const container = document.createElement('div');
   container.style.position = 'relative';
   container.style.display = 'inline-block';
@@ -279,17 +295,17 @@ NODE_CONFIG.defaultImageHeight=`${(node_size)}px`;
 
   const border = document.createElement('div');
   border.style.position = 'absolute';
-  border.style.top = NODE_CONFIG.borderTop;
-  border.style.left = NODE_CONFIG.borderLeft;
+  border.style.top = nodeconfig.borderTop;
+  border.style.left = nodeconfig.borderLeft;
   border.style.transform = 'translate(-50%, -50%)';
-  border.style.width = groupCount > 1 ? NODE_CONFIG.groupNodeWidth : NODE_CONFIG.Nodewidth;
-  border.style.height = groupCount > 1 ? NODE_CONFIG.groupNodeHeight : NODE_CONFIG.Nodehight;
+  border.style.width = groupCount > 1 ? NODE_CONFIG.groupNodeWidth : nodeconfig.Nodewidth;
+  border.style.height = groupCount > 1 ? NODE_CONFIG.groupNodeHeight : nodeconfig.Nodehight;
   border.style.borderRadius = '50%';
   border.style.transition = 'all 0.3s ease';
 
   if (isSelected ) {
-   border.style.boxShadow = '0 0 20px 8px rgba(104, 35, 157, 0.7)';
-   border.style.border = '8px solid rgba(71, 39, 134, 0.9)';
+  // border.style.boxShadow = '0 0 20px 8px rgba(104, 35, 157, 0.7)';
+  // border.style.border = '8px solid rgba(71, 39, 134, 0.9)';
     border.style.backgroundColor = 'rgba(255, 255, 0, 0.05)';
   } else if (groupCount > 1) {
     border.style.border = '3px dashed rgba(0, 128, 255, 0.8)';
@@ -304,11 +320,11 @@ NODE_CONFIG.defaultImageHeight=`${(node_size)}px`;
   const iconElement = document.createElement('img');
   iconElement.src = getNodeIcon(nodetype);
   iconElement.style.position = 'absolute';
-  iconElement.style.top = NODE_CONFIG.iconTop;
-  iconElement.style.left = NODE_CONFIG.iconLeft;
+  iconElement.style.top = nodeconfig.iconTop;
+  iconElement.style.left = nodeconfig.iconLeft;
   iconElement.style.transform = 'translate(-50%, -50%)';
-  iconElement.style.width = groupCount > 1 ? NODE_CONFIG.groupImageWidth : NODE_CONFIG.defaultImageWidth;
-  iconElement.style.height = groupCount > 1 ? NODE_CONFIG.groupImageHeight : NODE_CONFIG.defaultImageHeight;
+  iconElement.style.width = groupCount > 1 ? NODE_CONFIG.groupImageWidth : nodeconfig.defaultImageWidth;
+  iconElement.style.height = groupCount > 1 ? NODE_CONFIG.groupImageHeight : nodeconfig.defaultImageHeight;
   iconElement.style.zIndex = '2';
   iconElement.style.transition = 'all 0.3s ease';
 
@@ -317,10 +333,9 @@ NODE_CONFIG.defaultImageHeight=`${(node_size)}px`;
   captionElement.style.position = 'absolute';
   captionElement.style.width = '200px';
   captionElement.style.height = 'fit-content';
-  captionElement.style.left = NODE_CONFIG.captionLeft;
-  captionElement.style.top = NODE_CONFIG.captionTop;
+  captionElement.style.left = nodeconfig.captionLeft;
+  captionElement.style.top = nodeconfig.captionTop;
   captionElement.style.transform = 'translateX(-50%)';
-  captionElement.style.bottom = NODE_CONFIG.captionBottom;
   captionElement.style.fontSize = groupCount > 1 ? '32px' : '28px';
   captionElement.style.fontWeight = 'bold';
   captionElement.style.color = 'rgba(23, 22, 22, 0.8)';

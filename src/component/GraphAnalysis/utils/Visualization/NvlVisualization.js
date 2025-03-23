@@ -9,7 +9,7 @@ import {
   ClickInteraction,
   HoverInteraction,
 } from '@neo4j-nvl/interaction-handlers';
-import { createNodeHtml,NODE_CONFIG } from '../Parser';
+import { createNodeHtml,calculateNodeConfig } from '../Parser';
 import { IconPersonWithClass } from '../function_container';
 
 const useNvlVisualization = ({
@@ -26,12 +26,14 @@ const useNvlVisualization = ({
   setselectedEdges,
   sethoverEdge,
   ispath,
+  setNodes
 }) => {
   const previouslyHoveredNodeRef = useRef(null);
   const selectedNodeRef = useRef(null);
   const selectedRelationRef = useRef(null);
   const minimapContainerRef = useRef(null);
   const [isMinimapReady, setIsMinimapReady] = useState(false);
+  const [hoverdnode, sethovernode] = useState(null);
 
   useEffect(() => {
     if (minimapContainerRef.current) {
@@ -138,6 +140,7 @@ const useNvlVisualization = ({
         setrelationtoshow(selectedRelationRef.current);
         sethoverEdge(null);
         setnodetoshow(selectedNodeRef.current);
+        sethovernode(null)
         return;
       }
 
@@ -148,28 +151,31 @@ const useNvlVisualization = ({
             const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
             if (previousShadowEffect) previousShadowEffect.remove();
           }
-
+          console.log(hoveredNode.data)
           const hoverEffectPlaceholder = hoveredNode.data.html;
           if (hoverEffectPlaceholder) {
             setnodetoshow(hoveredNode.data.id);
             setrelationtoshow(null);
-
-            const centerWrapper = hoverEffectPlaceholder.querySelector('div[style*="transform: translate(-50%, -50%)"]');
-            if (centerWrapper) {
-              const shadowEffect = document.createElement('div');
-              shadowEffect.id = 'test';
-              shadowEffect.style.position = 'absolute';
-              shadowEffect.style.top = NODE_CONFIG.borderTop;
-              shadowEffect.style.left = NODE_CONFIG.borderTop;
-              shadowEffect.style.transform = 'translate(-50%, -50%)';
-              shadowEffect.style.width = NODE_CONFIG.Nodewidth;
-              shadowEffect.style.height = NODE_CONFIG.Nodewidth;
-              shadowEffect.style.borderRadius = '50%';
-              shadowEffect.style.border = '15px solid rgba(84, 207, 67, 0.8)';
-              shadowEffect.style.zIndex = '5';
-              shadowEffect.style.pointerEvents = 'none';
-              centerWrapper.appendChild(shadowEffect);
-            }
+             sethovernode(hoveredNode.data.id)
+         
+            /// make the node hover 
+            // const config = calculateNodeConfig(hoveredNode.data.size);
+            // const centerWrapper = hoverEffectPlaceholder.querySelector('div[style*="transform: translate(-50%, -50%)"]');
+            // if (centerWrapper) {
+            //   const shadowEffect = document.createElement('div');
+            //   shadowEffect.id = 'test';
+            //   shadowEffect.style.position = 'absolute';
+            //   shadowEffect.style.top = config.borderTop;
+            //   shadowEffect.style.left = config.borderTop;
+            //   shadowEffect.style.transform = 'translate(-50%, -50%)';
+            //   shadowEffect.style.width = config.Nodewidth;
+            //   shadowEffect.style.height = config.Nodewidth;
+            //   shadowEffect.style.borderRadius = '50%';
+            //   shadowEffect.style.border = '15px solid rgba(84, 207, 67, 0.8)';
+            //   shadowEffect.style.zIndex = '5';
+            //   shadowEffect.style.pointerEvents = 'none';
+            //   centerWrapper.appendChild(shadowEffect);
+            // }
             previouslyHoveredNodeRef.current = hoverEffectPlaceholder;
           }
         }
@@ -208,8 +214,8 @@ const useNvlVisualization = ({
     styling: {
       disabledItemFontColor: '#808080',
       selectedBorderColor: 'rgba(71, 39, 134, 0.9)',
-      dropShadowColor: 'green',
-    },
+      dropShadowColor: 'rgba(85, 83, 174, 0.5)'
+        },
     initialZoom:1
   };
 
@@ -218,6 +224,7 @@ const useNvlVisualization = ({
       nodes: combinedNodes.map((node) => ({
         ...node,
         Activated: node.Activated,
+        hovered:node.id==hoverdnode ,
         selected: selectedNodes.has(node.id),
         html: createNodeHtml(node.captionnode, node.group, selectedNodes.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "👑",node.size),
       })),

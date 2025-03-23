@@ -13,6 +13,7 @@ const GraphCanvas = ({
   setrelationtoshow,
   ispath,
   setEdges,
+  setNodes
   
 }) => {
   const [shiftPressed, setShiftPressed] = useState(false);
@@ -53,6 +54,7 @@ const GraphCanvas = ({
     setselectedEdges,
     sethoverEdge,
     ispath,
+    setNodes
   });
 
   const VisualizationComponent = getVisualizationComponent(hoveredEdge);

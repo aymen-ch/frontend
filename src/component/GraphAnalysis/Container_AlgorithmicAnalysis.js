@@ -112,7 +112,28 @@ const Container_AlgorithmicAnalysis = () => {
 
   const combinedNodes = [...nodes].filter((node) => !node.hidden);
   const combinedEdges = [...edges].filter((edge) => !edge.hidden);
-
+  const handleNodeConfigChange = (change) => {
+    if (change.type === 'size') {
+      // Update node sizes in your visualization
+      const updatedNodes = combinedNodes.map(node => {
+        if (node.group === change.nodeType) {
+          return { ...node, size: change.value };
+        }
+        return node;
+      });
+      setNodes(updatedNodes);
+    } else if (change.type === 'color') {
+      // Update node colors in your visualization
+      const updatedNodes = combinedNodes.map(node => {
+        if (node.group === change.nodeType) {
+          return { ...node, color: change.value };
+        }
+        return node;
+      });
+      setEdges(updatedNodes);
+    }
+    // Trigger re-render of visualization if needed
+  };
  
 return (
     <div className="container-fluid test">
@@ -234,6 +255,7 @@ return (
                   relationtoshow={relationtoshow}
                   SelectecRelationData={SelectecRelationData}
                   combinedEdges={combinedEdges}
+                  onNodeConfigChange={handleNodeConfigChange}
                 />
               )}
               

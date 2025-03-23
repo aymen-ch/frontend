@@ -53,7 +53,11 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
         response.data,
         { id: node.id }
       );
-      setNodes((prevNodes) => [...prevNodes, ...neighborhoodNodes]);
+      setNodes((prevNodes) => {
+        const existingNodeIds = new Set(prevNodes.map(n => n.id));
+        const newNodes = neighborhoodNodes.filter(n => !existingNodeIds.has(n.id));
+        return [...prevNodes, ...newNodes];
+      });
       setEdges((prevEdges) => [...prevEdges, ...neighborhoodEdges]);
     } else {
       console.error('Submission failed.');

@@ -108,8 +108,9 @@ const GraphVisualization = React.memo(({
             'Content-Type': 'application/json',
           }
         });
-        setSearchResults(response.data);
-        console.log(response.data);
+        const limitedResults = response.data.slice(0, 50);
+        setSearchResults(limitedResults);
+        //console.log(response.data);
       } catch (error) {
         console.error('Error searching database:', error);
         setSearchResults([{ node: { id: 'error', label: 'Error performing search' }, score: 0 }]);
@@ -385,6 +386,7 @@ const GraphVisualization = React.memo(({
         ispath={ispath}
         setrelationtoshow={setrelationtoshow}
         setEdges={setEdges}
+        setNodes={setNodes}
       />
 
       {contextMenu && contextMenu.visible && (
