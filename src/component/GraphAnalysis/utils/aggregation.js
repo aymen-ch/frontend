@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getNodeIcon, getNodeColor, parseAggregationResponse, parseAggregationResponse_advanced } from './Parser';
 import { BASE_URL } from './Urls';
-
+import { handleAggregation,getIntermediateTypes } from './aggregationUtils';
 const Aggregation = ({
   setEdges,
   setNodes,
@@ -37,7 +37,7 @@ const Aggregation = ({
   const handleTypeFilterChange = async (type) => {
     const aggregationTypeToCall = getAggregationPath(type);
     if (aggregationTypeToCall) {
-      await handleAggregation(aggregationTypeToCall, type);
+      await handleAggregation(aggregationTypeToCall, type,setNodes,setEdges,nodes,setActiveAggregations);
     }
   };
 
@@ -58,78 +58,7 @@ const Aggregation = ({
     }
   };
 
-  const getIntermediateTypes = (aggregationPath) => {
-    const intermediateTypes = [];
-    for (let i = 2; i < aggregationPath.length - 2; i += 2) {
-      intermediateTypes.push(aggregationPath[i]);
-    }
-    return intermediateTypes;
-  };
-
-  const handleAggregation = async (type, aggregationType) => {
-    const nodeIds = nodes
-      .filter((node) => type.includes(node.group))
-      .map((node) => parseInt(node.id, 10));
-
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post(BASE_URL + '/agregate/', {
-        node_ids: nodeIds,
-        aggregation_type: [type],
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.status === 200) {
-        const { nodes: parsedNodes, edges: parsedEdges } = parseAggregationResponse(response.data);
-        const updatedEdges = parsedEdges.map(edge => ({
-          ...edge,
-          aggregationType: aggregationType,
-          aggregationpath:type
-        }));
-
-        const updatedNodes = parsedNodes.map(edge => ({
-          ...edge,
-          aggregationType: aggregationType,
-          aggregationpath:type
-        }));
-        
-        const intermediateTypes = getIntermediateTypes(type);        
-        setNodes((prevNodes) =>
-          prevNodes.map((node) => ({
-            ...node,
-            hidden: intermediateTypes.includes(node.group) || node.hidden,
-          }))
-        );
-        setEdges((prevEdges) => {
-          const combinedEdges = [...prevEdges, ...updatedEdges];
-          const edgesWithHiddenState = combinedEdges.map((edge) => {
-            const isFromHidden = nodes.some(
-              (node) => node.id === edge.from && intermediateTypes.includes(node.group)
-            );
-            const isToHidden = nodes.some(
-              (node) => node.id === edge.to && intermediateTypes.includes(node.group)
-            );
-            return {
-              ...edge,
-              hidden: isFromHidden || isToHidden || edge.hidden,
-            };
-          });
-          return edgesWithHiddenState;
-        });
-        setEdges((prevEdges) => [...prevEdges, ...updatedEdges]);
-        setNodes((prevNodes) => [...prevNodes, ...updatedNodes]);
-        setActiveAggregations((prev) => ({ ...prev, [aggregationType]: true }));
-      } else {
-        console.error('Aggregation failed.');
-      }
-    } catch (error) {
-      console.error('Error during aggregation:', error);
-    }
-  };
+  
 
   const handleAdvancedAggregation = async (depth) => {
     try {

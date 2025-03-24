@@ -2,7 +2,7 @@
 import React from 'react';
 import Properties_introgation from '../interogation/Properties_introgation';
 import Template from '../interogation/tamplate';
-import Chat from '../interogation/chat';
+import Chat from '../interogation/chat/chat';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCogs, faListAlt, faComments } from '@fortawesome/free-solid-svg-icons';
 

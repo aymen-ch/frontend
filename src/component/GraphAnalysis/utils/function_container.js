@@ -187,7 +187,7 @@ export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTabl
     if (affairesInRange.length > 0) {
       const filteredResults = SubGrapgTable.results.filter((result) =>
         affairesInRange.includes(result.affaire.identity)
-      );
+      );  
 
       const { nodes: parsedNodes, edges: parsedEdges } = SubGraphParser(filteredResults);
 

@@ -40,6 +40,7 @@ const GraphVisualization = React.memo(({
   setSelectedNodes,
   ispath,
   setrelationtoshow,
+  setActiveAggregations
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [allPaths, setAllPaths] = useState([]);
@@ -185,6 +186,7 @@ const GraphVisualization = React.memo(({
     { type: ForceDirectedLayoutType, icon: <FaDiaspora size={16} />, title: 'Force Directed' },
     { type: 'Operationnelle_Soutien_Leader', icon: <FaLayerGroup size={16} />, title: 'Free Layout' },
     { type: "dagre", icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
+   // { type: "computeLinearLayout", icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
   ];
 
   const handleLayoutSelect = (type) => {
@@ -406,6 +408,7 @@ const GraphVisualization = React.memo(({
           setIsBoxPath={setIsBoxPath}
           depth={depth}
           isPathFindingStarted={isPathFindingStarted}
+        setActiveAggregations={setActiveAggregations}
         />
       )}
 

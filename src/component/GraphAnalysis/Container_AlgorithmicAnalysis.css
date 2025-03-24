@@ -137,7 +137,6 @@
     position: sticky;
     top: 0;
     background-color: white;
-    z-index: 2;
     padding-top: 5px;
   }
   
@@ -242,3 +241,6 @@
   .property-value {
     word-break: break-word;
   }
+
+
+  

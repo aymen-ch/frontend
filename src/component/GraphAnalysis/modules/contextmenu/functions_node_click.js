@@ -3,7 +3,7 @@ import axios from 'axios';
 import { BASE_URL } from '../../utils/Urls';
 import { AddNeighborhoodParser,parsePath ,parseNetworkData } from '../../utils/Parser';
 import globalWindowState from '../../utils/globalWindowState';
-
+import { handleAggregation } from '../../utils/aggregationUtils'
 export const fetchPossibleRelations = async (node, setPossibleRelations) => {
   const token = localStorage.getItem('authToken');
   const node_type = node.group;
@@ -106,7 +106,7 @@ export const updatePathNodesAndEdges = (path, setPathNodes, setPathEdges) => {
   setPathEdges(formattedEdges);
 };
 
-export const handleCriminalTree = async (node, setNodes, setEdges) => {
+export const handleCriminalTree = async (node, setNodes, setEdges,setActiveAggregations) => {
   const token = localStorage.getItem('authToken');
   const properties = { identity: parseInt(node.id, 10) };
   console.log("handleCriminalTree");
@@ -124,8 +124,20 @@ export const handleCriminalTree = async (node, setNodes, setEdges) => {
 
     if (response.status === 200) {
       const { nodes: criminalNodes, edges: criminalEdges } = parseNetworkData(response.data);
-      setNodes((prevNodes) => [...prevNodes, ...criminalNodes]);
+      let updatedNodes; // Define variable to hold the updated nodes
+      setNodes((prevNodes) => {
+        updatedNodes = [...prevNodes, ...criminalNodes]; // Assign the updated nodes
+        return updatedNodes;
+      });
       setEdges((prevEdges) => [...prevEdges, ...criminalEdges]);
+      await handleAggregation(
+        ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"],
+        "Phone",
+        setNodes,
+        setEdges,
+        updatedNodes// Use the prop nodes plus new criminalNodes
+        ,setActiveAggregations
+      );
     } else {
       console.error('Failed to fetch criminal network');
     }
@@ -134,7 +146,7 @@ export const handleCriminalTree = async (node, setNodes, setEdges) => {
   }
 };
 
-export const handleActionSelect = async (action, node, setActionsSubMenu, setContextMenu , setNodes ,setEdges) => {
+export const handleActionSelect = async (action, node, setActionsSubMenu, setContextMenu , setNodes ,setEdges,setActiveAggregations) => {
   console.log(`Selected ${action}`);
   if (action === 'Show Person Profile') {
     globalWindowState.setWindow('PersonProfile', node);
@@ -142,7 +154,7 @@ export const handleActionSelect = async (action, node, setActionsSubMenu, setCon
     setContextMenu(null);
   } 
   if (action === 'Show tree of criminal') {
-    await handleCriminalTree(node, setNodes, setEdges);
+    await handleCriminalTree(node, setNodes, setEdges,setActiveAggregations);
     setActionsSubMenu(null);
     setContextMenu(null);
   }

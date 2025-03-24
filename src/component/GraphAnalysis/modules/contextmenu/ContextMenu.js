@@ -35,6 +35,7 @@ const ContextMenu = ({
   setAllPaths,
   setCurrentPathIndex,
   setIsBoxPath,
+  setActiveAggregations,
 }) => {
   const [possibleRelations, setPossibleRelations] = useState([]);
   const [subContextMenu, setSubContextMenu] = useState(null);
@@ -244,7 +245,7 @@ const ContextMenu = ({
           {contextMenu.node.group === 'Affaire' && (
             <button
               className="menu-item"
-              onClick={() => handleActionSelect('Copy Node', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges)}
+              onClick={() => handleActionSelect('Copy Node', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges,setActiveAggregations)}
             >
               <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
               Affaire dans la meme region
@@ -253,7 +254,7 @@ const ContextMenu = ({
             {contextMenu.node.group === 'Personne' && (
               <button
                 className="menu-item"
-                onClick={() => handleActionSelect('Show Person Profile', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges)}
+                onClick={() => handleActionSelect('Show Person Profile', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges,setActiveAggregations)}
               >
                 <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
                 Show Person Profile
@@ -262,7 +263,7 @@ const ContextMenu = ({
              {contextMenu.node.group === 'Personne' && (
             <button
               className="menu-item"
-              onClick={() => handleActionSelect('Show tree of criminal', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges)}
+  onClick={() => handleActionSelect('Show tree of criminal', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges,setActiveAggregations )}
             >
               <FaCodeFork style={{ marginRight: '10px', color: '#4361ee' }} />
               Show tree of criminal
