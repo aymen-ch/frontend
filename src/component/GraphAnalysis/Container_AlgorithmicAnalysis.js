@@ -13,17 +13,20 @@ import Analysis from './modules/analysis/analysis';
 import DetailsModule from './modules/Details/Details';
 import InterrogationModule from './modules/interogation/interrogation';
 import { useAggregation, fetchNodeProperties,drawCirclesOnPersonneNodes, ColorPersonWithClass ,fetchNoderelation} from './utils/function_container';
+import { useGlobalContext } from './GlobalVariables';
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
 
 const Container_AlgorithmicAnalysis = () => {
+  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
+
   const [SubGrapgTable, setSubGrapgTable] = useState({ results: [] });
   const [activeModule, setActiveModule] = useState(null);
   const nvlRef = useRef(null);
   const nvlRefPath = useRef(null);
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
+  // const [nodes, setNodes] = useState([]);
+  // const [edges, setEdges] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedNodeData, setSelectedNodeData] = useState(null);
   const [SelectecRelationData, setSelectecRelationData] = useState(null);

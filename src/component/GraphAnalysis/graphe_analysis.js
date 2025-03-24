@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './graphe_anaylsis.css'
 import Container_AlgorithmicAnalysis from './Container_AlgorithmicAnalysis';
+import { GlobalProvider } from './GlobalVariables';
 const Graphe_analysis = () => {
   const [activeModule, setActiveModule] = useState('Schema'); // Default active module
 
@@ -34,7 +35,9 @@ const Graphe_analysis = () => {
 
   const VisualizationPage = () => (
     <div className="module-content">
+     <GlobalProvider>
       <Container_AlgorithmicAnalysis/>
+      </GlobalProvider>
     </div>
   );
 

@@ -5,12 +5,13 @@ import { getNodeIcon, getNodeColor, parseAggregationResponse, parseAggregationRe
 import { BASE_URL } from '../../utils/Urls';
 import NodeClasificationBackEnd from './NodeClasificationBackEnd/NodeClasificationBackEnd';
 import { BetweennessCentrality } from '../../utils/function_container';
+import { useGlobalContext } from '../../GlobalVariables';
 
 const Analysis = ({
-  setEdges,
-  setNodes,
-  nodes,
-  edges,
+  // setEdges,
+  // setNodes,
+  // nodes,
+  // edges,
   drawCirclesOnPersonneNodes,
   ColorPersonWithClass,
   activeAggregations,
@@ -23,6 +24,8 @@ const Analysis = ({
   const [isLoading, setIsLoading] = useState(false); // For SecteurActiviti
   const [isAggLoading, setIsAggLoading] = useState(false); // For Aggregation with Algorithm
   const [isBetweennessLoading, setIsBetweennessLoading] = useState(false); // For Betweenness Centrality
+
+  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
 
   useEffect(() => {
     const types = [...new Set(nodes.map((node) => node.group))];
