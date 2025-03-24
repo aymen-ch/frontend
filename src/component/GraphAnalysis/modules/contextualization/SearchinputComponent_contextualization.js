@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BASE_URL } from '../../utils/Urls';
+import './SearchInputComponent.css';  // Replace the Bootstrap import
 
 const SearchinputComponent = ({ setContextData }) => {
     const [affaireTypes, setaffaireTypes] = useState([]);
@@ -343,97 +344,105 @@ const SearchinputComponent = ({ setContextData }) => {
             </div>
 
             {/* Start Date, End Date, and Depth Inputs */}
+            <div className="mb-3">
+    <div className="date-inputs">
+        <div className="date-wrapper">
+            <label htmlFor="startDate" className="form-label">Start Date</label>
+            <input
+                type="date"
+                className="form-control"
+                id="startDate"
+                value={formValues.startDate}
+                onChange={(e) => handleInputChange(e, 'startDate')}
+            />
+        </div>
+        <div className="date-wrapper">
+            <label htmlFor="endDate" className="form-label">End Date</label>
+            <input
+                type="date"
+                className="form-control"
+                id="endDate"
+                value={formValues.endDate}
+                onChange={(e) => handleInputChange(e, 'endDate')}
+            />
+        </div>
+    </div>
+</div>
             <div className="col-4">
-                <label htmlFor="startDate" className="form-label">Start Date</label>
+    <label className="form-label">Depth</label>
+    <div className="d-flex flex-column">
+        <div className="depth-options">
+            <div className="form-check">
                 <input
-                    type="date"
-                    className="form-control"
-                    id="startDate"
-                    value={formValues.startDate}
-                    onChange={(e) => handleInputChange(e, 'startDate')}
+                    className="form-check-input"
+                    type="radio"
+                    name="depth"
+                    id="depth0"
+                    value="0"
+                    checked={formValues.depth === '0'}
+                    onChange={(e) => handleInputChange(e, 'depth')}
                 />
+                <label className="form-check-label" htmlFor="depth0">
+                    Only Node
+                </label>
             </div>
-            <div className="col-4">
-                <label htmlFor="endDate" className="form-label">End Date</label>
+            <div className="form-check">
                 <input
-                    type="date"
-                    className="form-control"
-                    id="endDate"
-                    value={formValues.endDate}
-                    onChange={(e) => handleInputChange(e, 'endDate')}
+                    className="form-check-input"
+                    type="radio"
+                    name="depth"
+                    id="depth1"
+                    value="1"
+                    checked={formValues.depth === '1'}
+                    onChange={(e) => handleInputChange(e, 'depth')}
                 />
+                <label className="form-check-label" htmlFor="depth1">
+                    Connected Directly
+                </label>
             </div>
-            <div className="col-4">
-                <label className="form-label">Depth</label>
-                <div className="d-flex flex-column">
-                    <div className="form-check">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="depth"
-                            id="depth0"
-                            value="0"
-                            checked={formValues.depth === '0'}
-                            onChange={(e) => handleInputChange(e, 'depth')}
-                        />
-                        <label className="form-check-label" htmlFor="depth0">
-                            Only Node
-                        </label>
-                    </div>
-                    <div className="form-check">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="depth"
-                            id="depth1"
-                            value="1"
-                            checked={formValues.depth === '1'}
-                            onChange={(e) => handleInputChange(e, 'depth')}
-                        />
-                        <label className="form-check-label" htmlFor="depth1">
-                            Connected Directly
-                        </label>
-                    </div>
-                    <div className="form-check">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="depth"
-                            id="depth2"
-                            value="2"
-                            checked={formValues.depth === '2'}
-                            onChange={(e) => handleInputChange(e, 'depth')}
-                        />
-                        <label className="form-check-label" htmlFor="depth2">
-                            Connected Indirectly
-                        </label>
-                    </div>
-                    <div className="form-check">
-                        <input
-                            className="form-check-input"
-                            type="radio"
-                            name="depth"
-                            id="depthAdvanced"
-                            value="advanced"
-                            checked={formValues.depth !== '0' && formValues.depth !== '1' && formValues.depth !== '2'}
-                            onChange={(e) => handleInputChange(e, 'depth')}
-                        />
-                        <label className="form-check-label" htmlFor="depthAdvanced">
-                            Advanced
-                        </label>
-                    </div>
-                    {formValues.depth !== '0' && formValues.depth !== '1' && formValues.depth !== '2' && (
-                        <input
-                            type="number"
-                            className="form-control mt-2"
-                            min="0"
-                            max="5"
-                            value={formValues.depth}
-                            onChange={(e) => handleInputChange(e, 'depth')}
-                        />
-                    )}
-                </div>
+            <div className="form-check">
+                <input
+                    className="form-check-input"
+                    type="radio"
+                    name="depth"
+                    id="depth2"
+                    value="2"
+                    checked={formValues.depth === '2'}
+                    onChange={(e) => handleInputChange(e, 'depth')}
+                />
+                <label className="form-check-label" htmlFor="depth2">
+                    Connected Indirectly
+                </label>
             </div>
+        </div>
+        <div className="advanced-option">
+            <div className="form-check">
+                <input
+                    className="form-check-input"
+                    type="radio"
+                    name="depth"
+                    id="depthAdvanced"
+                    value="advanced"
+                    checked={formValues.depth !== '0' && formValues.depth !== '1' && formValues.depth !== '2'}
+                    onChange={(e) => handleInputChange(e, 'depth')}
+                />
+                <label className="form-check-label" htmlFor="depthAdvanced">
+                    Advanced
+                </label>
+            </div>
+            {formValues.depth !== '0' && formValues.depth !== '1' && formValues.depth !== '2' && (
+                <input
+                    type="number"
+                    className="form-control mt-2"
+                    min="0"
+                    max="5"
+                    value={formValues.depth}
+                    onChange={(e) => handleInputChange(e, 'depth')}
+                />
+            )}
+        </div>
+    </div>
+</div>
         </div>
     );
 };

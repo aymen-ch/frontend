@@ -179,6 +179,7 @@ return (
                   ispath={false}
                   setAllPaths={setAllPaths}
                   setPathisempty={setPathisempty}
+                  pathisempty={pathisempty}
                   setrelationtoshow={setrelationtoshow}
                 />
               </div>

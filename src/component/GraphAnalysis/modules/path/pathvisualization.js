@@ -414,6 +414,14 @@ const PathVisualization = React.memo(({
         </div>
       )}
 
+        {pathisempty && (
+          <div className="empty-path-container">
+            <div className="empty-path-message">
+              No paths available to display.
+            </div>
+          </div>
+        )}
+
       {/* Path Visualization Content */}
       {!isLoading && (
         <div

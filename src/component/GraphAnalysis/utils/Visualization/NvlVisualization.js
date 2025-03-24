@@ -229,7 +229,6 @@ const useNvlVisualization = ({
     const nvlProps = {
       nodes: combinedNodes.map((node) => ({
         ...node,
-        Activated: node.Activated,
         hovered:node.id==hoverdnode ,
         selected: selectedNodes.has(node.id),
         html: createNodeHtml(node.captionnode, node.group, selectedNodes.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "🔴",node.size),
