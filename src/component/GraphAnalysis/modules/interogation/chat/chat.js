@@ -34,37 +34,77 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
 
   const handleSaveQueryEdit = async (messageId) => {
     try {
-      const response = await axios.post(
-        BASE_URL + '/chatbot/',
-        {
-          question: messages.find(msg => msg.id === messageId).text,
-          answer_type: 'graph',
-          cypher_query: editedQuery
-        }
-      );
-
+      setIsLoading(true);
+      const originalMessage = messages.find(msg => msg.id === messageId);
+      
+      // Update the message with the new query
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.id === messageId ? { ...msg, cypherQuery: editedQuery } : msg
         )
       );
 
+      // Re-execute the query
       const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
-      const nvlGraph = await driver.executeQuery(
+      const nvlResult = await driver.executeQuery(
         editedQuery,
         {},
         { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
       );
 
-      const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
-      setNodes([...nodes, ...newNodes]);
-      setEdges([...edges, ...newEdges]);
+      // Determine response type from original message context
+      const originalResponseType = originalMessage.type === 'table' ? 'table' : 'graph';
+
+      if (originalResponseType === 'graph') {
+        const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
+        setNodes([...nodes.filter(n => !newNodes.some(nn => nn.id === n.id)), ...newNodes]);
+        setEdges([...edges.filter(e => !newEdges.some(ne => ne.id === e.id)), ...newEdges]);
+        
+        // Update the message with execution confirmation
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === messageId
+              ? { 
+                  ...msg, 
+                  text: 'Graph updated with new nodes and edges.',
+                  cypherQuery: editedQuery,
+                  sender: 'bot'
+                }
+              : msg
+          )
+        );
+      } else if (originalResponseType === 'table') {
+        const { columns, rows } = convertNeo4jToTable(nvlResult.records);
+        
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === messageId
+              ? { 
+                  ...msg, 
+                  text: JSON.stringify({ columns, rows }, null, 2),
+                  cypherQuery: editedQuery,
+                  sender: 'bot',
+                  type: 'table'
+                }
+              : msg
+          )
+        );
+      }
 
     } catch (error) {
-      console.error('Error updating query:', error);
+      console.error('Error updating and executing query:', error);
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.id === messageId
+            ? { ...msg, text: 'Error executing query: ' + error.message, sender: 'error' }
+            : msg
+        )
+      );
     } finally {
       setEditingQueryId(null);
       setEditedQuery('');
+      setShowQueryModal(null); // Close modal after execution
+      setIsLoading(false);
     }
   };
 

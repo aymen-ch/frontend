@@ -729,3 +729,89 @@
   gap: 10px;
   justify-content: flex-end;
 }
+/* Table Wrapper */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto; /* Allows horizontal scrolling on small screens */
+  margin: 15px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #ffffff; /* White background for contrast */
+}
+
+/* Styled Table */
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace; /* Matches code editor */
+  font-size: 14px;
+  color: #333; /* Dark text for readability */
+}
+
+/* Table Header */
+.styled-table thead th {
+  background: #2d2d2d; /* Dark background like code editor */
+  color: #d4d4d4; /* Light text */
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #3e3e3e; /* Slightly lighter border */
+}
+
+/* Table Body */
+.styled-table tbody td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee; /* Light gray border */
+  background: #fff; /* White background for cells */
+}
+
+/* Alternating Row Colors */
+.styled-table tbody tr:nth-child(even) {
+  background: #f8f8f8; /* Subtle gray for even rows */
+}
+
+/* Hover Effect */
+.styled-table tbody tr:hover {
+  background: #f0f0f0; /* Light gray on hover */
+  transition: background 0.2s ease;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .styled-table {
+    font-size: 12px;
+  }
+  
+  .styled-table thead th,
+  .styled-table tbody td {
+    padding: 8px 10px;
+  }
+}
+
+/* Sticky Header (optional) */
+.styled-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Scrollbar Styling (for Webkit browsers) */
+.table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
