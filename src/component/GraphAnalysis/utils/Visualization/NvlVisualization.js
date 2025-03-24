@@ -232,7 +232,7 @@ const useNvlVisualization = ({
         Activated: node.Activated,
         hovered:node.id==hoverdnode ,
         selected: selectedNodes.has(node.id),
-        html: createNodeHtml(node.captionnode, node.group, selectedNodes.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "👑",node.size),
+        html: createNodeHtml(node.captionnode, node.group, selectedNodes.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "🔴",node.size),
       })),
       rels: combinedEdges.map((edge) => ({
         ...edge,

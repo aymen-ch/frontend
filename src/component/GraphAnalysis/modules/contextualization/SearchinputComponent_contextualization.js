@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BASE_URL } from '../../utils/Urls';
 
 const SearchinputComponent = ({ setContextData }) => {
-
     const [affaireTypes, setaffaireTypes] = useState([]);
     const [nodeData, setNodeData] = useState([]);
     const [error, setError] = useState(null);
@@ -15,16 +14,20 @@ const SearchinputComponent = ({ setContextData }) => {
     const [selectedWilaya, setSelectedWilaya] = useState('');
     const [selectedDaira, setSelectedDaira] = useState('');
     const [selectedCommune, setSelectedCommune] = useState('');
+    const [selectedCategories, setSelectedCategories] = useState([]);
 
     const [formValues, setFormValues] = useState({
         startDate: '',
         endDate: '',
-        depth: '',
+        depth: '0', // Default to "Only Node"
         selectedNodeTypes: [],
-        Affaire_type: '', // To store the selected category from the dropdown
+        Affaire_type: [], // Changed to array to store multiple categories
+        // wilaya_id, daira_id, commune_id remain as single values
     });
 
-    // Handle checkbox changes to select node types
+
+    
+    // Handle checkbox changes for node types
     const handleCheckboxChange = (e, nodeType) => {
         let updatedSelectedNodeTypes;
         if (e.target.checked) {
@@ -33,55 +36,61 @@ const SearchinputComponent = ({ setContextData }) => {
             updatedSelectedNodeTypes = selectedNodeTypes.filter(type => type !== nodeType.type);
         }
 
-        // Update both selectedNodeTypes and formValues
         setSelectedNodeTypes(updatedSelectedNodeTypes);
-        setFormValues(prevState => {
-            const updatedFormValues = { ...prevState, selectedNodeTypes: updatedSelectedNodeTypes };
-            return updatedFormValues;
-        });
+        setFormValues(prevState => ({
+            ...prevState,
+            selectedNodeTypes: updatedSelectedNodeTypes
+        }));
+    };
+
+    // Handle category checkbox changes
+    const handleCategoryCheckboxChange = (e, category) => {
+        let updatedCategories;
+        if (e.target.checked) {
+            updatedCategories = [...selectedCategories, category];
+        } else {
+            updatedCategories = selectedCategories.filter(cat => cat !== category);
+        }
+
+        setSelectedCategories(updatedCategories);
+        setFormValues(prevState => ({
+            ...prevState,
+            Affaire_type: updatedCategories
+        }));
     };
 
     // Handle input changes for form fields
     const handleInputChange = (e, propertyName) => {
         const { value } = e.target;
-        setFormValues(prevState => {
-            const updatedFormValues = { ...prevState, [propertyName]: value };
-            return updatedFormValues;
-        });
+        setFormValues(prevState => ({
+            ...prevState,
+            [propertyName]: value
+        }));
     };
 
-    // Handle category selection change
-    const handleCategoryChange = (e) => {
-        const { value } = e.target;
-        setFormValues(prevState => {
-            const updatedFormValues = { ...prevState, Affaire_type: value };
-            return updatedFormValues;
-        });
-    };
-
-     // Handle Wilaya selection
-     const handleWilayaChange = (e) => {
+    // Handle Wilaya selection
+    const handleWilayaChange = (e) => {
         const value = e.target.value;
         setSelectedWilaya(value);
-        setSelectedDaira(''); // Reset Daira when Wilaya changes
-        setSelectedCommune(''); // Reset Commune when Wilaya changes
+        setSelectedDaira('');
+        setSelectedCommune('');
 
-        setFormValues(prevState => {
-            const updatedFormValues = { ...prevState, "wilaya_id": parseInt(value) };
-            return updatedFormValues;
-        });
+        setFormValues(prevState => ({
+            ...prevState,
+            "wilaya_id": parseInt(value)
+        }));
     };
 
     // Handle Daira selection
     const handleDairaChange = (e) => {
         const value = e.target.value;
         setSelectedDaira(value);
-        setSelectedCommune(''); // Reset Commune when Daira changes
+        setSelectedCommune('');
 
-        setFormValues(prevState => {
-            const updatedFormValues = { ...prevState, "daira_id": parseInt(value) };
-            return updatedFormValues;
-        });
+        setFormValues(prevState => ({
+            ...prevState,
+            "daira_id": parseInt(value)
+        }));
     };
 
     // Handle Commune selection
@@ -89,10 +98,10 @@ const SearchinputComponent = ({ setContextData }) => {
         const value = e.target.value;
         setSelectedCommune(value);
 
-        setFormValues(prevState => {
-            const updatedFormValues = { ...prevState, "commune_id": parseInt(value) };
-            return updatedFormValues;
-        });
+        setFormValues(prevState => ({
+            ...prevState,
+            "commune_id": parseInt(value)
+        }));
     };
 
     // Fetch node types from API
@@ -120,11 +129,10 @@ const SearchinputComponent = ({ setContextData }) => {
     // Use useEffect to setContextData after formValues change
     useEffect(() => {
         setContextData(formValues);
-    }, [formValues, setContextData]); // Run whenever formValues changes
+    }, [formValues, setContextData]);
 
     // Fetch Wilayas from API
-     // Fetch Wilayas from API
-     useEffect(() => {
+    useEffect(() => {
         const fetchWilayas = async () => {
             try {
                 const token = localStorage.getItem('authToken');
@@ -152,7 +160,7 @@ const SearchinputComponent = ({ setContextData }) => {
                     const token = localStorage.getItem('authToken');
                     const response = await axios.post(
                         BASE_URL+'/dairas/',
-                        { wilaya: parseInt( selectedWilaya )}, // Send Wilaya ID in the body
+                        { wilaya: parseInt(selectedWilaya) },
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -164,14 +172,13 @@ const SearchinputComponent = ({ setContextData }) => {
                         throw new Error('Failed to fetch Dairas');
                     }
                     setDairas(response.data.daira);
-                    
                 } catch (error) {
                     console.error('Error fetching Dairas:', error);
                 }
             };
             fetchDairas();
         } else {
-            setDairas([]); // Reset Dairas if no Wilaya is selected
+            setDairas([]);
         }
     }, [selectedWilaya]);
 
@@ -183,7 +190,7 @@ const SearchinputComponent = ({ setContextData }) => {
                     const token = localStorage.getItem('authToken');
                     const response = await axios.post(
                         BASE_URL+'/communes/',
-                        { daira: parseInt (selectedDaira) ,wilaya: parseInt(selectedWilaya ) }, // Send Daira ID in the body
+                        { daira: parseInt(selectedDaira), wilaya: parseInt(selectedWilaya) },
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -195,17 +202,15 @@ const SearchinputComponent = ({ setContextData }) => {
                         throw new Error('Failed to fetch Communes');
                     }
                     setCommunes(response.data.commune);
-                    console.log("comune : ", response.data);
                 } catch (error) {
                     console.error('Error fetching Communes:', error);
                 }
             };
             fetchCommunes();
         } else {
-            setCommunes([]); // Reset Communes if no Daira is selected
+            setCommunes([]);
         }
     }, [selectedDaira]);
-
 
     useEffect(() => {
         const fetchall_affaire_types = async () => {
@@ -228,10 +233,9 @@ const SearchinputComponent = ({ setContextData }) => {
         fetchall_affaire_types();
     }, []);
 
-
     return (
         <div className="container mt-4">
-                {/* Wilaya Dropdown */}
+            {/* Wilaya Dropdown */}
             <div className="mb-3">
                 <label htmlFor="wilayaSelect" className="form-label">Wilaya</label>
                 <select
@@ -257,7 +261,7 @@ const SearchinputComponent = ({ setContextData }) => {
                     id="dairaSelect"
                     value={selectedDaira}
                     onChange={handleDairaChange}
-                    disabled={!selectedWilaya} // Disable if no Wilaya is selected
+                    disabled={!selectedWilaya}
                 >
                     <option value="">Select Daira</option>
                     {dairas.map((daira) => (
@@ -276,7 +280,7 @@ const SearchinputComponent = ({ setContextData }) => {
                     id="communeSelect"
                     value={selectedCommune}
                     onChange={handleCommuneChange}
-                    disabled={!selectedDaira} // Disable if no Daira is selected
+                    disabled={!selectedDaira}
                 >
                     <option value="">Select Commune</option>
                     {communes.map((commune) => (
@@ -312,28 +316,31 @@ const SearchinputComponent = ({ setContextData }) => {
             </div>
             {error && <div className="alert alert-danger">{error}</div>}
 
-   {/* Dropdown list */}
-        <div className="mb-3">
-            <label htmlFor="categorySelect" className="form-label">Category</label>
-            {console.log("affaireTypes :", affaireTypes.affaire_types)}
-            <select
-                className="form-select"
-                id="categorySelect"
-                value={formValues.Affaire_type}
-                onChange={handleCategoryChange}
-            >
-                <option value="">Select Category</option>
+            {/* Category Checkboxes */}
+            <div className="mb-3">
+                <label className="form-label">Categories</label>
                 {affaireTypes.affaire_types && affaireTypes.affaire_types.length > 0 ? (
-                    affaireTypes.affaire_types.map((type, index) => (
-                        <option key={index} value={type}>
-                            {type}
-                        </option>
-                    ))
+                    <div className="d-flex flex-wrap">
+                        {affaireTypes.affaire_types.map((type, index) => (
+                            <div key={index} className="form-check form-check-inline">
+                                <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    value={type}
+                                    id={`category-${index}`}
+                                    onChange={(e) => handleCategoryCheckboxChange(e, type)}
+                                    checked={selectedCategories.includes(type)}
+                                />
+                                <label className="form-check-label" htmlFor={`category-${index}`}>
+                                    {type}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
                 ) : (
-                    <option value="" disabled>No categories available</option>
+                    <p>No categories available</p>
                 )}
-            </select>
-        </div>
+            </div>
 
             {/* Start Date, End Date, and Depth Inputs */}
             <div className="col-4">
@@ -357,16 +364,75 @@ const SearchinputComponent = ({ setContextData }) => {
                 />
             </div>
             <div className="col-4">
-                <label htmlFor="depth" className="form-label">Depth</label>
-                <input
-                    type="number"
-                    className="form-control"
-                    id="depth"
-                    min="1"
-                    max="20"
-                    value={formValues.depth}
-                    onChange={(e) => handleInputChange(e, 'depth')}
-                />
+                <label className="form-label">Depth</label>
+                <div className="d-flex flex-column">
+                    <div className="form-check">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            name="depth"
+                            id="depth0"
+                            value="0"
+                            checked={formValues.depth === '0'}
+                            onChange={(e) => handleInputChange(e, 'depth')}
+                        />
+                        <label className="form-check-label" htmlFor="depth0">
+                            Only Node
+                        </label>
+                    </div>
+                    <div className="form-check">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            name="depth"
+                            id="depth1"
+                            value="1"
+                            checked={formValues.depth === '1'}
+                            onChange={(e) => handleInputChange(e, 'depth')}
+                        />
+                        <label className="form-check-label" htmlFor="depth1">
+                            Connected Directly
+                        </label>
+                    </div>
+                    <div className="form-check">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            name="depth"
+                            id="depth2"
+                            value="2"
+                            checked={formValues.depth === '2'}
+                            onChange={(e) => handleInputChange(e, 'depth')}
+                        />
+                        <label className="form-check-label" htmlFor="depth2">
+                            Connected Indirectly
+                        </label>
+                    </div>
+                    <div className="form-check">
+                        <input
+                            className="form-check-input"
+                            type="radio"
+                            name="depth"
+                            id="depthAdvanced"
+                            value="advanced"
+                            checked={formValues.depth !== '0' && formValues.depth !== '1' && formValues.depth !== '2'}
+                            onChange={(e) => handleInputChange(e, 'depth')}
+                        />
+                        <label className="form-check-label" htmlFor="depthAdvanced">
+                            Advanced
+                        </label>
+                    </div>
+                    {formValues.depth !== '0' && formValues.depth !== '1' && formValues.depth !== '2' && (
+                        <input
+                            type="number"
+                            className="form-control mt-2"
+                            min="0"
+                            max="5"
+                            value={formValues.depth}
+                            onChange={(e) => handleInputChange(e, 'depth')}
+                        />
+                    )}
+                </div>
             </div>
         </div>
     );

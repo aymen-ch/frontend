@@ -88,7 +88,6 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false,ag
     properties:properties
   };
 
-
   if (properties._class) {
     node._class = properties._class;
   }
@@ -364,8 +363,8 @@ export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpa
     const crownIcon = document.createElement("div");
     crownIcon.innerText = Icon; // Crown emoji
     crownIcon.style.position = "absolute";
-    crownIcon.style.top = "-30px"; // Position above the node
-    crownIcon.style.left = "50%";
+    crownIcon.style.top = "-20%"; // Position above the node
+    crownIcon.style.left = "80%";
     crownIcon.style.transform = "translateX(-50%)";
     crownIcon.style.fontSize = "32px"; // Adjust size as needed
     crownIcon.style.zIndex = "35";

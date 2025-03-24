@@ -52,10 +52,10 @@ const ContextManagerComponent = ({
   return (
     <div className="sidebar bg-light p-4 border shadow-sm" style={{ minHeight: '80vh' }}>
       <h5 className="mb-4 text-center">Context Manager</h5>
-      <p className="mb-4 text-muted text-center">Manage the context data below.</p>
+      {/* <p className="mb-4 text-muted text-center">Manage the context data below.</p> */}
       {SubGrapgTable.results.length > 0 && (
         <div className="mt-4">
-          <button
+          {/* <button
             className="btn btn-secondary w-100 mb-3"
             onClick={() => setShowAggregation(!showAggregation)}
           >
@@ -63,7 +63,7 @@ const ContextManagerComponent = ({
           </button>
           {showAggregation && <>
             <h3>aggregation </h3>
-          </>}
+          </>} */}
         </div>
       )}
       <div className="mb-4">
