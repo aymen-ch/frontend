@@ -11,6 +11,9 @@ import {
   faTimes,
   faEye,
 } from '@fortawesome/free-solid-svg-icons';
+import "@fontsource/fira-code"; // Fira Code font
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Using Dracula theme
 import { convertNeo4jToGraph,convertNeo4jToTable } from './graphconvertor';
 const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [messages, setMessages] = useState([]);
@@ -300,6 +303,125 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       </div>
 
       {/* ... Query Modal ... */}
+  
+      {showQueryModal && (
+        <div className="query-modal-overlay" onClick={handleCloseQueryModal}>
+          <div 
+            className="query-modal" 
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="query-modal-header">
+              <h4>Cypher Query</h4>
+              <button 
+                className="close-modal-button" 
+                onClick={handleCloseQueryModal}
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            
+            {editingQueryId === showQueryModal ? (
+              <div className="query-edit-container">
+                <textarea
+                  className="query-edit-textarea"
+                  value={editedQuery}
+                  onChange={(e) => setEditedQuery(e.target.value)}
+                  rows="6"
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    background: '#2d2d2d',
+                    color: '#d4d4d4',
+                    fontFamily: "'Fira Code', Consolas, Monaco, monospace",
+                    fontSize: '14px',
+                    resize: 'vertical',
+                    marginBottom: '15px',
+                    border: '1px solid #3e3e3e'
+                  }}
+                />
+                <div className="query-edit-actions">
+                  <button
+                    className="save-query-button"
+                    onClick={() => handleSaveQueryEdit(showQueryModal)}
+                    style={{
+                      background: '#2ecc71',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faCheck} /> Save & Execute
+                  </button>
+                  <button
+                    className="cancel-query-button"
+                    onClick={handleCancelQueryEdit}
+                    style={{
+                      background: '#e74c3c',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faTimes} /> Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="query-view-container">
+                <SyntaxHighlighter
+                  language="cypher" // Specify Cypher language (though it might fall back to generic highlighting)
+                  style={dracula} // Using Dracula theme
+                  customStyle={{
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    marginBottom: '15px',
+                    borderRadius: '4px',
+                    padding: '15px',
+                    fontFamily: "'Fira Code', Consolas, Monaco, monospace",
+                    fontSize: '14px',
+                    border: '1px solid #3e3e3e'
+                  }}
+                  showLineNumbers // Optional: adds line numbers
+                >
+                  {messages.find(msg => msg.id === showQueryModal)?.cypherQuery || ''}
+                </SyntaxHighlighter>
+                <button
+                  className="edit-query-button"
+                  onClick={() => handleEditQuery(
+                    showQueryModal,
+                    messages.find(msg => msg.id === showQueryModal)?.cypherQuery
+                  )}
+                  style={{
+                    background: '#4a90e2',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  <FontAwesomeIcon icon={faEdit} /> Edit Query
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="input-group">
         <textarea

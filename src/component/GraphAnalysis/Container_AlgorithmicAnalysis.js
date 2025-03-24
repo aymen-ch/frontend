@@ -156,6 +156,7 @@ return (
             setSelectedNodes={setSelectedNodes}
             ispath={true}
             setrelationtoshow={setrelationtoshow}
+            setActiveAggregations={setActiveAggregations}
           />
           {isBoxPath > 0 && (
             <div className="path-visualization-overlay">

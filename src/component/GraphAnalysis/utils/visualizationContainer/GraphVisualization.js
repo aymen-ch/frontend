@@ -40,6 +40,7 @@ const GraphVisualization = React.memo(({
   setSelectedNodes,
   ispath,
   setrelationtoshow,
+  setActiveAggregations
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [allPaths, setAllPaths] = useState([]);
@@ -407,6 +408,7 @@ const GraphVisualization = React.memo(({
           setIsBoxPath={setIsBoxPath}
           depth={depth}
           isPathFindingStarted={isPathFindingStarted}
+        setActiveAggregations={setActiveAggregations}
         />
       )}
 
