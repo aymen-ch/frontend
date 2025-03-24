@@ -185,6 +185,7 @@ const GraphVisualization = React.memo(({
     { type: ForceDirectedLayoutType, icon: <FaDiaspora size={16} />, title: 'Force Directed' },
     { type: 'Operationnelle_Soutien_Leader', icon: <FaLayerGroup size={16} />, title: 'Free Layout' },
     { type: "dagre", icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
+   // { type: "computeLinearLayout", icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
   ];
 
   const handleLayoutSelect = (type) => {

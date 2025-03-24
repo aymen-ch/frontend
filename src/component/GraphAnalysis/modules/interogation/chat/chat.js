@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Chat.css';
-import { BASE_URL } from '../../utils/Urls';
+import { BASE_URL } from '../../../utils/Urls';
 import neo4j from "neo4j-driver";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -9,11 +9,9 @@ import {
   faCopy,
   faCheck,
   faTimes,
-  faEye, // Added eye icon for toggle
-  faEyeSlash // Added eye-slash icon for toggle
+  faEye,
 } from '@fortawesome/free-solid-svg-icons';
-import { getNodeIcon, getNodeColor, LabelManager, createNode, createEdge } from '../../utils/Parser';
-
+import { convertNeo4jToGraph,convertNeo4jToTable } from './graphconvertor';
 const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -22,7 +20,65 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editedText, setEditedText] = useState('');
   const [copiedMessageId, setCopiedMessageId] = useState(null);
-  const [showQueryIds, setShowQueryIds] = useState([]); // Track which message IDs have visible queries
+  const [showQueryModal, setShowQueryModal] = useState(null); // Tracks which message ID's query is shown in modal
+  const [editingQueryId, setEditingQueryId] = useState(null);
+  const [editedQuery, setEditedQuery] = useState('');
+
+  const handleEditQuery = (messageId, currentQuery) => {
+    setEditingQueryId(messageId);
+    setEditedQuery(currentQuery);
+  };
+
+  const handleSaveQueryEdit = async (messageId) => {
+    try {
+      const response = await axios.post(
+        BASE_URL + '/chatbot/',
+        {
+          question: messages.find(msg => msg.id === messageId).text,
+          answer_type: 'graph',
+          cypher_query: editedQuery
+        }
+      );
+
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.id === messageId ? { ...msg, cypherQuery: editedQuery } : msg
+        )
+      );
+
+      const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
+      const nvlGraph = await driver.executeQuery(
+        editedQuery,
+        {},
+        { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
+      );
+
+      const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
+      setNodes([...nodes, ...newNodes]);
+      setEdges([...edges, ...newEdges]);
+
+    } catch (error) {
+      console.error('Error updating query:', error);
+    } finally {
+      setEditingQueryId(null);
+      setEditedQuery('');
+    }
+  };
+
+  const handleCancelQueryEdit = () => {
+    setEditingQueryId(null);
+    setEditedQuery('');
+  };
+
+  const handleShowQueryModal = (messageId) => {
+    setShowQueryModal(messageId);
+  };
+
+  const handleCloseQueryModal = () => {
+    setShowQueryModal(null);
+    setEditingQueryId(null);
+    setEditedQuery('');
+  };
 
   useEffect(() => {
     if (selectedNodes.length > 0) {
@@ -33,15 +89,14 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     }
   }, [selectedNodes]);
 
-  
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
-  
+
     const userMessage = { id: messages.length + 1, text: inputText, sender: 'user' };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInputText('');
     setIsLoading(true);
-  
+
     try {
       const response = await axios.post(
         BASE_URL + '/chatbot/',
@@ -55,7 +110,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           },
         }
       );
-  
+
       if (responseType === 'graph') {
         const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
         const nvlGraph = await driver.executeQuery(
@@ -63,32 +118,34 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           {},
           { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
         );
-        console.log(nvlGraph)
-        const nodes1 = [];
-        const relationships1 = [];
 
-        nvlGraph.records.forEach(record => {
-          for (const n of record["_fields"]) {
-            if ('labels' in n) {
-              nodes1.push(
-                createNode(n.properties, n.labels[0], n.properties, false)
-              );
-            } else {
-              relationships1.push(
-                createEdge(n, n.start, n.end)
-              );
-            }
-          }
-        });
-        
-        setNodes([...nodes, ...nodes1]);
-        setEdges([...edges, ...relationships1]);
+        console.log(nvlGraph)
+        const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
+      setNodes([...nodes, ...newNodes]);
+      setEdges([...edges, ...newEdges]);
 
         const botMessage = {
           id: messages.length + 2,
           text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
           sender: 'bot',
-          cypherQuery: response.data.cypher_query
+          cypherQuery: response.data.cypher
+        };
+        setMessages((prevMessages) => [...prevMessages, botMessage]);
+      }else if (responseType === 'table') {
+        const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
+        const nvlTable = await driver.executeQuery(
+          response.data.cypher, // Assuming the backend returns a cypher query for tables
+          {},
+          { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
+        );
+        const { columns, rows } = convertNeo4jToTable(nvlTable.records);
+        console.log(columns,rows)
+        const botMessage = {
+          id: messages.length + 2,
+          text: JSON.stringify({ columns, rows }, null, 2), // For simplicity, display as JSON
+          sender: 'bot',
+          cypherQuery: response.data.cypher,
+          type: 'table', // Optional: to render as a table in UI
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
       } else {
@@ -96,7 +153,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           id: messages.length + 2,
           text: responseType === 'JSON'
             ? JSON.stringify(response.data, null, 2)
-            : response.data.response.replace(/\n/g, '<br>'), // Replace newlines with <br>
+            : response.data.response.replace(/\n/g, '<br>'),
           sender: 'bot',
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
@@ -143,15 +200,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       console.error('Failed to copy text:', error);
     }
   };
-
-  const toggleQueryVisibility = (messageId) => {
-    setShowQueryIds(prev => 
-      prev.includes(messageId) 
-        ? prev.filter(id => id !== messageId)
-        : [...prev, messageId]
-    );
-  };
-
   return (
     <div className="chat-container">
       <h3 className="chat-header">Chat</h3>
@@ -185,26 +233,42 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             ) : (
               <>
                 <strong>{message.sender === 'user' ? 'You:' : 'Bot:'}</strong>{' '}
-                <span className="message-text">{message.text}</span>
-                {/* Show toggle button and query if cypherQuery exists */}
-                {message.cypherQuery && (
-                  <div className="query-section">
-                    <button
-                      className="toggle-query-button"
-                      onClick={() => toggleQueryVisibility(message.id)}
-                    >
-                      <FontAwesomeIcon 
-                        icon={showQueryIds.includes(message.id) ? faEyeSlash : faEye} 
-                      />
-                      {showQueryIds.includes(message.id) ? ' Hide Query' : ' Show Query'}
-                    </button>
-                    {showQueryIds.includes(message.id) && (
-                      <div className="cypher-query">
-                        <strong>Cypher Query:</strong>
-                        <pre>{message.cypherQuery}</pre>
+                {message.type === 'table' ? (
+                  (() => {
+                    const { columns, rows } = JSON.parse(message.text);
+                    return (
+                      <div className="table-wrapper">
+                        <table className="styled-table">
+                          <thead>
+                            <tr>
+                              {columns.map(col => (
+                                <th key={col.key}>{col.label}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map((row, rowIndex) => (
+                              <tr key={rowIndex}>
+                                {columns.map(col => (
+                                  <td key={col.key}>{row[col.key]}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()
+                ) : (
+                  <span className="message-text">{message.text}</span>
+                )}
+                {message.cypherQuery && (
+                  <button
+                    className="toggle-query-button"
+                    onClick={() => handleShowQueryModal(message.id)}
+                  >
+                    <FontAwesomeIcon icon={faEye} /> Show Query
+                  </button>
                 )}
                 <div className="message-actions">
                   {message.sender === 'user' && (
@@ -235,6 +299,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         )}
       </div>
 
+      {/* ... Query Modal ... */}
+
       <div className="input-group">
         <textarea
           className="chat-input"
@@ -258,7 +324,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         >
           <option value="Text">Text</option>
           <option value="JSON">JSON</option>
-          <option value="graph">graph</option>
+          <option value="graph">Graph</option>
+          <option value="table">Table</option>
         </select>
         <button
           className="send-button"
