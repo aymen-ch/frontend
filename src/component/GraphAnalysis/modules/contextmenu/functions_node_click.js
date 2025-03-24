@@ -56,7 +56,7 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
       setNodes((prevNodes) => {
         const existingNodeIds = new Set(prevNodes.map(n => n.id));
         const newNodes = neighborhoodNodes.filter(n => !existingNodeIds.has(n.id));
-        return [...prevNodes, ...newNodes];
+        return [...prevNodes, ...neighborhoodNodes];
       });
       setEdges((prevEdges) => [...prevEdges, ...neighborhoodEdges]);
     } else {

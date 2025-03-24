@@ -37,42 +37,58 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       setIsLoading(true);
       const originalMessage = messages.find(msg => msg.id === messageId);
       
-      // Update the message with the new query
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.id === messageId ? { ...msg, cypherQuery: editedQuery } : msg
         )
       );
-
-      // Re-execute the query
+  
       const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
       const nvlResult = await driver.executeQuery(
         editedQuery,
         {},
         { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
       );
-
-      // Determine response type from original message context
+  
       const originalResponseType = originalMessage.type === 'table' ? 'table' : 'graph';
-
+  
       if (originalResponseType === 'graph') {
-        const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
-        setNodes([...nodes.filter(n => !newNodes.some(nn => nn.id === n.id)), ...newNodes]);
-        setEdges([...edges.filter(e => !newEdges.some(ne => ne.id === e.id)), ...newEdges]);
-        
-        // Update the message with execution confirmation
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.id === messageId
-              ? { 
-                  ...msg, 
-                  text: 'Graph updated with new nodes and edges.',
-                  cypherQuery: editedQuery,
-                  sender: 'bot'
-                }
-              : msg
-          )
-        );
+        try {
+          const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
+          
+          if (newNodes.length > 0 || newEdges.length > 0) {
+            setNodes([...nodes.filter(n => !newNodes.some(nn => nn.id === n.id)), ...newNodes]);
+            setEdges([...edges.filter(e => !newEdges.some(ne => ne.id === e.id)), ...newEdges]);
+            
+            setMessages((prevMessages) =>
+              prevMessages.map((msg) =>
+                msg.id === messageId
+                  ? { 
+                      ...msg, 
+                      text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة..',
+                      cypherQuery: editedQuery,
+                      sender: 'bot'
+                    }
+                  : msg
+              )
+            );
+          } else {
+            throw new Error("No valid graph data returned");
+          }
+        } catch (conversionError) {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg.id === messageId
+                ? { 
+                    ...msg, 
+                    text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. قد لا يُرجع الاستعلام العُقد والعلاقات. يرجى تعديل استعلام Cypher لإرجاع بيانات متوافقة مع الرسم البياني (العُقد والعلاقات).',
+                    cypherQuery: editedQuery,
+                    sender: 'bot'
+                  }
+                : msg
+            )
+          );
+        }
       } else if (originalResponseType === 'table') {
         const { columns, rows } = convertNeo4jToTable(nvlResult.records);
         
@@ -90,7 +106,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           )
         );
       }
-
     } catch (error) {
       console.error('Error updating and executing query:', error);
       setMessages((prevMessages) =>
@@ -103,7 +118,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     } finally {
       setEditingQueryId(null);
       setEditedQuery('');
-      setShowQueryModal(null); // Close modal after execution
+      setShowQueryModal(null);
       setIsLoading(false);
     }
   };
@@ -134,12 +149,12 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
-
+  
     const userMessage = { id: messages.length + 1, text: inputText, sender: 'user' };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInputText('');
     setIsLoading(true);
-
+  
     try {
       const response = await axios.post(
         BASE_URL + '/chatbot/',
@@ -153,7 +168,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           },
         }
       );
-
+  
       if (responseType === 'graph') {
         const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
         const nvlGraph = await driver.executeQuery(
@@ -161,34 +176,48 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           {},
           { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
         );
-
-        console.log(nvlGraph)
-        const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
-      setNodes([...nodes, ...newNodes]);
-      setEdges([...edges, ...newEdges]);
-
-        const botMessage = {
-          id: messages.length + 2,
-          text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
-          sender: 'bot',
-          cypherQuery: response.data.cypher
-        };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-      }else if (responseType === 'table') {
+  
+        try {
+          const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
+          
+          // Only update if we have valid graph data
+          if (newNodes.length > 0 || newEdges.length > 0) {
+            setNodes([...nodes, ...newNodes]);
+            setEdges([...edges, ...newEdges]);
+            
+            const botMessage = {
+              id: messages.length + 2,
+              text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
+              sender: 'bot',
+              cypherQuery: response.data.cypher
+            };
+            setMessages((prevMessages) => [...prevMessages, botMessage]);
+          } else {
+            throw new Error("No valid graph data returned");
+          }
+        } catch (conversionError) {
+          const botMessage = {
+            id: messages.length + 2,
+            text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. قد لا يُرجع الاستعلام العُقد والعلاقات. يرجى تعديل استعلام Cypher لإرجاع بيانات متوافقة مع الرسم البياني (العُقد والعلاقات).',
+            sender: 'bot',
+            cypherQuery: response.data.cypher
+          };
+          setMessages((prevMessages) => [...prevMessages, botMessage]);
+        }
+      } else if (responseType === 'table') {
         const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
         const nvlTable = await driver.executeQuery(
-          response.data.cypher, // Assuming the backend returns a cypher query for tables
+          response.data.cypher,
           {},
           { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
         );
         const { columns, rows } = convertNeo4jToTable(nvlTable.records);
-        console.log(columns,rows)
         const botMessage = {
           id: messages.length + 2,
-          text: JSON.stringify({ columns, rows }, null, 2), // For simplicity, display as JSON
+          text: JSON.stringify({ columns, rows }, null, 2),
           sender: 'bot',
           cypherQuery: response.data.cypher,
-          type: 'table', // Optional: to render as a table in UI
+          type: 'table',
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
       } else {
@@ -205,7 +234,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       console.error('Error sending message:', error);
       const errorMessage = {
         id: messages.length + 2,
-        text: 'Failed to get a response from the chatbot.',
+        text: 'Failed to get a response from the chatbot: ' + error.message,
         sender: 'error',
       };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);

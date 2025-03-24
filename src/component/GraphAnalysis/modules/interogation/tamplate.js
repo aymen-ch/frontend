@@ -5,7 +5,9 @@ import 'ace-builds/src-noconflict/theme-monokai';
 import './Template.css';
 import { BASE_URL } from '../../utils/Urls';
 import { arabicQuestions } from './tamplate_question';
-
+import { convertNeo4jToGraph } from './chat/graphconvertor';
+import neo4j from "neo4j-driver";
+import { useGlobalContext } from '../../GlobalVariables';
 const Template = () => {
   const [selectedQuestion, setSelectedQuestion] = useState('');
   const [queryParameters, setQueryParameters] = useState({});
@@ -27,7 +29,7 @@ const Template = () => {
   const [templateError, setTemplateError] = useState('');
   const [newParam, setNewParam] = useState({ name: '', description: '', type: 'string' });
   const [successMessage, setSuccessMessage] = useState('');
-
+  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
   // Effect to clear success message after 3 seconds
   useEffect(() => {
     if (successMessage) {
@@ -59,25 +61,43 @@ const Template = () => {
   };
 
   const executeQuery = async () => {
-    if (selectedQuestion) {
-      setIsLoading(true);
-      setError('');
-      setQueryResult('');
+    if (!selectedQuestion) return;
+
+    setIsLoading(true);
+    setError('');
+    setQueryResult('');
+
+    try {
+      const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
+      const nvlResult = await driver.executeQuery(
+        selectedQuestion.query,
+        queryParameters,
+        { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
+      );
+      console.log(nvlResult)
       try {
-        const payload = { query: selectedQuestion.query, parameters: queryParameters };
-        const response = await fetch(BASE_URL + '/run/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) throw new Error('Failed to execute query');
-        const data = await response.json();
-        setQueryResult(formatQueryResult(data.result));
-      } catch (error) {
-        setError(`خطأ: ${error.message}`);
+        const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
+        console.log(newNodes)
+        if (newNodes.length > 0 || newEdges.length > 0) {
+          // Use the setter functions with previous state
+          
+          setNodes([...nodes.filter(n => !newNodes.some(nn => nn.id === n.id)), ...newNodes]);
+          setEdges([...edges.filter(e => !newEdges.some(ne => ne.id === e.id)), ...newEdges]);
+          setQueryResult('تم تحديث الرسم البياني بالعقد والحواف الجديدة.');
+        } else {
+          setQueryResult('result is empty.');
+          throw new Error("the result is empty");
+        }
+      } catch (graphError) {
+        console.log(graphError)
+        setQueryResult('لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. قد لا يُرجع الاستعلام العُقد والعلاقات. يرجى تعديل استعلام Cypher لإرجاع بيانات متوافقة مع الرسم البياني (العُقد والعلاقات).');
       } finally {
-        setIsLoading(false);
+        await driver.close();
       }
+    } catch (error) {
+      setError(`خطأ في تنفيذ الاستعلام: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
