@@ -298,7 +298,8 @@ const SearchinputComponent = ({ setContextData }) => {
                     <p>Loading...</p>
                 ) : (
                     <div className="d-flex flex-wrap">
-                        {nodeData.map((nodeType, index) => (
+                        {nodeData.
+                        filter((nodeType) => nodeType.type !== "Affaire").map((nodeType, index) => (
                             <div key={index} className="form-check form-check-inline">
                                 <input
                                     className="form-check-input"

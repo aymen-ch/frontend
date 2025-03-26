@@ -9,6 +9,8 @@ export const GlobalProvider = ({ children }) => {
   // Initial global states
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
+  const [NewContextHasArrived, setNewContextHasArrived] = useState(false);
+  
   
   // Placeholder for additional global states
   // Add more global states here as needed
@@ -21,6 +23,8 @@ export const GlobalProvider = ({ children }) => {
     setNodes,
     edges,
     setEdges,
+    NewContextHasArrived,
+    setNewContextHasArrived
     // Add more states and setters here as needed
     // someOtherState,
     // setSomeOtherState,

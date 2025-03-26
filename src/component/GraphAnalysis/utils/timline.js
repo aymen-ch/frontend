@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import Draggable from 'react-draggable';
 import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 
+import { useGlobalContext } from '../GlobalVariables';
 const TimelineBar = ({ affaires, setAffairesInRange }) => {
   const affaireRefs = useRef({});
   const [isVisible, setIsVisible] = useState(true);
@@ -14,12 +15,13 @@ const TimelineBar = ({ affaires, setAffairesInRange }) => {
   const resizeStartWidth = useRef(0);
   const resizeStartXPosition = useRef(0);
   const prevAffairesInRange = useRef([]);
+  const { NewContextHasArrived ,setNewContextHasArrived } = useGlobalContext();
 
   useEffect(() => {
     affaireRefs.current = {};
   }, [affaires]);
 
-  const logAffairesInRange = (startX, endX) => {
+  const logAffairesInRange = (startX, endX, NewContextHasArrived =false) => {
     if (!timelineRef.current) return;
     
     const timelineRect = timelineRef.current.getBoundingClientRect();
@@ -35,14 +37,38 @@ const TimelineBar = ({ affaires, setAffairesInRange }) => {
     });
 
     const affaireIdsInRange = affairesInRange.map((affaire) => affaire.id);
+    console.log("NewContextHasArrived33" );
+    if(NewContextHasArrived){
+      console.log("setAffairesInRange55"  , affaireIdsInRange);
+      setAffairesInRange(affaireIdsInRange);
+      prevAffairesInRange.current = affaireIdsInRange;
+    }
     if (
       affaireIdsInRange.length !== prevAffairesInRange.current.length ||
-      !affaireIdsInRange.every((id, index) => id === prevAffairesInRange.current[index])
+      !affaireIdsInRange.every((id, index) => id === prevAffairesInRange.current[index]
+      )
     ) {
+      console.log("setAffairesInRange" );
       setAffairesInRange(affaireIdsInRange);
       prevAffairesInRange.current = affaireIdsInRange;
     }
   };
+
+  useEffect(() => {
+    if (affaires.length > 0 ) {
+      setBoxPosition({ x: 0, width: 100 });
+      
+      logAffairesInRange(boxPosition.x, boxPosition.x + boxPosition.width ,NewContextHasArrived);
+      console.log("setNewContextHasArrived1" ,NewContextHasArrived);
+      setNewContextHasArrived(false);
+      console.log("setNewContextHasArrived2" ,NewContextHasArrived);
+    }
+    if(! isVisible) {
+      isVisible =true;
+    }
+   
+  }, [NewContextHasArrived]);
+
 
   useEffect(() => {
     if (affaires.length > 0 && isVisible) {
