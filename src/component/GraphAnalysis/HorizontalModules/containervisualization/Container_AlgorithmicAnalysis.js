@@ -108,10 +108,15 @@ const Container_AlgorithmicAnalysis = () => {
 
   useEffect(() => {
     if (SubGrapgTable.results.length > 0 && affairesInRange.length === 0) {
+      console.log("from container 333 ",affairesInRange)
       setAffairesInRange([SubGrapgTable.results[0].affaire.identity]); // Automatically select the first affaire
       setCurrentSubGraphIndex(0); // Also ensure currentSubGraphIndex points to the first affaire
     }
   }, [SubGrapgTable]);
+
+  useEffect(() => {
+    console.log("from container ",affairesInRange)
+  }, [affairesInRange]);
 
   useAggregation(affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges);
 

@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import Draggable from 'react-draggable';
 import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 
-import { useGlobalContext } from '../GlobalVariables';
+import { useGlobalContext } from '../../GlobalVariables';
 const TimelineBar = ({ affaires, setAffairesInRange }) => {
   const affaireRefs = useRef({});
   const [isVisible, setIsVisible] = useState(true);
@@ -48,7 +48,7 @@ const TimelineBar = ({ affaires, setAffairesInRange }) => {
       !affaireIdsInRange.every((id, index) => id === prevAffairesInRange.current[index]
       )
     ) {
-      console.log("setAffairesInRange" );
+      console.log("setAffairesInRange66" );
       setAffairesInRange(affaireIdsInRange);
       prevAffairesInRange.current = affaireIdsInRange;
     }

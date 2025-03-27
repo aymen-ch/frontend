@@ -114,126 +114,183 @@ export const fetchNodeProperties = async (nodeId, setSelectedNodeData) => {
       return null;
     }
   };
-export const getAggregationPath = (type) => {
-    switch (type) {
-      case "Phone":
-        return ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"];
-      case "Affaire":
-        return ["Personne", "Impliquer", "Affaire", "Impliquer", "Personne"];
-      case "Personne":
-        return ["Phone", "Proprietaire", "Personne", "Impliquer", "Affaire"];
-      case "Unite":
-        return ["Affaire", "Traiter", "Unite", "situer", "Commune"];
-      case "Commune":
-        return ["Affaire", "Traiter", "Unite", "situer", "Commune", "appartient", "Daira"];
-      default:
-        return null;
-    }
-  };
-  
-  export const getIntermediateTypes = (aggregationPath) => {
-    const intermediateTypes = [];
-    for (let i = 2; i < aggregationPath.length - 2; i += 2) {
-      intermediateTypes.push(aggregationPath[i]);
-    }
-    return intermediateTypes;
-  };
-  
-  export const handleAggregation = async (type, aggregationType, nodes, edges) => {
-    const nodeIds = nodes
-      .filter((node) => type.includes(node.group))
-      .map((node) => parseInt(node.id, 10));
-  
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post(BASE_URL + '/agregate/', {
-        node_ids: nodeIds,
-        aggregation_type: [type],
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (response.status === 200) {
-        const { nodes: parsedNodes, edges: parsedEdges } = parseAggregationResponse(response.data);
+  // Aggregation definitions
+const virtualRelations = [
+  {
+      "name": "Appel_telephone",
+      "path": ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"]
+  },
+  {
+      "name": "memeaffaire",
+      "path": ["Personne", "Impliquer", "Affaire", "Impliquer", "Personne"]
+  },
+  {
+      "name": "impliquer",
+      "path": ["Phone", "Proprietaire", "Personne", "Impliquer", "Affaire"]
+  },
+  {
+      "name": "ProduitDansCommune",
+      "path": ["Affaire", "Traiter", "Unite", "situer", "Commune"]
+  },
+  {
+      "name": "ProduitDansDaira",
+      "path": ["Affaire", "Traiter", "Unite", "situer", "Commune", "appartient", "Daira"]
+  }
+];
 
-        const updatedNodes = parsedNodes.map(node => ({
-          ...node,
-          aggregationType: aggregationType,
-        }));
-        const updatedEdges = parsedEdges.map(edge => ({
-          ...edge,
-          aggregationType: aggregationType,
-        }));
-  
-        return { nodes: updatedNodes, edges: updatedEdges };
-      } else {
-        console.error('Aggregation failed.');
-        return { nodes: [], edges: [] };
-      }
-    } catch (error) {
-      console.error('Error during aggregation:', error);
-      return { nodes: [], edges: [] };
-    }
-  };
-
-
-
-
-export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges) => {
-  useEffect(() => {
-    if (affairesInRange.length > 0) {
-      const filteredResults = SubGrapgTable.results.filter((result) =>
-        affairesInRange.includes(result.affaire.identity)
-      );  
-
-      const { nodes: parsedNodes, edges: parsedEdges } = SubGraphParser(filteredResults);
-
-      const applyAggregations = async () => {
-        let aggregatedNodes = [...parsedNodes];
-        let aggregatedEdges = [...parsedEdges];
-
-        for (const [type, isActive] of Object.entries(activeAggregations)) {
-          if (isActive) {
-            const aggregationTypeToCall = getAggregationPath(type);
-            if (aggregationTypeToCall) {
-              const intermediateTypes = getIntermediateTypes(aggregationTypeToCall);
-
-              aggregatedNodes = aggregatedNodes.map(node => ({
-                ...node,
-                hidden: intermediateTypes.includes(node.group) || node.hidden,
-              }));
-
-              aggregatedEdges = aggregatedEdges.map(edge => ({
-                ...edge,
-                hidden: intermediateTypes.includes(aggregatedNodes.find(n => n.id === edge.from)?.group) ||
-                        intermediateTypes.includes(aggregatedNodes.find(n => n.id === edge.to)?.group) ||
-                        edge.hidden,
-              }));
-
-              const { nodes: newNodes, edges: newEdges } = await handleAggregation(
-                aggregationTypeToCall,
-                type,
-                aggregatedNodes,
-                aggregatedEdges
-              );
-              aggregatedNodes = [...aggregatedNodes, ...newNodes];
-              aggregatedEdges = [...aggregatedEdges, ...newEdges];
-            }
-          }
-        }
-
-        setNodes(aggregatedNodes);
-        setEdges(aggregatedEdges);
-      };
-
-      applyAggregations();
-    }
-  }, [affairesInRange, activeAggregations]);
+// Helper to get aggregation path by name
+const getAggregationPath = (relationName) => {
+  const relation = virtualRelations.find((rel) => rel.name === relationName);
+  console.log(`getAggregationPath for ${relationName}:`, relation ? relation.path : null);
+  return relation ? relation.path : null;
 };
 
+// Helper to get intermediate types
+const getIntermediateTypes = (aggregationPath) => {
+  if (!aggregationPath) return [];
+  const intermediateTypes = [];
+  for (let i = 2; i < aggregationPath.length - 2; i += 2) {
+      intermediateTypes.push(aggregationPath[i]);
+  }
+  console.log('Intermediate types:', intermediateTypes);
+  return intermediateTypes;
+};
+
+// Handle aggregation API call
+const handleAggregation = async (relationName, aggregationPath, nodes) => {
+  const startType = aggregationPath[0];
+  const nodeIds = nodes
+ //     .filter((node) => node.group === startType)
+      .map((node) => parseInt(node.id, 10));
+
+  console.log(`handleAggregation - relationName: ${relationName}, startType: ${startType}, nodeIds:`, nodeIds);
+
+  if (nodeIds.length === 0) {
+      console.warn('No nodes found for aggregation');
+      return { nodes: [], edges: [] };
+  }
+
+  try {
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('No auth token found');
+
+      const response = await axios.post(`${BASE_URL}/agregate/`, {
+          node_ids: nodeIds,
+          aggregation_type: [aggregationPath],
+          type: relationName
+      }, {
+          headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+          },
+      });
+
+      console.log('API Response:', response.status, response.data);
+
+      if (response.status === 200) {
+          const { nodes: parsedNodes, edges: parsedEdges } = parseAggregationResponse(response.data);
+          console.log('Parsed nodes:', parsedNodes, 'Parsed edges:', parsedEdges);
+
+          const updatedNodes = parsedNodes.map(node => ({
+              ...node,
+              aggregationType: relationName,
+              aggregationPath: aggregationPath
+          }));
+
+          const updatedEdges = parsedEdges.map(edge => ({
+              ...edge,
+              aggregationType: relationName,
+              aggregationPath: aggregationPath
+          }));
+
+          return { nodes: updatedNodes, edges: updatedEdges };
+      } else {
+          console.error('Aggregation failed with status:', response.status);
+          return { nodes: [], edges: [] };
+      }
+  } catch (error) {
+      console.error('Error during aggregation:', error.message);
+      return { nodes: [], edges: [] };
+  }
+};
+
+// Main hook
+export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges) => {
+  useEffect(() => {
+      console.log('useEffect triggered - affairesInRange:', affairesInRange, 'activeAggregations:', activeAggregations);
+
+      if (!affairesInRange || affairesInRange.length === 0) {
+          console.log('No affaires in range, skipping aggregation');
+          return;
+      }
+
+      if (!SubGrapgTable || !SubGrapgTable.results) {
+          console.error('SubGrapgTable or results is undefined');
+          return;
+      }
+
+      const filteredResults = SubGrapgTable.results.filter((result) =>
+          affairesInRange.includes(result.affaire.identity)
+      );
+      console.log('Filtered results:', filteredResults);
+
+      const { nodes: parsedNodes, edges: parsedEdges } = SubGraphParser(filteredResults);
+      console.log('Initial parsed nodes:', parsedNodes, 'edges:', parsedEdges);
+
+      const applyAggregations = async () => {
+          let aggregatedNodes = [...parsedNodes];
+          let aggregatedEdges = [...parsedEdges];
+
+          for (const [relationName, isActive] of Object.entries(activeAggregations)) {
+              console.log(`Processing aggregation: ${relationName}, isActive: ${isActive}`);
+              if (!isActive) continue;
+
+              const aggregationPath = getAggregationPath(relationName);
+              if (!aggregationPath) {
+                  console.warn(`No aggregation path found for ${relationName}`);
+                  continue;
+              }
+
+              const intermediateTypes = getIntermediateTypes(aggregationPath);
+
+              // Hide intermediate nodes
+              aggregatedNodes = aggregatedNodes.map(node => ({
+                  ...node,
+                  hidden: intermediateTypes.includes(node.group) || node.hidden,
+              }));
+
+              // Hide edges connected to intermediate nodes
+              aggregatedEdges = aggregatedEdges.map(edge => {
+                  const fromNode = aggregatedNodes.find(n => n.id === edge.from);
+                  const toNode = aggregatedNodes.find(n => n.id === edge.to);
+                  return {
+                      ...edge,
+                      hidden: intermediateTypes.includes(fromNode?.group) ||
+                             intermediateTypes.includes(toNode?.group) ||
+                             edge.hidden,
+                  };
+              });
+
+              // Perform aggregation
+              const { nodes: newNodes, edges: newEdges } = await handleAggregation(
+                  relationName,
+                  aggregationPath,
+                  aggregatedNodes
+              );
+
+              console.log('New nodes from aggregation:', newNodes, 'New edges:', newEdges);
+              aggregatedNodes = [...aggregatedNodes, ...newNodes];
+              aggregatedEdges = [...aggregatedEdges, ...newEdges];
+          }
+
+          console.log('Final aggregated nodes:', aggregatedNodes, 'edges:', aggregatedEdges);
+          setNodes(aggregatedNodes);
+          setEdges(aggregatedEdges);
+      };
+
+      applyAggregations().catch(error => console.error('Aggregation process failed:', error));
+  }, [affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges]);
+};
 
 export const fetchPersonneCrimes = async (combinedNodes) => {
   try {

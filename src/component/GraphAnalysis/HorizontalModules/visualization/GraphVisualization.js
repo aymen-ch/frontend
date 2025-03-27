@@ -22,6 +22,7 @@ import { FaProjectDiagram, FaLayerGroup, FaSitemap } from 'react-icons/fa';
 import { BASE_URL } from '../../utils/Urls';
 import { getNodeColor, getNodeIcon, createNode } from '../../utils/Parser';
 import LayoutControl from '../../modules/layout/Layoutcontrol';
+import ContextMenuRel from '../../modules/contextmenu/contextmenuRelarion';
 const GraphVisualization = React.memo(({
   setEdges,
   edges,
@@ -45,6 +46,7 @@ const GraphVisualization = React.memo(({
     setselectedEdges,
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
+  const [contextMenuRel, setContextMenuRel] = useState(null);
   const [allPaths, setAllPaths] = useState([]);
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
   const [render, setRenderer] = useState("canvas");
@@ -362,6 +364,7 @@ const GraphVisualization = React.memo(({
         selectedNodes={selectedNodes}
         setSelectedNodes={setSelectedNodes}
         setContextMenu={setContextMenu}
+        setContextMenuRel={setContextMenuRel}
         setnodetoshow={setnodetoshow}
         ispath={ispath}
         setrelationtoshow={setrelationtoshow}
@@ -388,6 +391,15 @@ const GraphVisualization = React.memo(({
           depth={depth}
           isPathFindingStarted={isPathFindingStarted}
         setActiveAggregations={setActiveAggregations}
+        />
+      )}
+
+{contextMenuRel && contextMenuRel.visible && (
+        <ContextMenuRel
+          contextMenuRel={contextMenuRel}
+          setContextMenuRel={setContextMenuRel}
+          setNodes={setNodes}
+          setEdges={setEdges}
         />
       )}
 

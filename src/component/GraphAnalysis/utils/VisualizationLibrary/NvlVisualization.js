@@ -19,6 +19,7 @@ const useNvlVisualization = ({
   selectedNodes,
   setSelectedNodes,
   setContextMenu,
+  setContextMenuRel,
   setnodetoshow,
   setrelationtoshow,
   shiftPressed,
@@ -117,6 +118,16 @@ const useNvlVisualization = ({
         });
         selectedRelationRef.current = edge.id;
       }
+    });
+
+    clickInteraction.updateCallback('onRelationshipRightClick', (edge, hitElements, event) => {
+      event.preventDefault();
+      setContextMenuRel({
+        visible: true,
+        x: event.clientX - 230,
+        y: event.clientY - 200,
+        edge,
+      });
     });
 
     // Canvas click (deselect)
