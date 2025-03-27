@@ -513,8 +513,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           onChange={(e) => setResponseType(e.target.value)}
           disabled={isLoading}
         >
-          <option value="Text">Text</option>
-          <option value="JSON">JSON</option>
           <option value="graph">Graph</option>
           <option value="table">Table</option>
         </select>

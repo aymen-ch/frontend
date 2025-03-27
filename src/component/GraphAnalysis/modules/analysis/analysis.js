@@ -4,7 +4,7 @@ import { Button, Spinner, Container } from 'react-bootstrap';
 import { getNodeIcon, getNodeColor, parseAggregationResponse, parseAggregationResponse_advanced } from '../../utils/Parser';
 import { BASE_URL } from '../../utils/Urls';
 import NodeClasificationBackEnd from './NodeClasificationBackEnd/NodeClasificationBackEnd';
-import { BetweennessCentrality } from '../../utils/function_container';
+import { BetweennessCentrality } from '../../HorizontalModules/containervisualization/function_container';
 import { useGlobalContext } from '../../GlobalVariables';
 
 const Analysis = ({

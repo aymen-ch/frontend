@@ -12,14 +12,11 @@ const GraphCanvas = ({
   setnodetoshow,
   setrelationtoshow,
   ispath,
-  setEdges,
-  setNodes
-  
+  setselectedEdges,
+  selectedEdges
 }) => {
   const [shiftPressed, setShiftPressed] = useState(false);
   const [hoveredEdge, sethoverEdge] = useState(null);
-  const [selectedEdges, setselectedEdges] = useState(new Set());
-
   // Handle Shift key press
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -54,7 +51,6 @@ const GraphCanvas = ({
     setselectedEdges,
     sethoverEdge,
     ispath,
-    setNodes
   });
 
   const VisualizationComponent = getVisualizationComponent(hoveredEdge);

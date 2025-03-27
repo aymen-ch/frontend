@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ContextMenu from '../../modules/contextmenu/ContextMenu';
-import GraphCanvas from '../Visualization/GraphCanvas';
+import GraphCanvas from '../../utils/VisualizationLibrary/GraphCanvas';
 import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWindow/PersonProfileWindow";
 import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa'; // Added FaSpinner
 import { FaDiaspora } from "react-icons/fa6";
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
-import { handleLayoutChange, fetchNodeProperties } from '../function_container';
-import globalWindowState from '../globalWindowState';
+import { handleLayoutChange, fetchNodeProperties } from '../containervisualization/function_container';
+import globalWindowState from '../../utils/globalWindowState';
 import { 
   buttonStyle, 
   activeButtonStyle, 
@@ -19,9 +19,9 @@ import {
 } from './GraphVisualizationStyles';
 import { filterNodesByQuery, updateLayoutOption } from './GraphVisualizationUtils';
 import { FaProjectDiagram, FaLayerGroup, FaSitemap } from 'react-icons/fa';
-import { BASE_URL } from '../Urls';
-import { getNodeColor, getNodeIcon, createNode } from '../Parser';
-
+import { BASE_URL } from '../../utils/Urls';
+import { getNodeColor, getNodeIcon, createNode } from '../../utils/Parser';
+import LayoutControl from '../../modules/layout/Layoutcontrol';
 const GraphVisualization = React.memo(({
   setEdges,
   edges,
@@ -40,7 +40,9 @@ const GraphVisualization = React.memo(({
   setSelectedNodes,
   ispath,
   setrelationtoshow,
-  setActiveAggregations
+  setActiveAggregations,
+  selectedEdges,
+    setselectedEdges,
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [allPaths, setAllPaths] = useState([]);
@@ -48,13 +50,7 @@ const GraphVisualization = React.memo(({
   const [render, setRenderer] = useState("canvas");
   const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [searchtype, setsearchtype] = useState("current_graph");
-  const [layoutOptions, setLayoutOptions] = useState({
-    enableCytoscape: true,
-    enableVerlet: false,
-    gravity: -20000,
-    intelWorkaround: true,
-    simulationStopVelocity: 0.1,
-  });
+
   
   const [showSettings, setShowSettings] = useState(false);
   const [activeWindow, setActiveWindow] = useState(null);
@@ -181,17 +177,7 @@ const GraphVisualization = React.memo(({
     setActiveWindow(null);
   };
 
-  const layouts = [
-    { type: d3ForceLayoutType, icon: <FaProjectDiagram size={16} />, title: 'D3 Force Layout' },
-    { type: ForceDirectedLayoutType, icon: <FaDiaspora size={16} />, title: 'Force Directed' },
-    { type: 'Operationnelle_Soutien_Leader', icon: <FaLayerGroup size={16} />, title: 'Free Layout' },
-    { type: "dagre", icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
-   // { type: "computeLinearLayout", icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
-  ];
 
-  const handleLayoutSelect = (type) => {
-    handleLayoutChange(type, nvlRef, nodes, edges, setLayoutType);
-  };
 
   return (
     <div style={containerStyle(isFullscreen)}>
@@ -303,20 +289,11 @@ const GraphVisualization = React.memo(({
           })}
         </div>
       )}
-      <div style={layoutControlStyle}>
-        {layouts.map((layout) => (
-          <button
-            key={layout.type}
-            style={layoutType === layout.type ? activeButtonStyle : buttonStyle}
-            onClick={() => handleLayoutSelect(layout.type)}
-            title={layout.title}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = layoutType === layout.type ? 'rgba(66, 153, 225, 0.8)' : 'rgba(255, 255, 255, 0.8)'}
-          >
-            {layout.icon}
-          </button>
-        ))}
-      </div>
+     <LayoutControl 
+        nvlRef={nvlRef}
+        nodes={nodes}
+        edges={edges}
+      />
 
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '200px', left: '10px' }}
@@ -390,7 +367,9 @@ const GraphVisualization = React.memo(({
         setrelationtoshow={setrelationtoshow}
         setEdges={setEdges}
         setNodes={setNodes}
-      />
+        selectedEdges={selectedEdges}
+        setselectedEdges={setselectedEdges}
+      /> 
 
       {contextMenu && contextMenu.visible && (
         <ContextMenu

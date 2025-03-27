@@ -71,8 +71,7 @@ const fetchNodeProperties = async (nodeId) => {
 };
 
 // Utility function to create a node object
-export const createNode = (nodeData, nodeType, properties, isSelected = false,aggregatedproperties=null) => {
-    console.log("create node have been called")
+export const createNode = (nodeData, nodeType, properties, isSelected = false,aggregatedproperties=null,ischema=false) => {
   // Create the base node object
   const node = {
     id: nodeData.identity.toString(),
@@ -82,7 +81,7 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false,ag
     color: NODE_CONFIG.nodeColors[nodeType] || NODE_CONFIG.nodeColors.default,
     html: createNodeHtml(LabelManager(nodeType, properties), nodeType, isSelected, false, nodeData.identity.toString(), NODE_CONFIG.defaultNodeSize),
     selecte: isSelected,
-    captionnode: LabelManager(nodeType, properties),
+    captionnode: ischema? LabelManagerSchema(nodeType, properties):LabelManager(nodeType, properties),
     aggregatedproperties:aggregatedproperties,
     //hovered:true,
     properties:properties
@@ -98,11 +97,11 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false,ag
 };
 
 // Utility function to create an edge object
-export const createEdge = (rel, startId, endId) => ({
+export const createEdge = (rel, startId, endId,color='red') => ({
   id: rel.identity ? rel.identity.toString() : `${startId}-${endId}`,
   from: startId.toString(),
   to: endId.toString(),
-  color: NODE_CONFIG.edgeColor,
+  color: color,
   width: NODE_CONFIG.edgeWidth,
   captionSize: NODE_CONFIG.captionSize || 12, // Default size if not provided
   captionAlign: 'center',
@@ -417,6 +416,9 @@ export const LabelManager = (node_type, properties) => {
     case 'Personne': return `${properties.اللقب} ${properties.الاسم}`;
     default: return `Unknown Type\nID: ${properties.identity}`;
   }
+};
+export const LabelManagerSchema = (node_type, properties) => {
+  return node_type
 };
 
 // Edge caption HTML (unchanged for now, but can be parameterized similarly if needed)

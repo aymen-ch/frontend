@@ -10,7 +10,7 @@ import {
   HoverInteraction,
 } from '@neo4j-nvl/interaction-handlers';
 import { createNodeHtml,calculateNodeConfig } from '../Parser';
-import { IconPersonWithClass } from '../function_container';
+import { IconPersonWithClass } from '../../HorizontalModules/containervisualization/function_container';
 
 const useNvlVisualization = ({
   nvlRef,
@@ -26,7 +26,6 @@ const useNvlVisualization = ({
   setselectedEdges,
   sethoverEdge,
   ispath,
-  setNodes
 }) => {
   const previouslyHoveredNodeRef = useRef(null);
   const selectedNodeRef = useRef(null);
@@ -235,12 +234,10 @@ const useNvlVisualization = ({
       })),
       rels: combinedEdges.map((edge) => ({
         ...edge,
-        selected: selectedEdges.has(edge.id),
-        color: edge.id === hoveredEdge || selectedEdges.has(edge.id) ? '#B771E5' : (edge.color || '#808080'),
-        width: edge.id === hoveredEdge || selectedEdges.has(edge.id) ? 15 : (edge.width || 1),
+        selected: selectedEdges?.has(edge.id),
+        color: edge.id === hoveredEdge || selectedEdges?.has(edge.id) ? '#B771E5' : (edge.color || '#808080'),
+        width: edge.id === hoveredEdge || selectedEdges?.has(edge.id) ? 15 : (edge.width || 1),
       })),
- 
-
     };
 
     return (

@@ -1,5 +1,5 @@
-import { BASE_URL } from "./Urls";
-import { parseAggregationResponse } from "./Parser";
+import { BASE_URL } from "../../utils/Urls";
+import { parseAggregationResponse } from "../../utils/Parser";
 import axios from "axios";
 export const getIntermediateTypes = (aggregationPath) => {
     const intermediateTypes = [];
@@ -8,7 +8,7 @@ export const getIntermediateTypes = (aggregationPath) => {
     }
     return intermediateTypes;
   };
-  export const handleAggregation = async (type, aggregationType,setNodes,setEdges,nodes,setActiveAggregations) => {
+  export const handleAggregation = async (relationName="apple_telephone",type, aggregationType,setNodes,setEdges,nodes,setActiveAggregations) => {
     const nodeIds = nodes
       .filter((node) => type.includes(node.group))
       .map((node) => parseInt(node.id, 10));
@@ -18,6 +18,7 @@ export const getIntermediateTypes = (aggregationPath) => {
       const response = await axios.post(BASE_URL + '/agregate/', {
         node_ids: nodeIds,
         aggregation_type: [type],
+        type:relationName
       }, {
         headers: {
           Authorization: `Bearer ${token}`,

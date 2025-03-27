@@ -3,7 +3,7 @@ import axios from 'axios';
 import { BASE_URL } from '../../utils/Urls';
 import { AddNeighborhoodParser,parsePath ,parseNetworkData } from '../../utils/Parser';
 import globalWindowState from '../../utils/globalWindowState';
-import { handleAggregation } from '../../utils/aggregationUtils'
+import { handleAggregation } from '../aggregation/aggregationUtils'
 export const fetchPossibleRelations = async (node, setPossibleRelations) => {
   const token = localStorage.getItem('authToken');
   const node_type = node.group;

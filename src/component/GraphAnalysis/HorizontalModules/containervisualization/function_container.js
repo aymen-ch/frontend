@@ -1,9 +1,9 @@
 
 import { useEffect } from 'react';
-import { BASE_URL } from './Urls';
-import { parseAggregationResponse,SubGraphParser } from './Parser';
+import { BASE_URL } from '../../utils/Urls';
+import { parseAggregationResponse,SubGraphParser } from '../../utils/Parser';
 import axios from 'axios';
-import { computeDagreLayout_1, computeCytoscapeLayout, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout } from "../modules/layout/layout";
+import { computeDagreLayout_1, computeCytoscapeLayout, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout } from "../../modules/layout/layout";
 import { FreeLayoutType } from '@neo4j-nvl/base';
 
 export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {

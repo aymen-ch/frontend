@@ -2,18 +2,18 @@
 import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './Container_AlgorithmicAnalysis.css';
-import ContextManagerComponent from './modules/contextualization/ContextManagerComponent';
-import GraphVisualization from './utils/visualizationContainer/GraphVisualization';
-import Aggregation from './utils/aggregation';
-import TimelineBar from './utils/timline';
-import PathVisualization from './modules/path/pathvisualization';
-import PathFinder from './modules/path/pathfinding';
-import LayoutControl from './modules/layout/Layoutcontrol';
-import Analysis from './modules/analysis/analysis';
-import DetailsModule from './modules/Details/Details';
-import InterrogationModule from './modules/interogation/interrogation';
-import { useAggregation, fetchNodeProperties,drawCirclesOnPersonneNodes, ColorPersonWithClass ,fetchNoderelation} from './utils/function_container';
-import { useGlobalContext } from './GlobalVariables';
+import ContextManagerComponent from '../../modules/contextualization/ContextManagerComponent';
+import GraphVisualization from '../visualization/GraphVisualization';
+import Aggregation from '../../modules/aggregation/aggregation';
+import TimelineBar from '../../modules/timeline/timline'
+import PathVisualization from '../../modules/path/pathvisualization';
+import PathFinder from '../../modules/path/pathfinding';
+import LayoutControl from '../../modules/layout/Layoutcontrol';
+import Analysis from '../../modules/analysis/analysis';
+import DetailsModule from '../../modules/Details/Details';
+import InterrogationModule from '../../modules/interogation/interrogation';
+import { useAggregation, fetchNodeProperties,drawCirclesOnPersonneNodes, ColorPersonWithClass ,fetchNoderelation} from './function_container';
+import { useGlobalContext } from '../../GlobalVariables';
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
@@ -44,6 +44,7 @@ const Container_AlgorithmicAnalysis = () => {
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
   const [activeAggregations, setActiveAggregations] = useState({});
   const [visibleNodeTypes, setVisibleNodeTypes] = useState({});
+  const [selectedEdges, setselectedEdges] = useState(new Set());
 
   useEffect(() => {
     const nodeTypes = {};
@@ -160,6 +161,8 @@ return (
             ispath={true}
             setrelationtoshow={setrelationtoshow}
             setActiveAggregations={setActiveAggregations}
+            selectedEdges={selectedEdges}
+            setselectedEdges={setselectedEdges}
           />
           {isBoxPath > 0 && (
             <div className="path-visualization-overlay">

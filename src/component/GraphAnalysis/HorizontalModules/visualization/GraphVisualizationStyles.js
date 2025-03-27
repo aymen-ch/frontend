@@ -1,6 +1,6 @@
 // src/components/GraphVisualizationStyles.js
 export const buttonStyle = {
-    zIndex: 1001,
+    zIndex: 50,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     border: '1px solid #ccc',
     borderRadius: '4px',
@@ -26,7 +26,7 @@ export const buttonStyle = {
   
   export const layoutControlStyle = {
     position: 'absolute',
-    zIndex: 1001,
+    zIndex: 50,
     top: '10px',
     left: '60px',
     display: 'flex',
@@ -35,7 +35,7 @@ export const buttonStyle = {
   
   export const searchStyle = {
     position: 'absolute',
-    zIndex: 1001,
+    zIndex: 50,
     top: '15px',
     left: '50%',
     transform: 'translateX(-50%)',

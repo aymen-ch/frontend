@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './graphe_anaylsis.css'
-import Container_AlgorithmicAnalysis from './Container_AlgorithmicAnalysis';
+import Container_AlgorithmicAnalysis from './HorizontalModules/containervisualization/Container_AlgorithmicAnalysis';
+import SchemaViewer from './HorizontalModules/schema/schema';
 import { GlobalProvider } from './GlobalVariables';
 const Graphe_analysis = () => {
   const [activeModule, setActiveModule] = useState('Schema'); // Default active module
@@ -14,8 +15,9 @@ const Graphe_analysis = () => {
   // Components for each module (you can customize these)
   const SchemaPage = () => (
     <div className="module-content">
-      <h2>Schema Page</h2>
-      <p>This is the Schema module content.</p>
+        <GlobalProvider>
+      <SchemaViewer/>
+      </GlobalProvider>
     </div>
   );
 

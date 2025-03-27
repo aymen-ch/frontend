@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import GraphCanvas from '../../utils/Visualization/GraphCanvas';
+import GraphCanvas from '../../utils/VisualizationLibrary/GraphCanvas';
 import { FaExpand, FaCompress, FaArrowLeft, FaArrowRight, FaList, FaTimes, FaProjectDiagram, FaBezierCurve, FaLayerGroup, FaSitemap, FaPlus, FaObjectGroup } from 'react-icons/fa';
 import { AddNeighborhoodParser, getNodeIcon, getNodeColor, parsePath } from '../../utils/Parser';
 import './PathVisualization.css';
 import { computeLinearLayout } from '../layout/layout';
 import { d3ForceLayoutType, ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType } from '@neo4j-nvl/base';
-import { handleLayoutChange } from '../../utils/function_container';
+import { handleLayoutChange } from '../../HorizontalModules/containervisualization/function_container';
 
 const PathVisualization = React.memo(({
   edges,
@@ -446,14 +446,20 @@ const PathVisualization = React.memo(({
 
           {/* Add Current Path Button */}
           <button
-            style={addButtonStyle}
-            onClick={addCurrentPathToVisualization}
-            title="Add Current Path to Visualization"
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-          >
-            <FaPlus size={14} />
-          </button>
+  style={{
+    ...addButtonStyle,
+    width: '200px',
+    height: '40px',
+    color: 'white',
+    backgroundColor: 'black'
+  }}
+  onClick={addCurrentPathToVisualization}
+  title="Add Current Path to Visualization"
+  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(33, 77, 108, 0.9)'}
+  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(7, 4, 4, 0.8)'}
+>
+  <FaPlus size={14} /> Add to Canvas
+</button>
 
           <GraphCanvas
             nvlRef={nvlRef}
