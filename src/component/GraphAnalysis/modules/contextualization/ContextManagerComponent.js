@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useState, memo, useEffect } from 'react';
 import SearchinputComponent from './SearchinputComponent_contextualization';
 import { BASE_URL } from '../../utils/Urls';
+import { useGlobalContext } from '../../GlobalVariables';
 
 const ContextManagerComponent = ({
   SubGrapgTable,
@@ -11,7 +12,7 @@ const ContextManagerComponent = ({
   const [ContextData, setContextData] = useState([]);
   const [showAggregation, setShowAggregation] = useState(false); // State to control visibility of Aggregation component
   const [loading, setLoading] = useState(false); // Loading state
-
+  const { setNewContextHasArrived } = useGlobalContext();
   useEffect(() => {
     console.log(ContextData);
   }, [ContextData]);
@@ -36,9 +37,10 @@ const ContextManagerComponent = ({
       );
 
       if (response.status === 200) {
-        console.log('Data submitted successfully!', response.data);
+        console.log('Data submitted successfully! Contextualisaiton', response.data);
         setSubGrapgTable(response.data);
         setShowAggregation(true); // Show Aggregation component after successful submission
+        setNewContextHasArrived(true);
       } else {
         console.error('Submission failed.');
       }
