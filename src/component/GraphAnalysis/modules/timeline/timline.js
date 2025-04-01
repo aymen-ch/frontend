@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import Draggable from 'react-draggable';
 import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 
-import { useGlobalContext } from '../GlobalVariables';
+import { useGlobalContext } from '../../GlobalVariables';
 const TimelineBar = ({ affaires, setAffairesInRange }) => {
   const affaireRefs = useRef({});
   const [isVisible, setIsVisible] = useState(true);
