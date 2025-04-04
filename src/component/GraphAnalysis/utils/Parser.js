@@ -84,7 +84,8 @@ export const createNode = (nodeData, nodeType, properties, isSelected = false,ag
     captionnode: ischema? LabelManagerSchema(nodeType, properties):LabelManager(nodeType, properties),
     aggregatedproperties:aggregatedproperties,
     //hovered:true,
-    properties:properties
+    properties:properties,
+    image:getNodeIcon(nodeType)
   };
 
   if (properties._class) {

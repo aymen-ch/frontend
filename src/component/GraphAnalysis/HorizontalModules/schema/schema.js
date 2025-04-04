@@ -70,36 +70,45 @@ const SchemaVisualizer = () => {
         const schemaData = result.records[0];
         const schemaNodes = schemaData.get('nodes');
         const schemaRelationships = schemaData.get('relationships');
-
-        let processedNodes = schemaNodes.map(node => {
-          const nodeType = node.labels[0];
-          const properties = node.properties.indexes;
-          return createNode(
-            { identity: node.identity },
-            nodeType,
-            properties,
-            false,
-            null,
-            true
-          );
-        });
-
+  
+        // Define unwanted node types
+        const unwantedNodeTypes = [
+          "Chunk",      // Example: Exclude nodes of type "Phone"
+       
+        ];
+  
+        // Process nodes and filter out unwanted node types
+        let processedNodes = schemaNodes
+          .map(node => {
+            const nodeType = node.labels[0];
+            const properties = node.properties.indexes;
+            return createNode(
+              { identity: node.identity },
+              nodeType,
+              properties,
+              false,
+              null,
+              true
+            );
+          })
+          .filter(node => !unwantedNodeTypes.includes(node.group)); // Filter out unwanted node types
+  
         const processedEdges = [];
         const nodeMap = new Map();
-
+  
         schemaRelationships.forEach((rel, index) => {
           const startId = rel.start.toString();
           const endId = rel.end.toString();
           const relType = rel.type;
-
+  
           const startNode = schemaNodes.find(n => n.identity.toString() === startId);
           const endNode = schemaNodes.find(n => n.identity.toString() === endId);
-
+  
           if (!startNode || !endNode) return;
-
+  
           const startLabels = startNode.labels;
           const endLabels = endNode.labels;
-
+  
           const unwantedRelationships = [
             { relType: "Appel_telephone", startLabel: "Phone", endLabel: "Affaire" },
             { relType: "Appel_telephone", startLabel: "Personne", endLabel: "Phone" },
@@ -107,7 +116,7 @@ const SchemaVisualizer = () => {
             { relType: "appartient", startLabel: "Commune", endLabel: "Wilaya" },
             { relType: "appartient", startLabel: "Daira", endLabel: "Daira" },
           ];
-
+  
           const shouldSkip = unwantedRelationships.some(({ relType, startLabel, endLabel }) => {
             return (
               rel.type === relType &&
@@ -115,9 +124,13 @@ const SchemaVisualizer = () => {
               endLabels.includes(endLabel)
             );
           });
-
+  
           if (shouldSkip) return;
-
+  
+          // Ensure the nodes involved in the relationship still exist after filtering
+          const startNodeExists = processedNodes.some(n => n.id === startId);
+          const endNodeExists = processedNodes.some(n => n.id === endId);
+  
           if (startId === endId) {
             const originalNode = processedNodes.find(n => n.id === startId);
             if (originalNode) {
@@ -126,13 +139,13 @@ const SchemaVisualizer = () => {
                 id: `${originalNode.id}_dup_${index}`,
               };
               processedNodes.push(duplicatedNode);
-
+  
               processedEdges.push(createEdge(
                 { ...rel, identity: `${rel.identity}_self_${index}` },
                 startId,
                 duplicatedNode.id
               ));
-
+  
               const relatedEdges = schemaRelationships.filter(r => {
                 const isUnwanted = unwantedRelationships.some(({ relType, startLabel, endLabel }) => (
                   r.type === relType &&
@@ -145,13 +158,13 @@ const SchemaVisualizer = () => {
                   !isUnwanted
                 );
               });
-
+  
               const duplicatedConnectedNodes = new Map();
-
+  
               relatedEdges.forEach((relatedRel, relIndex) => {
                 const relStartId = relatedRel.start.toString();
                 const relEndId = relatedRel.end.toString();
-
+  
                 if (relStartId === startId && relEndId !== startId) {
                   const connectedNode = processedNodes.find(n => n.id === relEndId);
                   if (connectedNode && !duplicatedConnectedNodes.has(relEndId)) {
@@ -162,7 +175,7 @@ const SchemaVisualizer = () => {
                     processedNodes.push(duplicatedConnectedNode);
                     duplicatedConnectedNodes.set(relEndId, duplicatedConnectedNode.id);
                   }
-
+  
                   const targetId = duplicatedConnectedNodes.get(relEndId) || relEndId;
                   processedEdges.push(createEdge(
                     { ...relatedRel, identity: `${relatedRel.identity}_dup_out_${relIndex}` },
@@ -179,7 +192,7 @@ const SchemaVisualizer = () => {
                     processedNodes.push(duplicatedConnectedNode);
                     duplicatedConnectedNodes.set(relStartId, duplicatedConnectedNode.id);
                   }
-
+  
                   const sourceId = duplicatedConnectedNodes.get(relStartId) || relStartId;
                   processedEdges.push(createEdge(
                     { ...relatedRel, identity: `${relatedRel.identity}_dup_in_${relIndex}` },
@@ -190,12 +203,12 @@ const SchemaVisualizer = () => {
               });
             }
           } else {
-            if (!shouldSkip) {
+            if (!shouldSkip && startNodeExists && endNodeExists) {
               processedEdges.push(createEdge(rel, startId, endId));
             }
           }
         });
-
+  
         setNodes(processedNodes);
         setEdges(processedEdges);
       } catch (error) {
@@ -205,7 +218,7 @@ const SchemaVisualizer = () => {
         await driver.close();
       }
     };
-
+  
     fetchSchema();
   }, []);
 

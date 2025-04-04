@@ -52,11 +52,11 @@ export const handleLayoutChange = async (newLayoutType, nvlRef, combinedNodes, c
     }
     else {
       nvlRef.current.setLayout(newLayoutType);
-     // nvlRef.current.fit(nvlRef.current.getNodes().map((n) => n.id))
+     //nvlRef.current?.resetZoom()
       return;
     }
     nvlRef.current.setNodePositions(nodesWithPositions);
-    //nvlRef.current.fit(nvlRef.current.getNodes().map((n) => n.id))
+    //nvlRef.current?.resetZoom()
   }
 };
 

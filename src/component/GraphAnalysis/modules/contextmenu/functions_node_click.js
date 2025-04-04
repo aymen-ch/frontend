@@ -131,8 +131,9 @@ export const handleCriminalTree = async (node, setNodes, setEdges,setActiveAggre
       });
       setEdges((prevEdges) => [...prevEdges, ...criminalEdges]);
       await handleAggregation(
+        "apple_telephone",
         ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"],
-        "Phone",
+        "apple_telephone",
         setNodes,
         setEdges,
         updatedNodes// Use the prop nodes plus new criminalNodes

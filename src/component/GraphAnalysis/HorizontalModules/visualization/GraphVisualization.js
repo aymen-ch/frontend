@@ -23,6 +23,7 @@ import { BASE_URL } from '../../utils/Urls';
 import { getNodeColor, getNodeIcon, createNode } from '../../utils/Parser';
 import LayoutControl from '../../modules/layout/Layoutcontrol';
 import ContextMenuRel from '../../modules/contextmenu/contextmenuRelarion';
+import { useGlobalContext } from '../../GlobalVariables';
 const GraphVisualization = React.memo(({
   setEdges,
   edges,
@@ -52,7 +53,8 @@ const GraphVisualization = React.memo(({
   const [render, setRenderer] = useState("canvas");
   const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [searchtype, setsearchtype] = useState("current_graph");
-
+  const [graphHistory, setGraphHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   
   const [showSettings, setShowSettings] = useState(false);
   const [activeWindow, setActiveWindow] = useState(null);
@@ -75,6 +77,27 @@ const GraphVisualization = React.memo(({
     const interval = setInterval(checkWindowState, 100);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    // Only add to history if there are actual changes
+    if (nodes.length > 0 || edges.length > 0) {
+      // Create a deep copy of current state
+      const newState = {
+        nodes: JSON.parse(JSON.stringify(nodes)),
+        edges: JSON.parse(JSON.stringify(edges)),
+        timestamp: Date.now()
+      };
+      
+      // If we're not at the latest state, truncate history
+      if (historyIndex < graphHistory.length - 1) {
+        setGraphHistory(prev => prev.slice(0, historyIndex + 1));
+      }
+      
+      setGraphHistory(prev => [...prev, newState]);
+      setHistoryIndex(prev => prev + 1);
+    }
+  }, [nodes, edges]);
+
 
   const handleSearchClick = async () => {
     if (searchtype === "current_graph") {
@@ -152,7 +175,35 @@ const GraphVisualization = React.memo(({
   };
 
   const handleBack = () => {
-    console.log('Back functionality to be implemented');
+    if (historyIndex > 0) {
+      const previousIndex = historyIndex - 1;
+      const previousState = graphHistory[previousIndex];
+      
+      // Restore previous state
+      setNodes(previousState.nodes);
+      setEdges(previousState.edges);
+      setHistoryIndex(previousIndex);
+      
+      // Reset selections and view
+      setSelectedNodes([]);
+      setselectedEdges([]);
+      
+      // Fit view to restored graph
+      setTimeout(() => {
+        nvlRef.current.fit(
+          previousState.nodes.map(n => n.id),
+          {
+            animated: true,
+            maxZoom: 1.0,
+            minZoom: 0.5
+          }
+        );
+      }, 100);
+      
+      console.log(`Reverted to state ${previousIndex + 1} of ${graphHistory.length}`);
+    } else {
+      console.log('No previous state available');
+    }
   };
 
   const handleEarth = () => {
