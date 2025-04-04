@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './graphe_anaylsis.css'
 import Container_AlgorithmicAnalysis from './HorizontalModules/containervisualization/Container_AlgorithmicAnalysis';
 import SchemaViewer from './HorizontalModules/schema/schema';
+import SettingsPage from './HorizontalModules/Settings/SettingsPage';
 import { GlobalProvider } from './GlobalVariables';
 const Graphe_analysis = () => {
   const [activeModule, setActiveModule] = useState('Schema'); // Default active module
@@ -23,8 +24,7 @@ const Graphe_analysis = () => {
 
   const SettingPage = () => (
     <div className="module-content">
-      <h2>Settings Page</h2>
-      <p>This is the Settings module content.</p>
+        <SettingsPage/>
     </div>
   );
 
@@ -46,7 +46,7 @@ const Graphe_analysis = () => {
   // Map of module names to their components
   const moduleComponents = {
     Schema: SchemaPage,
-    Setting: SettingPage,
+    Setting: SettingsPage, // Use the new SettingsPage component
     Dashboard: DashboardPage,
     Visualization: VisualizationPage,
   };
