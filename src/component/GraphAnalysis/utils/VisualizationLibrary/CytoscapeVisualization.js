@@ -16,27 +16,28 @@ const useCytoVisualization = ({
   setrelationtoshow,
   selectedEdges,
   setselectedEdges,
-  sethoverEdge,
+  sethoverEdge
 }) => {
-  const cyInstance = useRef(null);
   const ehInstance = useRef(null);
   const [newEdgeInput, setNewEdgeInput] = useState(null);
 
   useEffect(() => {
-    if (!nvlRef.current) return;
-
+    if (!nvlRef.current){ console.log("has exit ") ;
+      return;}
+    console.log(combinedNodes)
+    // Initialize Cytoscape and assign it directly to nvlRef.current
     const cy = cytoscape({
       container: nvlRef.current,
       elements: [
         ...combinedNodes.map(node => ({
           data: { 
             id: node.id, 
-            label: `${node.captionnode}\n${node.type || ''}`, // Combine caption and type
+            label: `${node.captionnode}\n${node.type || ''}`,
             group: node.group,
             size: node.size * 3 || 20,
             color: node.color || '#666',
-            image: node.image || '', // Add image URL
-            type: node.type || '' // Store type separately if needed
+            image: node.image || '',
+            type: node.type || ''
           },
           selected: selectedNodes.has(node.id),
         })),
@@ -56,24 +57,22 @@ const useCytoVisualization = ({
           selector: 'node',
           style: {
             'background-color': 'data(color)',
-            'background-image': 'data(image)', // Use node.image as icon
-           // 'background-fit': 'contain', // Changed from 'cover' to 'contain' to fit image inside
-           // 'background-clip': 'node', // Clip image to node shape
-            'background-width': '60%', // Set image width relative to node size (adjust as needed)
-            'background-height': '60%', // Set image height relative to node size (adjust as needed)
-            'label': 'data(label)', // Display caption and type
+            'background-image': 'data(image)',
+            'background-width': '60%',
+            'background-height': '60%',
+            'label': 'data(label)',
             'width': 'data(size)',
             'height': 'data(size)',
-            'text-valign': 'bottom', // Position text below node
+            'text-valign': 'bottom',
             'text-halign': 'center',
             'color': '#fff',
             'text-outline-width': 8,
             'text-outline-color': 'data(color)',
             'border-width': 2,
             'border-color': 'rgba(255, 255, 255, 0.3)',
-            'text-wrap': 'wrap', // Allow multiline text
-            'text-max-width': 'data(size)', // Match text width to node size
-            'padding': 50 // Add padding to separate icon from text
+            'text-wrap': 'wrap',
+            'text-max-width': 'data(size)',
+            'padding': 50
           }
         },
         {
@@ -100,12 +99,12 @@ const useCytoVisualization = ({
         {
           selector: '.eh-handle',
           style: {
-            'background-color': '#FF0000', // Red handle
+            'background-color': '#FF0000',
             'width': 12,
             'height': 12,
             'border-width': 2,
             'border-color': '#FFFFFF',
-            'z-index': 10 // Ensure handle is above node
+            'z-index': 10
           }
         },
         {
@@ -135,12 +134,13 @@ const useCytoVisualization = ({
       }
     });
 
-    cyInstance.current = cy;
+    // Assign the Cytoscape instance to nvlRef.current
+    nvlRef.current = cy;
 
     // Initialize edgehandles
     const eh = cy.edgehandles({
       canConnect: function(sourceNode, targetNode) {
-        return !sourceNode.same(targetNode); // Disallow loops
+        return !sourceNode.same(targetNode);
       },
       edgeParams: function(sourceNode, targetNode) {
         return {
@@ -158,8 +158,8 @@ const useCytoVisualization = ({
       snapFrequency: 15,
       noEdgeEventsInDraw: true,
       disableBrowserGestures: true,
-      handleNodes: 'node', // Apply to all nodes
-      handlePosition: 'middle middle', // Center of node
+      handleNodes: 'node',
+      handlePosition: 'middle middle',
       handleSize: 12,
       handleColor: '#FF0000'
     });
@@ -214,8 +214,8 @@ const useCytoVisualization = ({
     });
 
     return () => {
-      if (cyInstance.current) {
-        cyInstance.current.destroy();
+      if (nvlRef.current) {
+        nvlRef.current.destroy();
       }
       if (ehInstance.current) {
         ehInstance.current.destroy();
@@ -238,8 +238,8 @@ const useCytoVisualization = ({
         combinedEdges.push(newEdge);
         
         // Remove temporary edge and add permanent one
-        cyInstance.current.edges(`[id = "${newEdgeInput.tempId}"]`).remove();
-        cyInstance.current.add({
+        nvlRef.current.edges(`[id = "${newEdgeInput.tempId}"]`).remove();
+        nvlRef.current.add({
           group: 'edges',
           data: newEdge
         });
@@ -252,7 +252,7 @@ const useCytoVisualization = ({
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
         <div 
-          ref={nvlRef}
+          ref={nvlRef} // This will now hold the Cytoscape instance
           style={{ width: '100%', height: '100%', border: '1px solid lightgray' }}
         />
         {newEdgeInput && (

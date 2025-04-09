@@ -4,14 +4,12 @@ import GraphCanvas from '../../utils/VisualizationLibrary/GraphCanvas';
 import { createNode, createEdge } from '../../utils/Parser';
 import LayoutControl from '../../modules/layout/Layoutcontrol';
 import { constructPath } from './cunstructpath';
-import { getNodeColor,getNodeIcon } from '../../utils/Parser';
+import { getNodeColor, getNodeIcon } from '../../utils/Parser';
 import virtualRelationsData from '../../modules/aggregation/aggregations.json';
+
 const URI = 'neo4j://localhost:7687';
 const USER = 'neo4j';
 const PASSWORD = '12345678';
-
-// Utility functions (unchanged except for clarity)
-
 
 // Sidebar component (unchanged)
 const Sidebar = ({ selectedItem }) => {
@@ -61,6 +59,7 @@ const SchemaVisualizer = () => {
   const [pathResult, setPathResult] = useState(null);
   const nvlRef = useRef(null);
   const [virtualRelations, setVirtualRelations] = useState(virtualRelationsData);
+
   useEffect(() => {
     const fetchSchema = async () => {
       const driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD));
@@ -70,13 +69,10 @@ const SchemaVisualizer = () => {
         const schemaData = result.records[0];
         const schemaNodes = schemaData.get('nodes');
         const schemaRelationships = schemaData.get('relationships');
-  
+
         // Define unwanted node types
-        const unwantedNodeTypes = [
-          "Chunk",      // Example: Exclude nodes of type "Phone"
-       
-        ];
-  
+        const unwantedNodeTypes = ["Chunk"];
+
         // Process nodes and filter out unwanted node types
         let processedNodes = schemaNodes
           .map(node => {
@@ -91,24 +87,24 @@ const SchemaVisualizer = () => {
               true
             );
           })
-          .filter(node => !unwantedNodeTypes.includes(node.group)); // Filter out unwanted node types
-  
+          .filter(node => !unwantedNodeTypes.includes(node.group));
+
         const processedEdges = [];
-        const nodeMap = new Map();
-  
+        const duplicatedNodesMap = new Map();
+
         schemaRelationships.forEach((rel, index) => {
           const startId = rel.start.toString();
           const endId = rel.end.toString();
           const relType = rel.type;
-  
+
           const startNode = schemaNodes.find(n => n.identity.toString() === startId);
           const endNode = schemaNodes.find(n => n.identity.toString() === endId);
-  
+
           if (!startNode || !endNode) return;
-  
+
           const startLabels = startNode.labels;
           const endLabels = endNode.labels;
-  
+
           const unwantedRelationships = [
             { relType: "Appel_telephone", startLabel: "Phone", endLabel: "Affaire" },
             { relType: "Appel_telephone", startLabel: "Personne", endLabel: "Phone" },
@@ -116,7 +112,7 @@ const SchemaVisualizer = () => {
             { relType: "appartient", startLabel: "Commune", endLabel: "Wilaya" },
             { relType: "appartient", startLabel: "Daira", endLabel: "Daira" },
           ];
-  
+
           const shouldSkip = unwantedRelationships.some(({ relType, startLabel, endLabel }) => {
             return (
               rel.type === relType &&
@@ -124,28 +120,35 @@ const SchemaVisualizer = () => {
               endLabels.includes(endLabel)
             );
           });
-  
+
           if (shouldSkip) return;
-  
-          // Ensure the nodes involved in the relationship still exist after filtering
+
           const startNodeExists = processedNodes.some(n => n.id === startId);
           const endNodeExists = processedNodes.some(n => n.id === endId);
-  
+
+          if (!startNodeExists || !endNodeExists) return;
+
           if (startId === endId) {
             const originalNode = processedNodes.find(n => n.id === startId);
             if (originalNode) {
-              const duplicatedNode = {
-                ...originalNode,
-                id: `${originalNode.id}_dup_${index}`,
-              };
-              processedNodes.push(duplicatedNode);
-  
+              let duplicatedNode;
+              if (!duplicatedNodesMap.has(startId)) {
+                duplicatedNode = {
+                  ...originalNode,
+                  id: `${originalNode.id}_dup`,
+                };
+                processedNodes.push(duplicatedNode);
+                duplicatedNodesMap.set(startId, duplicatedNode.id);
+              } else {
+                duplicatedNode = processedNodes.find(n => n.id === duplicatedNodesMap.get(startId));
+              }
+
               processedEdges.push(createEdge(
-                { ...rel, identity: `${rel.identity}_self_${index}` },
+                { ...rel, identity: `${rel.identity}_self` },
                 startId,
                 duplicatedNode.id
               ));
-  
+
               const relatedEdges = schemaRelationships.filter(r => {
                 const isUnwanted = unwantedRelationships.some(({ relType, startLabel, endLabel }) => (
                   r.type === relType &&
@@ -158,57 +161,92 @@ const SchemaVisualizer = () => {
                   !isUnwanted
                 );
               });
-  
-              const duplicatedConnectedNodes = new Map();
-  
+
               relatedEdges.forEach((relatedRel, relIndex) => {
                 const relStartId = relatedRel.start.toString();
                 const relEndId = relatedRel.end.toString();
-  
+
                 if (relStartId === startId && relEndId !== startId) {
                   const connectedNode = processedNodes.find(n => n.id === relEndId);
-                  if (connectedNode && !duplicatedConnectedNodes.has(relEndId)) {
-                    const duplicatedConnectedNode = {
-                      ...connectedNode,
-                      id: `${connectedNode.id}_dup_${index}_${relIndex}`,
-                    };
-                    processedNodes.push(duplicatedConnectedNode);
-                    duplicatedConnectedNodes.set(relEndId, duplicatedConnectedNode.id);
+                  if (connectedNode) {
+                    let targetNodeId = relEndId;
+                    if (!duplicatedNodesMap.has(relEndId)) {
+                      const duplicatedConnectedNode = {
+                        ...connectedNode,
+                        id: `${connectedNode.id}_dup`,
+                      };
+                      processedNodes.push(duplicatedConnectedNode);
+                      duplicatedNodesMap.set(relEndId, duplicatedConnectedNode.id);
+                      targetNodeId = duplicatedConnectedNode.id;
+                    } else {
+                      targetNodeId = duplicatedNodesMap.get(relEndId);
+                    }
+
+                    processedEdges.push(createEdge(
+                      { ...relatedRel, identity: `${relatedRel.identity}_dup_out_${relIndex}` },
+                      duplicatedNode.id,
+                      targetNodeId
+                    ));
                   }
-  
-                  const targetId = duplicatedConnectedNodes.get(relEndId) || relEndId;
-                  processedEdges.push(createEdge(
-                    { ...relatedRel, identity: `${relatedRel.identity}_dup_out_${relIndex}` },
-                    duplicatedNode.id,
-                    targetId
-                  ));
                 } else if (relEndId === startId && relStartId !== startId) {
                   const connectedNode = processedNodes.find(n => n.id === relStartId);
-                  if (connectedNode && !duplicatedConnectedNodes.has(relStartId)) {
-                    const duplicatedConnectedNode = {
-                      ...connectedNode,
-                      id: `${connectedNode.id}_dup_${index}_${relIndex}`,
-                    };
-                    processedNodes.push(duplicatedConnectedNode);
-                    duplicatedConnectedNodes.set(relStartId, duplicatedConnectedNode.id);
+                  if (connectedNode) {
+                    let sourceNodeId = relStartId;
+                    if (!duplicatedNodesMap.has(relStartId)) {
+                      const duplicatedConnectedNode = {
+                        ...connectedNode,
+                        id: `${connectedNode.id}_dup`,
+                      };
+                      processedNodes.push(duplicatedConnectedNode);
+                      duplicatedNodesMap.set(relStartId, duplicatedConnectedNode.id);
+                      sourceNodeId = duplicatedConnectedNode.id;
+                    } else {
+                      sourceNodeId = duplicatedNodesMap.get(relStartId);
+                    }
+
+                    processedEdges.push(createEdge(
+                      { ...relatedRel, identity: `${relatedRel.identity}_dup_in_${relIndex}` },
+                      sourceNodeId,
+                      duplicatedNode.id
+                    ));
                   }
-  
-                  const sourceId = duplicatedConnectedNodes.get(relStartId) || relStartId;
-                  processedEdges.push(createEdge(
-                    { ...relatedRel, identity: `${relatedRel.identity}_dup_in_${relIndex}` },
-                    sourceId,
-                    duplicatedNode.id
-                  ));
                 }
               });
             }
           } else {
-            if (!shouldSkip && startNodeExists && endNodeExists) {
+            if (startNodeExists && endNodeExists) {
               processedEdges.push(createEdge(rel, startId, endId));
             }
           }
         });
-  
+
+        // Add virtual relationships from aggregations.json dynamically
+        virtualRelations.forEach(relation => {
+          const path = relation.path;
+          const relationName = relation.name;
+
+          // Extract start and end nodes from the path
+          const startNodeLabel = path[0]; // First node in the path
+          const endNodeLabel = path[path.length - 1]; // Last node in the path
+
+          // Find matching nodes in processedNodes (assuming one node per type for simplicity)
+          const startNode = processedNodes.find(n => n.group === startNodeLabel);
+          const endNode = processedNodes.find(n => n.group === endNodeLabel);
+
+          if (startNode && endNode) {
+            // Create a virtual edge with green color
+            const virtualEdge = createEdge(
+              { type: relationName, identity: `virtual_${relationName}_${startNode.id}_${endNode.id}` },
+              startNode.id,
+              endNode.id,
+              'green' // Set color to green
+            );
+            processedEdges.push(virtualEdge);
+          } else {
+            console.warn(`Could not find nodes for virtual relation ${relationName}: ${startNodeLabel} -> ${endNodeLabel}`);
+          }
+        });
+
         setNodes(processedNodes);
         setEdges(processedEdges);
       } catch (error) {
@@ -218,18 +256,18 @@ const SchemaVisualizer = () => {
         await driver.close();
       }
     };
-  
+    
     fetchSchema();
-  }, []);
-
-
+    
+    console.log(nodes)
+  }, [virtualRelations]); // Include virtualRelations in dependency array
 
   const handleBuildPath = () => {
     const selectedRels = nvlRef.current?.getSelectedRelationships() || [];
     const selectedNodesArray = nvlRef.current?.getSelectedNodes() || [];
     const result = constructPath(selectedNodesArray, selectedRels, nodes);
     console.log(result);
-    const pathExists = virtualRelations.some(relation => 
+    const pathExists = virtualRelations.some(relation =>
       JSON.stringify(relation.path) === JSON.stringify(result)
     );
     if (Array.isArray(result) && !pathExists) {
@@ -239,14 +277,12 @@ const SchemaVisualizer = () => {
     } else {
       setIsPathValid(false);
       setPathResult(null);
-      alert(result === 'Incomplete selection' 
-        ? 'Please select at least one node and one relationship.' 
+      alert(result === 'Incomplete selection'
+        ? 'Please select at least one node and one relationship.'
         : 'No valid path connects the selected nodes and relationships.');
     }
   };
 
-
-  // Optional: Load from localStorage on component mount
   useEffect(() => {
     const storedRelations = localStorage.getItem('virtualRelations');
     if (storedRelations) {
@@ -260,53 +296,40 @@ const SchemaVisualizer = () => {
       return;
     }
 
-     // Check if this path already exists in virtualRelations
-     const pathExists = virtualRelations.some(relation => 
+    const pathExists = virtualRelations.some(relation =>
       JSON.stringify(relation.path) === JSON.stringify(pathResult)
     );
 
     if (!pathExists) {
-      // Create a new relation object
       const newRelation = {
-        name: pathName, // Generate a unique name
+        name: pathName,
         path: pathResult
       };
       const startNodeId = [...selectedNodes][0];
-    const endNodeId = selectedNodes.size > 1 ? [...selectedNodes][1] : startNodeId; // Fallback to start if only one node
-    
-    // Get node details for start and end nodes
-    const startNode = nodes.find(n => n.id === startNodeId);
-    const endNode = nodes.find(n => n.id === endNodeId) || startNode; // Fallback to start if same node
-    
-    // Construct the new edge label in the format "startnode-name-endnode"
-   // const newEdgeLabel = `${startNode.group}-${pathName.toUpperCase()}-${endNode.group}`;
-    
-    // Create a new edge object
-    const newEdge = createEdge({type:pathName},startNodeId,endNodeId,'green')
-  
-    // Add the new edge to the edges array
-    setEdges(prevEdges => [...prevEdges, newEdge]);
-    
-    // Reset the UI state
-    setIsPathBuilding(false);
-    setPathName('');
-    setIsPathValid(false);
-    setPathResult(null);
-      // Update state with new relation
-      setVirtualRelations(prev => [...prev, newRelation]);
+      const endNodeId = selectedNodes.size > 1 ? [...selectedNodes][1] : startNodeId;
+      const startNode = nodes.find(n => n.id === startNodeId);
+      const endNode = nodes.find(n => n.id === endNodeId) || startNode;
 
-      // Optional: Save to localStorage as a fallback
-      localStorage.setItem(
-        'virtualRelations',
-        JSON.stringify([...virtualRelations, newRelation])
+      const newEdge = createEdge(
+        { type: pathName, identity: `virtual_${pathName}_${startNodeId}_${endNodeId}` },
+        startNodeId,
+        endNodeId,
+        'green'
       );
-    //  downloadUpdatedJson([...virtualRelations, newRelation]);
+
+      setEdges(prevEdges => [...prevEdges, newEdge]);
+      setVirtualRelations(prev => [...prev, newRelation]);
+      localStorage.setItem('virtualRelations', JSON.stringify([...virtualRelations, newRelation]));
+
+      setIsPathBuilding(false);
+      setPathName('');
+      setIsPathValid(false);
+      setPathResult(null);
       console.log('New path saved:', newRelation);
     } else {
       console.log('Path already exists in virtualRelations');
     }
-    
-  //  setSelectedNodes(new Set());
+
     setSelectedEdges(new Set());
   };
 
@@ -361,7 +384,7 @@ const SchemaVisualizer = () => {
               <div style={{ marginTop: '10px' }}>
                 <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Path Construction</h4>
                 
-                {nvlRef.current.getSelectedNodes().length > 0 && (
+                {selectedNodes.size > 0 && (
                   <div style={{ background: '#f8f9fa', padding: '10px', borderRadius: '4px', marginBottom: '10px' }}>
                     {selectedNodes.size === 1 && (
                       <div style={{ marginBottom: '8px' }}>
