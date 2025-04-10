@@ -267,7 +267,7 @@ export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTabl
       }
 
       const filteredResults = SubGrapgTable.results.filter((result) =>
-          affairesInRange.includes(result.affaire.identity)
+          affairesInRange.includes(result.affaire.id)
       );
       console.log('Filtered results:', filteredResults);
 

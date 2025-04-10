@@ -38,6 +38,7 @@ const ContextManagerComponent = ({
 
       if (response.status === 200) {
         console.log('Data submitted successfully! Contextualisaiton', response.data);
+        console.log(response.data)
         setSubGrapgTable(response.data);
         setShowAggregation(true); // Show Aggregation component after successful submission
         setNewContextHasArrived(true);

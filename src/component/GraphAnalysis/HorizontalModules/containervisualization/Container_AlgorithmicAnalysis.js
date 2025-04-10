@@ -88,9 +88,10 @@ const Container_AlgorithmicAnalysis = () => {
 
   const extractAffaires = () => {
     return SubGrapgTable.results.map((result, index) => ({
-      id: result.affaire.identity, // Use index as a unique identifier
-      type: result.affaire.Number, // Assuming `affaire.type` is the property you want to display
-      date: result.affaire.date,
+      id: result.affaire.id, // Use index as a unique identifier
+      type: result.affaire.properties.Number, // Assuming `affaire.type` is the property you want to display
+      date: result.affaire.properties.date,
+
     }));
   };
 
@@ -109,7 +110,7 @@ const Container_AlgorithmicAnalysis = () => {
   useEffect(() => {
     if (SubGrapgTable.results.length > 0 && affairesInRange.length === 0) {
       console.log("from container 333 ",affairesInRange)
-      setAffairesInRange([SubGrapgTable.results[0].affaire.identity]); // Automatically select the first affaire
+      setAffairesInRange([SubGrapgTable.results[0].affaire.id]); // Automatically select the first affaire
       setCurrentSubGraphIndex(0); // Also ensure currentSubGraphIndex points to the first affaire
     }
   }, [SubGrapgTable]);

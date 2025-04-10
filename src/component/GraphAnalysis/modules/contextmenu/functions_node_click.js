@@ -1,7 +1,7 @@
 // src/utils/contextMenuHelpers.js
 import axios from 'axios';
 import { BASE_URL } from '../../utils/Urls';
-import { AddNeighborhoodParser,parsePath ,parseNetworkData } from '../../utils/Parser';
+import { AddNeighborhoodParser,parsePath ,parseNetworkData,parsergraph } from '../../utils/Parser';
 import globalWindowState from '../../utils/globalWindowState';
 import { handleAggregation } from '../aggregation/aggregationUtils'
 export const fetchPossibleRelations = async (node, setPossibleRelations) => {
@@ -35,7 +35,7 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
   const token = localStorage.getItem('authToken');
   const node_type = node.group;
   const properties = { identity: parseInt(node.id, 10) };
-
+  console.log(node_type)
   try {
     const response = await axios.post(
       BASE_URL + '/get_node_relationships/',
@@ -49,16 +49,11 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
     );
 
     if (response.status === 200) {
-      const { nodes: neighborhoodNodes, edges: neighborhoodEdges } = AddNeighborhoodParser(
-        response.data,
-        { id: node.id }
-      );
-      setNodes((prevNodes) => {
-        const existingNodeIds = new Set(prevNodes.map(n => n.id));
-        const newNodes = neighborhoodNodes.filter(n => !existingNodeIds.has(n.id));
-        return [...prevNodes, ...neighborhoodNodes];
-      });
-      setEdges((prevEdges) => [...prevEdges, ...neighborhoodEdges]);
+      const graphData = parsergraph(response.data);
+          setNodes((prevNodes) => {
+            return [...prevNodes, ...graphData.nodes];
+          });
+          setEdges((prevEdges) => [...prevEdges, ...graphData.edges]);
     } else {
       console.error('Submission failed.');
     }
@@ -123,7 +118,7 @@ export const handleCriminalTree = async (node, setNodes, setEdges,setActiveAggre
     );
 
     if (response.status === 200) {
-      const { nodes: criminalNodes, edges: criminalEdges } = parseNetworkData(response.data);
+      const { nodes: criminalNodes, edges: criminalEdges } = parsergraph(response.data);
       let updatedNodes; // Define variable to hold the updated nodes
       setNodes((prevNodes) => {
         updatedNodes = [...prevNodes, ...criminalNodes]; // Assign the updated nodes

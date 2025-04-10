@@ -1,7 +1,7 @@
 import React, { useEffect, useState, memo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { fetchNodeProperties, submitSearch } from '../../utils/Urls';
-import { getNodeIcon, getNodeColor, LabelManager, createNode } from '../../utils/Parser';
+import { getNodeIcon, getNodeColor, LabelManager, createNode,createEdge,parsergraph } from '../../utils/Parser';
 
 const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, setNodeTypes }) => {
   const [nodeProperties, setNodeProperties] = useState([]);
@@ -30,13 +30,13 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
   }, [selectedNodeType]);
 
   useEffect(() => {
-    if (!searchResult || typeof searchResult !== 'object' || !searchResult.results) return;
-    const nodes1 = [];
-    console.log(searchResult);
-    searchResult.results.forEach((object) => {
-      nodes1.push(createNode(object, selectedNodeType, object, false));
+    if (!searchResult) return;
+    console.log(searchResult)
+    const graphData = parsergraph(searchResult);
+    setNodes((prevNodes) => {
+      return [...prevNodes, ...graphData.nodes];
     });
-    setNodes([...nodes, ...nodes1]);
+    setEdges((prevEdges) => [...prevEdges, ...graphData.edges]);
   }, [searchResult]);
 
   const handleInputChange = (e, propertyName, propertyType) => {
