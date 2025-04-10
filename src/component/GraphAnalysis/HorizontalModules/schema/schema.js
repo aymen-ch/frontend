@@ -79,7 +79,7 @@ const SchemaVisualizer = () => {
             const nodeType = node.labels[0];
             const properties = node.properties.indexes;
             return createNode(
-              { identity: node.identity },
+              node.identity,
               nodeType,
               properties,
               false,
