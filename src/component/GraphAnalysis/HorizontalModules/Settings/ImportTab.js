@@ -11,12 +11,15 @@ import {
   Col,
   Dropdown,
 } from 'react-bootstrap';
-import { CheckCircleFill } from 'react-bootstrap-icons'; // Import icon for success indicator
+import { CheckCircleFill } from 'react-bootstrap-icons';
 import { BASE_URL } from '../../utils/Urls';
 import './ImportTab.css';
 
 const ImportTab = () => {
-  const [file, setFile] = useState(null);
+  const [nodesFile, setNodesFile] = useState(null);
+  const [relationshipsFile, setRelationshipsFile] = useState(null);
+  const [jsonFile, setJsonFile] = useState(null);
+  const [cypherFile, setCypherFile] = useState(null);
   const [fileType, setFileType] = useState('');
   const [config, setConfig] = useState('');
   const [nodes, setNodes] = useState('');
@@ -27,15 +30,30 @@ const ImportTab = () => {
 
   const token = localStorage.getItem('authToken');
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setFileType(''); // Reset file type when new file is selected
+  const handleNodesFileChange = (e) => {
+    setNodesFile(e.target.files[0]);
+    if (!fileType) setFileType('csv');
+  };
+
+  const handleRelationshipsFileChange = (e) => {
+    setRelationshipsFile(e.target.files[0]);
+    if (!fileType) setFileType('csv');
+  };
+
+  const handleJsonFileChange = (e) => {
+    setJsonFile(e.target.files[0]);
+    if (!fileType) setFileType('json');
+  };
+
+  const handleCypherFileChange = (e) => {
+    setCypherFile(e.target.files[0]);
+    if (!fileType) setFileType('cypher');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) {
-      setError('Please select a file');
+    if (!nodesFile && !relationshipsFile && !jsonFile && !cypherFile) {
+      setError('Please select at least one file');
       return;
     }
 
@@ -44,7 +62,10 @@ const ImportTab = () => {
     setSuccess('');
 
     const formData = new FormData();
-    formData.append('file', file);
+    if (nodesFile) formData.append('nodes_file', nodesFile);
+    if (relationshipsFile) formData.append('relationships_file', relationshipsFile);
+    if (jsonFile) formData.append('json_file', jsonFile);
+    if (cypherFile) formData.append('cypher_file', cypherFile);
     if (fileType) formData.append('file_type', fileType);
     if (config) formData.append('config', config);
     if (nodes) formData.append('nodes', nodes);
@@ -62,7 +83,11 @@ const ImportTab = () => {
         }
       );
       setSuccess(response.data.message);
-      setFile(null);
+      setNodesFile(null);
+      setRelationshipsFile(null);
+      setJsonFile(null);
+      setCypherFile(null);
+      setFileType('');
       setConfig('');
       setNodes('');
       setRelationships('');
@@ -70,6 +95,60 @@ const ImportTab = () => {
       setError(err.response?.data?.error || 'Failed to import file');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const renderFileInputs = () => {
+    switch (fileType) {
+      case 'csv':
+        return (
+          <>
+            <Form.Group controlId="nodesFile" className="mb-3">
+              <Form.Label>Nodes File (CSV)</Form.Label>
+              <Form.Control
+                type="file"
+                onChange={handleNodesFileChange}
+                disabled={loading}
+                accept=".csv"
+              />
+            </Form.Group>
+            <Form.Group controlId="relationshipsFile" className="mb-3">
+              <Form.Label>Relationships File (CSV)</Form.Label>
+              <Form.Control
+                type="file"
+                onChange={handleRelationshipsFileChange}
+                disabled={loading}
+                accept=".csv"
+              />
+            </Form.Group>
+          </>
+        );
+      case 'json':
+        return (
+          <Form.Group controlId="jsonFile" className="mb-3">
+            <Form.Label>JSON File</Form.Label>
+            <Form.Control
+              type="file"
+              onChange={handleJsonFileChange}
+              disabled={loading}
+              accept=".json"
+            />
+          </Form.Group>
+        );
+      case 'cypher':
+        return (
+          <Form.Group controlId="cypherFile" className="mb-3">
+            <Form.Label>Cypher File</Form.Label>
+            <Form.Control
+              type="file"
+              onChange={handleCypherFileChange}
+              disabled={loading}
+              accept=".cypher"
+            />
+          </Form.Group>
+        );
+      default:
+        return null;
     }
   };
 
@@ -85,18 +164,19 @@ const ImportTab = () => {
                 rows={3}
                 value={nodes}
                 onChange={(e) => setNodes(e.target.value)}
-                placeholder='e.g. [{"labels": ["Person"], "mapping": {"name": "name"}}]'
+                placeholder='e.g. [{"labels": ["Person"], "mapping": {"name": "name"}, "header": true}]'
                 disabled={loading}
               />
             </Form.Group>
             <Form.Group controlId="relationships" className="mb-3">
+            
               <Form.Label>Relationships Configuration (JSON)</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
                 value={relationships}
                 onChange={(e) => setRelationships(e.target.value)}
-                placeholder='e.g. [{"type": "KNOWS", "mapping": {"from": "source", "to": "target"}}]'
+                placeholder='e.g. [{"type": "KNOWS", "mapping": {"from": "source", "to": "target"}, "header": true}]'
                 disabled={loading}
               />
             </Form.Group>
@@ -128,7 +208,7 @@ const ImportTab = () => {
           </Form.Group>
         );
       case 'cypher':
-        return null; // No additional config needed for Cypher
+        return null;
       default:
         return null;
     }
@@ -140,18 +220,7 @@ const ImportTab = () => {
       <Card.Body className="scrollable-body">
         <Form onSubmit={handleSubmit}>
           <Row>
-            <Col md={6}>
-              <Form.Group controlId="file" className="mb-3">
-                <Form.Label>Select File</Form.Label>
-                <Form.Control
-                  type="file"
-                  onChange={handleFileChange}
-                  disabled={loading}
-                  accept=".csv,.json,.cypher"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
+            <Col md={12}>
               <Form.Group controlId="fileType" className="mb-3">
                 <Form.Label>File Type</Form.Label>
                 <Dropdown onSelect={(key) => setFileType(key)}>
@@ -167,12 +236,13 @@ const ImportTab = () => {
               </Form.Group>
             </Col>
           </Row>
-          {fileType && renderConfigFields()}
+          {renderFileInputs()}
+          {renderConfigFields()}
           <Button
             variant="primary"
             type="submit"
             className="w-100 mt-3"
-            disabled={loading || !file}
+            disabled={loading || (!nodesFile && !relationshipsFile && !jsonFile && !cypherFile)}
           >
             {loading ? (
               <>

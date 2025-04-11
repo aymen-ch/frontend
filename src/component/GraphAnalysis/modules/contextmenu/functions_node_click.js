@@ -49,6 +49,7 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
     );
 
     if (response.status === 200) {
+      console.log("testest",response.data)
       const graphData = parsergraph(response.data);
           setNodes((prevNodes) => {
             return [...prevNodes, ...graphData.nodes];
