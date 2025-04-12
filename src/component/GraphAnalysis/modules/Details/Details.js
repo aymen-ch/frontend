@@ -251,7 +251,7 @@ const DetailsModule = ({
         <div className="properties-container">
           {(() => {
             const matchedNode = combinedNodes.find(node => 
-              node.id === selectedNodeData.identity.toString()
+              node.id === selectedNodeData.id.toString()
             );
             const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
             const nodeColor = nodeColors[nodeGroup] || getNodeColor(nodeGroup);
