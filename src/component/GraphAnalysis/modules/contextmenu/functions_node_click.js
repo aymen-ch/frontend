@@ -7,12 +7,12 @@ import { handleAggregation } from '../aggregation/aggregationUtils'
 export const fetchPossibleRelations = async (node, setPossibleRelations) => {
   const token = localStorage.getItem('authToken');
   const node_type = node.group;
-  const properties = { identity: parseInt(node.id, 10) };
+  const id = parseInt(node.id, 10) ;
 
   try {
     const response = await axios.post(
       BASE_URL + '/get_possible_relations/',
-      { node_type, properties },
+      { node_type, id },
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -34,12 +34,12 @@ export const fetchPossibleRelations = async (node, setPossibleRelations) => {
 export const handleNodeExpansion = async (node, relationType, setNodes, setEdges) => {
   const token = localStorage.getItem('authToken');
   const node_type = node.group;
-  const properties = { identity: parseInt(node.id, 10) };
+  const id = parseInt(node.id, 10);
   console.log(node_type)
   try {
     const response = await axios.post(
       BASE_URL + '/get_node_relationships/',
-      { node_type, properties, relation_type: relationType },
+      { node_type, id, relation_type: relationType },
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -49,6 +49,7 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
     );
 
     if (response.status === 200) {
+      console.log("testest",response.data)
       const graphData = parsergraph(response.data);
           setNodes((prevNodes) => {
             return [...prevNodes, ...graphData.nodes];
