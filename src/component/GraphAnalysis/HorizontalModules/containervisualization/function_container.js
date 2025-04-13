@@ -109,6 +109,7 @@ export const fetchNodeProperties = async (nodeId, setSelectedNodeData) => {
         }
       );
       setSelectedNodeData(response.data);
+      console.log(response.data)
     } catch (error) {
       console.error("Error fetching node properties:", error.response?.data || error.message);
       return null;

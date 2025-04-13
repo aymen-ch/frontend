@@ -1,0 +1,128 @@
+.sidebar-container {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    overflow-y: auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  .sidebar-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 12px;
+    border-bottom: 1px solid #e8ecef;
+    padding-bottom: 8px;
+  }
+  
+  .sidebar-placeholder {
+    font-size: 14px;
+    color: #6b7280;
+    font-style: italic;
+    margin: 0;
+  }
+  
+  .details-card {
+    background: #f8fafc;
+    border-radius: 6px;
+    padding: 12px;
+  }
+  
+  .detail-item {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .detail-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0066cc;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .detail-value {
+    font-size: 14px;
+    color: #1a1a1a;
+    word-break: break-word;
+  }
+  
+  .properties-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: #ffffff;
+    border: 1px solid #e8ecef;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .property-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e8ecef;
+    gap: 8px;
+  }
+  
+  .property-item:last-child {
+    border-bottom: none;
+  }
+  
+  .property-key {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a1a1a;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+  
+  .property-value {
+    font-size: 13px;
+    color: #1a1a1a;
+    word-break: break-word;
+    flex: 1;
+  }
+  
+  .no-properties {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 8px 0 0;
+    font-style: italic;
+  }
+  
+  .config-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 16px 0 8px;
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar-container {
+      padding: 12px;
+    }
+  
+    .sidebar-title {
+      font-size: 16px;
+    }
+  
+    .details-card {
+      padding: 10px;
+    }
+  
+    .detail-label,
+    .detail-value {
+      font-size: 13px;
+    }
+  
+    .property-key,
+    .property-value {
+      font-size: 12px;
+    }
+  }

@@ -236,6 +236,7 @@ const useNvlVisualization = ({
   };
 
   const getVisualizationComponent = (hoveredEdge) => {
+    console.log(combinedNodes)
     const nvlProps = {
       nodes: combinedNodes.map((node) => ({
         ...node,

@@ -20,9 +20,10 @@ const DetailsModule = ({
   const [showDetails, setShowDetails] = useState(false);
   const [expandedDetails, setExpandedDetails] = useState({});
   const [sizeProperty, setSizeProperty] = useState(''); // New state for selected size property
-
+ console.log(nodeColors)
   // Get unique node types from combinedNodes
   const nodeTypes = [...new Set(combinedNodes.map(node => node.group))];
+  
   
   // Get unique properties for the selected node type
   const getPropertiesForNodeType = (nodeType) => {
@@ -251,10 +252,10 @@ const DetailsModule = ({
         <div className="properties-container">
           {(() => {
             const matchedNode = combinedNodes.find(node => 
-              node.id === selectedNodeData.id.toString()
+              node.id === selectedNodeData.identity.toString()
             );
             const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
-            const nodeColor = nodeColors[nodeGroup] || getNodeColor(nodeGroup);
+            const nodeColor = getNodeColor(nodeGroup);
             const nodeIcon = getNodeIcon(nodeGroup);
 
             return (
