@@ -248,11 +248,11 @@ const DetailsModule = ({
       )}
 
       {/* Existing Node Properties Section */}
-      {nodetoshow && selectedNodeData && (
+      {nodetoshow  && (
         <div className="properties-container">
           {(() => {
             const matchedNode = combinedNodes.find(node => 
-              node.id === selectedNodeData.identity.toString()
+              node.id === nodetoshow
             );
             const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
             const nodeColor = getNodeColor(nodeGroup);

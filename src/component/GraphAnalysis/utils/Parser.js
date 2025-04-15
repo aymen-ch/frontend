@@ -316,7 +316,7 @@ export const createNodeHtml = (
   Icon = "",
   node_size = 90
 ) => {
-  console.log("createNodeHtml captionText:", JSON.stringify(captionText));
+  console.log(node_size);
   const nodeconfig = calculateNodeConfig(node_size);
   const container = document.createElement("div");
   container.style.position = "relative";
@@ -326,7 +326,6 @@ export const createNodeHtml = (
   container.style.height =
     groupCount > 1 ? NODE_CONFIG.groupNodeHeight : NODE_CONFIG.defaultNodeHeight;
   container.style.textAlign = "center";
-  container.style.overflow = "visible"; // Prevent clipping
 
   const centerWrapper = document.createElement("div");
   centerWrapper.style.position = "absolute";
@@ -385,40 +384,21 @@ export const createNodeHtml = (
   iconElement.style.transition = "all 0.3s ease";
 
   const captionElement = document.createElement("div");
-
-  // Split captionText into pairs, handling spaces in values
-  let pairs;
-  if (captionText.includes('\n')) {
-    pairs = captionText.split('\n').filter((pair) => pair.trim());
-  } else {
-    // Handle space-separated input (e.g., "nom: brahom prenom: barhom id: 9")
-    pairs = captionText
-      .split(/(?<=:.*?)(?=\s[a-zA-Z]+:|$)/) // Split after ": value" before next "key:"
-      .map((pair) => pair.trim())
-      .filter((pair) => pair);
-  }
-
-  // Create HTML with <br> for each pair
-  captionElement.innerHTML = pairs
-    .map((pair) => `<span style="white-space: nowrap;">${pair}</span>`)
-    .join('<br>');
-
+  captionElement.innerText = captionText; // Preserve newlines
   captionElement.style.position = "absolute";
-  captionElement.style.width = "fit-content"; // Wide enough for labels
-  captionElement.style.height = "auto"; // Adjust to content
-  captionElement.style.lineHeight = "1.5"; // Space between lines
+  captionElement.style.width = "300px"; // Wide enough for typical labels
+  captionElement.style.height = "auto"; // Allow height to adjust to content
+  captionElement.style.lineHeight = "1.4"; // Space between lines
   captionElement.style.left = nodeconfig.captionLeft;
-  captionElement.style.top = `${parseInt(nodeconfig.captionTop || 60) + 120}px`; // Move below node
+  captionElement.style.top = nodeconfig.captionTop;
   captionElement.style.transform = "translateX(-50%)";
-  captionElement.style.fontSize = groupCount > 1 ? "22px" : "23px"; // Compact
+  captionElement.style.fontSize = groupCount > 1 ? "24px" : "20px"; // Smaller for clarity
   captionElement.style.fontWeight = "bold";
   captionElement.style.color = "rgba(23, 22, 22, 0.8)";
   captionElement.style.borderRadius = "6px";
   captionElement.style.textAlign = "center";
-  captionElement.style.padding = "6px 10px"; // Padding for readability
-  // captionElement.style.backgroundColor = "rgba(238, 234, 234, 0.9)"; // Subtle background
-  captionElement.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)"; // Subtle shadow
-  captionElement.style.whiteSpace = "normal"; // Allow multi-line
+  captionElement.style.transition = "all 0.3s ease";
+  captionElement.style.padding = "4px 8px"; // Add padding for better appearance
 
   if (isSelected) {
     captionElement.style.backgroundColor = "rgba(69, 36, 157, 0.7)";
@@ -431,6 +411,8 @@ export const createNodeHtml = (
     captionElement.style.backgroundColor = "rgba(94, 208, 56, 0.7)";
     captionElement.style.boxShadow = "0 2px 4px rgba(84, 195, 53, 0.1)";
     captionElement.style.color = "rgba(255, 255, 255, 0.9)";
+  } else if (groupCount > 1) {
+    captionElement.style.color = "rgba(0, 128, 255, 0.9)";
   }
 
   if (AddIcon) {
@@ -453,6 +435,7 @@ export const createNodeHtml = (
 
   return container;
 };
+
 // Node color and icon utilities
 export const getNodeColor = (nodeType) =>
   NODE_CONFIG.nodeTypes[nodeType]?.color || NODE_CONFIG.nodeTypes.default.color;
@@ -493,27 +476,7 @@ export const LabelManager = (node_type, properties) => {
   return result;
 };
 
-export const LabelManagerSchema = (node_type, properties) => {
-  console.log("LabelManagerSchema input:", { node_type, properties });
-  if (!node_type) {
-    const fallback = "Unknown Type";
-    console.log("LabelManagerSchema output (fallback):", fallback);
-    return fallback;
-  }
-
-  const labelKey = NODE_CONFIG.nodeTypes[node_type]?.labelKey || NODE_CONFIG.nodeTypes.default.labelKey;
-  if (!labelKey) {
-    const fallback = node_type;
-    console.log("LabelManagerSchema output (no labelKey):", fallback);
-    return fallback;
-  }
-
-  const result = labelKey.includes(',')
-    ? labelKey.split(',').map((key) => key.trim()).join('\n')
-    : labelKey;
-  console.log("LabelManagerSchema output:", result);
-  return result;
-};
+export const LabelManagerSchema = (node_type, properties) => node_type;
 
 // Edge caption HTML
 const createEdgeCaptionHtml = () => {

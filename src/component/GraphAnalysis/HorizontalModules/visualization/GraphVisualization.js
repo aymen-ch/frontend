@@ -103,7 +103,7 @@ const GraphVisualization = React.memo(({
             return {
               ...node,
               properties_analyse: {
-                ...result.properties_analyse,
+                ...result?.properties_analyse,
               },
             };
           })
