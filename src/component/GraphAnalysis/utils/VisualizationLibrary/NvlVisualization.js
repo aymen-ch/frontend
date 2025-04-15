@@ -11,11 +11,10 @@ import {
 } from '@neo4j-nvl/interaction-handlers';
 import { createNodeHtml,calculateNodeConfig } from '../Parser';
 import { IconPersonWithClass } from '../../HorizontalModules/containervisualization/function_container';
-
+import { useGlobalContext } from '../../GlobalVariables';
+import { LabelManager,LabelManagerSchema } from '../Parser';
 const useNvlVisualization = ({
   nvlRef,
-  combinedNodes,
-  combinedEdges,
   selectedNodes,
   setSelectedNodes,
   setContextMenu,
@@ -34,6 +33,7 @@ const useNvlVisualization = ({
   const minimapContainerRef = useRef(null);
   const [isMinimapReady, setIsMinimapReady] = useState(false);
   const [hoverdnode, sethovernode] = useState(null);
+  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
 
   const layoutoptions={
     direction:"up",
@@ -236,15 +236,18 @@ const useNvlVisualization = ({
   };
 
   const getVisualizationComponent = (hoveredEdge) => {
-    console.log(combinedNodes)
+    console.log(nodes)
     const nvlProps = {
-      nodes: combinedNodes.map((node) => ({
+      nodes: nodes.map((node) => ({
         ...node,
         hovered:node.id==hoverdnode ,
         selected: selectedNodes?.has(node.id),
-        html: createNodeHtml(node.captionnode, node.group, selectedNodes?.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "🔴",node.size),
+        html: createNodeHtml(node.ischema 
+          ? LabelManagerSchema(node.group, node.properties) 
+          : LabelManager(node.group, { ...node.properties, ...node.properties_analyse }),
+        node.group, selectedNodes?.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "🔴",node.size),
       })),
-      rels: combinedEdges.map((edge) => ({
+      rels: edges.map((edge) => ({
         ...edge,
         selected: selectedEdges?.has(edge.id),
         color: edge.id === hoveredEdge || selectedEdges?.has(edge.id) ? '#B771E5' : (edge.color || '#808080'),

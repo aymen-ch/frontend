@@ -7,14 +7,14 @@ import GraphCanvas from '../../utils/VisualizationLibrary/GraphCanvas';
 import LayoutControl from '../../modules/layout/Layoutcontrol';
 import { createNode, createEdge, parsergraph,createNodeHtml } from '../../utils/Parser';
 import virtualRelationsData from '../../modules/aggregation/aggregations.json';
+import { useGlobalContext } from '../../GlobalVariables';
 
 const URI = 'neo4j://localhost:7687';
 const USER = 'neo4j';
 const PASSWORD = '12345678';
 
 const SchemaVisualizer = () => {
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
+   const {nodes,setNodes,edges,setEdges}= useGlobalContext()
   const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [selectedEdges, setSelectedEdges] = useState(new Set());
   const [contextMenu, setContextMenu] = useState(null);
@@ -38,10 +38,23 @@ const SchemaVisualizer = () => {
           properties: node.properties || {},
         });
       }
-    } else {
+    } else if (selectedEdges.size === 1) {
+      console.log(selectedEdges)
+      const edgeid = [...selectedEdges][0];
+      const edge = edges.find((e) => e.id === edgeid);
+      if (edge) {
+        setSelectedItem({
+          id: edge.id,
+          group: edge.group,
+          properties: edge.properties || {},
+        });
+      }
+    }else
+    
+    {
       setSelectedItem(null);
     }
-  }, [selectedNodes, nodes]);
+  }, [selectedNodes,selectedEdges,edges, nodes]);
 
   // Redraw graph after config changes
   const redrawGraph = (nodeType, config) => {
@@ -138,7 +151,6 @@ const SchemaVisualizer = () => {
           const startId = rel.start.toString();
           const endId = rel.end.toString();
           const relType = rel.type;
-
           const startNode = schemaNodes.find((n) => n.identity.toString() === startId);
           const endNode = schemaNodes.find((n) => n.identity.toString() === endId);
 

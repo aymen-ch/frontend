@@ -257,7 +257,7 @@ const DetailsModule = ({
             const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
             const nodeColor = getNodeColor(nodeGroup);
             const nodeIcon = getNodeIcon(nodeGroup);
-
+            const property_analyse= matchedNode.properties_analyse
             return (
               <>
                 <div 
@@ -297,7 +297,8 @@ const DetailsModule = ({
                   <span>{nodeGroup}</span>
                 </div>
                 <ul className="list-group properties-list">
-                  {Object.entries(selectedNodeData).map(([key, value]) => (
+                
+                   {Object.entries(selectedNodeData).map(([key, value]) => (
                     <li key={key} className="list-group-item property-item">
                       <strong className="property-key">{key}:</strong> 
                       <span className="property-value">
@@ -305,6 +306,15 @@ const DetailsModule = ({
                       </span>
                     </li>
                   ))}
+                   <h4>------les attribut d'analyse :--------------</h4>
+            {Object.entries(property_analyse).map(([key, value]) => (
+                                <li key={key} className="list-group-item property-item">
+                                  <strong className="property-key">{key}:</strong> 
+                                  <span className="property-value">
+                                    {typeof value === 'object' ? JSON.stringify(value) : value}
+                                  </span>
+                                </li>
+                              ))}
                 </ul>
               </>
             );

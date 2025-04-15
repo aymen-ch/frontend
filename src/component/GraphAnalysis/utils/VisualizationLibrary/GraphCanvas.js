@@ -4,8 +4,6 @@ import useNvlVisualization from './NvlVisualization';
 import useCytoVisualization from './CytoscapeVisualization';
 const GraphCanvas = ({
   nvlRef,
-  combinedNodes,
-  combinedEdges,
   selectedNodes,
   setSelectedNodes,
   setContextMenu,
@@ -30,7 +28,6 @@ const GraphCanvas = ({
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    console.log(combinedNodes)
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
@@ -40,8 +37,6 @@ const GraphCanvas = ({
   // Use the NVL visualization hook
   const { getVisualizationComponent } = useNvlVisualization({
     nvlRef,
-    combinedNodes,
-    combinedEdges,
     selectedNodes,
     setSelectedNodes,
     setContextMenu,

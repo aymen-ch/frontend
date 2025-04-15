@@ -13,6 +13,7 @@ const loadConfig = async () => {
   try {
     const response = await axios.get('http://127.0.0.1:8000/api/node-config/');
     NODE_CONFIG = response.data;
+    console.log(NODE_CONFIG)
   } catch (error) {
     console.error('Error loading nodeConfig:', error.message);
     throw error;
@@ -45,7 +46,7 @@ export const updateNodeConfig = async (nodeType, { color, size, icon, labelKey }
 loadConfig();
 
 // Fetch node properties from the server
-const fetchNodeProperties = async (nodeId) => {
+export const fetchNodeProperties = async (nodeId) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/getdata/`,
@@ -107,6 +108,7 @@ export const createNode = (
       id.toString(),
       nodeSize
     ),
+    ischema:ischema,
     selecte: isSelected,
     captionnode: ischema ? LabelManagerSchema(nodeType, properties) : LabelManager(nodeType, properties),
     aggregatedproperties,
@@ -124,14 +126,16 @@ export const createNode = (
 };
 
 // Utility function to create an edge object
-export const createEdge = (rel, startId, endId, color = null) => ({
+export const createEdge = (rel, startId, endId, color = null,aggregationPath=null) => ({
   id: rel.id ? rel.id.toString() : `${startId}-${endId}`,
   from: startId.toString(),
   to: endId.toString(),
+  properties:rel.properties?rel.properties:'empty',
   color: color || NODE_CONFIG.edgeColor || 'red',
   width: NODE_CONFIG.edgeWidth || 7,
   captionSize: NODE_CONFIG.captionSize || 5,
   captionAlign: 'center',
+  aggregationPath:aggregationPath,
   captions: [
     {
       value: rel.type,
@@ -301,118 +305,154 @@ export const calculateNodeConfig = (node_size) => {
 };
 
 // Create HTML for nodes
-export const createNodeHtml = (captionText, nodetype, isSelected = false, isinpath = false, groupCount = 1,id , AddIcon = false , Icon ="",node_size=90) => {
-  //NODE_CONFIG.defaultNodeSize=node_size
- console.log(node_size)
- const nodeconfig=calculateNodeConfig(node_size)
- const container = document.createElement('div');
- container.style.position = 'relative';
- container.style.display = 'inline-block';
- container.style.width = groupCount > 1 ? NODE_CONFIG.groupNodeWidth : NODE_CONFIG.defaultNodeWidth;
- container.style.height = groupCount > 1 ? NODE_CONFIG.groupNodeHeight : NODE_CONFIG.defaultNodeHeight;
- container.style.textAlign = 'center';
+export const createNodeHtml = (
+  captionText,
+  nodetype,
+  isSelected = false,
+  isinpath = false,
+  groupCount = 1,
+  id,
+  AddIcon = false,
+  Icon = "",
+  node_size = 90
+) => {
+  console.log("createNodeHtml captionText:", JSON.stringify(captionText));
+  const nodeconfig = calculateNodeConfig(node_size);
+  const container = document.createElement("div");
+  container.style.position = "relative";
+  container.style.display = "inline-block";
+  container.style.width =
+    groupCount > 1 ? NODE_CONFIG.groupNodeWidth : NODE_CONFIG.defaultNodeWidth;
+  container.style.height =
+    groupCount > 1 ? NODE_CONFIG.groupNodeHeight : NODE_CONFIG.defaultNodeHeight;
+  container.style.textAlign = "center";
+  container.style.overflow = "visible"; // Prevent clipping
 
- const centerWrapper = document.createElement('div');
- centerWrapper.style.position = 'absolute';
- centerWrapper.style.top = '50%';
- centerWrapper.style.left = '50%';
- centerWrapper.style.transform = 'translate(-50%, -50%)';
- centerWrapper.style.width = groupCount > 1 ? NODE_CONFIG.groupCenterWrapperWidth : NODE_CONFIG.centerWrapperWidth;
- centerWrapper.style.height = groupCount > 1 ? NODE_CONFIG.groupCenterWrapperHeight : NODE_CONFIG.centerWrapperHeight;
+  const centerWrapper = document.createElement("div");
+  centerWrapper.style.position = "absolute";
+  centerWrapper.style.top = "50%";
+  centerWrapper.style.left = "50%";
+  centerWrapper.style.transform = "translate(-50%, -50%)";
+  centerWrapper.style.width =
+    groupCount > 1
+      ? NODE_CONFIG.groupCenterWrapperWidth
+      : NODE_CONFIG.centerWrapperWidth;
+  centerWrapper.style.height =
+    groupCount > 1
+      ? NODE_CONFIG.groupCenterWrapperHeight
+      : NODE_CONFIG.centerWrapperHeight;
 
- const border = document.createElement('div');
- border.style.position = 'absolute';
- border.style.top = nodeconfig.borderTop;
- border.style.left = nodeconfig.borderLeft;
- border.style.transform = 'translate(-50%, -50%)';
- border.style.width = groupCount > 1 ? NODE_CONFIG.groupNodeWidth : nodeconfig.Nodewidth;
- border.style.height = groupCount > 1 ? NODE_CONFIG.groupNodeHeight : nodeconfig.Nodehight;
- border.style.borderRadius = '50%';
- border.style.transition = 'all 0.3s ease';
+  const border = document.createElement("div");
+  border.style.position = "absolute";
+  border.style.top = nodeconfig.borderTop;
+  border.style.left = nodeconfig.borderLeft;
+  border.style.transform = "translate(-50%, -50%)";
+  border.style.width =
+    groupCount > 1 ? NODE_CONFIG.groupNodeWidth : nodeconfig.Nodewidth;
+  border.style.height =
+    groupCount > 1 ? NODE_CONFIG.groupNodeHeight : nodeconfig.Nodehight;
+  border.style.borderRadius = "50%";
+  border.style.transition = "all 0.3s ease";
 
- if (isSelected ) {
- // border.style.boxShadow = '0 0 20px 8px rgba(104, 35, 157, 0.7)';
- // border.style.border = '8px solid rgba(71, 39, 134, 0.9)';
-   border.style.backgroundColor = 'rgba(255, 255, 0, 0.05)';
- } else if (groupCount > 1) {
-   border.style.border = '3px dashed rgba(0, 128, 255, 0.8)';
-   border.style.backgroundColor = 'rgba(0, 128, 255, 0.1)';
- }
+  if (isSelected) {
+    border.style.backgroundColor = "rgba(255, 255, 0, 0.05)";
+  } else if (groupCount > 1) {
+    border.style.border = "3px dashed rgba(0, 128, 255, 0.8)";
+    border.style.backgroundColor = "rgba(0, 128, 255, 0.1)";
+  }
 
- if ( isinpath) {
-   border.style.boxShadow = '0 0 20px 8px rgba(59, 173, 46, 0.7)';
-   border.style.border = '8px solid rgba(111, 213, 48, 0.9)';
-    border.style.backgroundColor = 'rgba(255, 255, 0, 0.05)';
-  } 
- const iconElement = document.createElement('img');
- iconElement.src = getNodeIcon(nodetype);
- iconElement.style.position = 'absolute';
- iconElement.style.top = nodeconfig.iconTop;
- iconElement.style.left = nodeconfig.iconLeft;
- iconElement.style.transform = 'translate(-50%, -50%)';
- iconElement.style.width = groupCount > 1 ? NODE_CONFIG.groupImageWidth : nodeconfig.defaultImageWidth;
- iconElement.style.height = groupCount > 1 ? NODE_CONFIG.groupImageHeight : nodeconfig.defaultImageHeight;
- iconElement.style.zIndex = '2';
- iconElement.style.transition = 'all 0.3s ease';
+  if (isinpath) {
+    border.style.boxShadow = "0 0 20px 8px rgba(59, 173, 46, 0.7)";
+    border.style.border = "8px solid rgba(111, 213, 48, 0.9)";
+    border.style.backgroundColor = "rgba(255, 255, 0, 0.05)";
+  }
 
- const captionElement = document.createElement('div');
- captionElement.innerText = captionText;
- captionElement.style.position = 'absolute';
- captionElement.style.width = '200px';
- captionElement.style.height = 'fit-content';
- captionElement.style.left = nodeconfig.captionLeft;
- captionElement.style.top = nodeconfig.captionTop;
- captionElement.style.transform = 'translateX(-50%)';
- captionElement.style.fontSize = groupCount > 1 ? '32px' : '28px';
- captionElement.style.fontWeight = 'bold';
- captionElement.style.color = 'rgba(23, 22, 22, 0.8)';
- captionElement.style.borderRadius = '6px';
- captionElement.style.textAlign = 'center';
- captionElement.style.transition = 'all 0.3s ease';
+  const iconElement = document.createElement("img");
+  iconElement.src = getNodeIcon(nodetype);
+  iconElement.style.position = "absolute";
+  iconElement.style.top = nodeconfig.iconTop;
+  iconElement.style.left = nodeconfig.iconLeft;
+  iconElement.style.transform = "translate(-50%, -50%)";
+  iconElement.style.width =
+    groupCount > 1
+      ? NODE_CONFIG.groupImageWidth
+      : nodeconfig.defaultImageWidth;
+  iconElement.style.height =
+    groupCount > 1
+      ? NODE_CONFIG.groupImageHeight
+      : nodeconfig.defaultImageHeight;
+  iconElement.style.zIndex = "2";
+  iconElement.style.transition = "all 0.3s ease";
 
- if (isSelected) {
-   captionElement.style.backgroundColor = 'rgba(69, 36, 157, 0.7)';
-   captionElement.style.boxShadow = '0 2px 4px rgba(152, 115, 52, 0.1)';
-   captionElement.style.color = 'rgba(255, 255, 255, 0.9)';
- } else if (groupCount > 1) {
-   captionElement.style.color = 'rgba(0, 128, 255, 0.9)';
- }
- if (isinpath) {
-   captionElement.style.backgroundColor = 'rgba(94, 208, 56, 0.7)';
-   captionElement.style.boxShadow = '0 2px 4px rgba(84, 195, 53, 0.1)';
-   captionElement.style.color = 'rgba(255, 255, 255, 0.9)';
- } else if (groupCount > 1) {
-   captionElement.style.color = 'rgba(0, 128, 255, 0.9)';
- }
+  const captionElement = document.createElement("div");
 
- if (AddIcon) {
-  
-   // Create crown icon element with animation
-   const crownIcon = document.createElement("div");
-   crownIcon.innerText = Icon; // Crown emoji
-   crownIcon.style.position = "absolute";
-   crownIcon.style.top = "-30px"; // Position above the node
-   crownIcon.style.left = "80%";
-   crownIcon.style.transform = "translateX(-50%)";
-   crownIcon.style.fontSize = "32px"; // Adjust size as needed
-   crownIcon.style.zIndex = "35";
+  // Split captionText into pairs, handling spaces in values
+  let pairs;
+  if (captionText.includes('\n')) {
+    pairs = captionText.split('\n').filter((pair) => pair.trim());
+  } else {
+    // Handle space-separated input (e.g., "nom: brahom prenom: barhom id: 9")
+    pairs = captionText
+      .split(/(?<=:.*?)(?=\s[a-zA-Z]+:|$)/) // Split after ": value" before next "key:"
+      .map((pair) => pair.trim())
+      .filter((pair) => pair);
+  }
 
-   // Add CSS animation for the crown
-   console.log("this is crown") ; // crownIcon.style.animation = "crownBounce 1.5s infinite";
+  // Create HTML with <br> for each pair
+  captionElement.innerHTML = pairs
+    .map((pair) => `<span style="white-space: nowrap;">${pair}</span>`)
+    .join('<br>');
 
-   // Append the crown icon to the container
-   container.appendChild(crownIcon);
- 
- }
+  captionElement.style.position = "absolute";
+  captionElement.style.width = "fit-content"; // Wide enough for labels
+  captionElement.style.height = "auto"; // Adjust to content
+  captionElement.style.lineHeight = "1.5"; // Space between lines
+  captionElement.style.left = nodeconfig.captionLeft;
+  captionElement.style.top = `${parseInt(nodeconfig.captionTop || 60) + 120}px`; // Move below node
+  captionElement.style.transform = "translateX(-50%)";
+  captionElement.style.fontSize = groupCount > 1 ? "22px" : "23px"; // Compact
+  captionElement.style.fontWeight = "bold";
+  captionElement.style.color = "rgba(23, 22, 22, 0.8)";
+  captionElement.style.borderRadius = "6px";
+  captionElement.style.textAlign = "center";
+  captionElement.style.padding = "6px 10px"; // Padding for readability
+  // captionElement.style.backgroundColor = "rgba(238, 234, 234, 0.9)"; // Subtle background
+  captionElement.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)"; // Subtle shadow
+  captionElement.style.whiteSpace = "normal"; // Allow multi-line
 
- centerWrapper.appendChild(border);
- centerWrapper.appendChild(iconElement);
- container.appendChild(centerWrapper);
- container.appendChild(captionElement);
+  if (isSelected) {
+    captionElement.style.backgroundColor = "rgba(69, 36, 157, 0.7)";
+    captionElement.style.boxShadow = "0 2px 4px rgba(152, 115, 52, 0.1)";
+    captionElement.style.color = "rgba(255, 255, 255, 0.9)";
+  } else if (groupCount > 1) {
+    captionElement.style.color = "rgba(0, 128, 255, 0.9)";
+  }
+  if (isinpath) {
+    captionElement.style.backgroundColor = "rgba(94, 208, 56, 0.7)";
+    captionElement.style.boxShadow = "0 2px 4px rgba(84, 195, 53, 0.1)";
+    captionElement.style.color = "rgba(255, 255, 255, 0.9)";
+  }
 
- return container;
+  if (AddIcon) {
+    const crownIcon = document.createElement("div");
+    crownIcon.innerText = Icon;
+    crownIcon.style.position = "absolute";
+    crownIcon.style.top = "-30px";
+    crownIcon.style.left = "80%";
+    crownIcon.style.transform = "translateX(-50%)";
+    crownIcon.style.fontSize = "32px";
+    crownIcon.style.zIndex = "35";
+    console.log("this is crown");
+    container.appendChild(crownIcon);
+  }
+
+  centerWrapper.appendChild(border);
+  centerWrapper.appendChild(iconElement);
+  container.appendChild(centerWrapper);
+  container.appendChild(captionElement);
+
+  return container;
 };
-
 // Node color and icon utilities
 export const getNodeColor = (nodeType) =>
   NODE_CONFIG.nodeTypes[nodeType]?.color || NODE_CONFIG.nodeTypes.default.color;
@@ -422,17 +462,58 @@ export const getNodeIcon = (nodeType) =>
 
 // Label manager
 export const LabelManager = (node_type, properties) => {
+  console.log("LabelManager input:", { node_type, properties });
   const labelKey = NODE_CONFIG.nodeTypes[node_type]?.labelKey || NODE_CONFIG.nodeTypes.default.labelKey;
-  if (!labelKey) return `Unknown Type\nID: ${properties.identity || 'N/A'}`;
+  if (!labelKey) {
+    const fallback = `Unknown Type\nID: ${properties.identity || 'N/A'}`;
+    console.log("LabelManager output:", fallback);
+    return fallback;
+  }
 
   if (labelKey.includes(',')) {
     const keys = labelKey.split(',');
-    return keys.map((key) => properties[key] || '').filter(Boolean).join(' ');
+    const result = keys
+      .map((key) => {
+        if (properties[key] !== undefined && properties[key] !== null) {
+          return `${key}: ${properties[key]}`;
+        }
+        return '';
+      })
+      .filter((item) => item !== '')
+      .join('\n'); // Use newline to separate pairs
+    console.log("LabelManager output:", result);
+    return result;
   }
-  return properties[labelKey] || `Unknown ${node_type}`;
+
+  const result =
+    properties[labelKey] !== undefined && properties[labelKey] !== null
+      ? `${labelKey}: ${properties[labelKey]}`
+      : `Unknown ${node_type}`;
+  console.log("LabelManager output:", result);
+  return result;
 };
 
-export const LabelManagerSchema = (node_type, properties) => node_type;
+export const LabelManagerSchema = (node_type, properties) => {
+  console.log("LabelManagerSchema input:", { node_type, properties });
+  if (!node_type) {
+    const fallback = "Unknown Type";
+    console.log("LabelManagerSchema output (fallback):", fallback);
+    return fallback;
+  }
+
+  const labelKey = NODE_CONFIG.nodeTypes[node_type]?.labelKey || NODE_CONFIG.nodeTypes.default.labelKey;
+  if (!labelKey) {
+    const fallback = node_type;
+    console.log("LabelManagerSchema output (no labelKey):", fallback);
+    return fallback;
+  }
+
+  const result = labelKey.includes(',')
+    ? labelKey.split(',').map((key) => key.trim()).join('\n')
+    : labelKey;
+  console.log("LabelManagerSchema output:", result);
+  return result;
+};
 
 // Edge caption HTML
 const createEdgeCaptionHtml = () => {

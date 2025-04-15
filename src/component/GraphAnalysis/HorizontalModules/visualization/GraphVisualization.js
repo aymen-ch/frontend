@@ -6,7 +6,7 @@ import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWind
 import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa'; // Added FaSpinner
 import { FaDiaspora } from "react-icons/fa6";
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
-import { handleLayoutChange, fetchNodeProperties } from '../containervisualization/function_container';
+import { handleLayoutChange } from '../containervisualization/function_container';
 import globalWindowState from '../../utils/globalWindowState';
 import { 
   buttonStyle, 
@@ -66,7 +66,58 @@ const GraphVisualization = React.memo(({
   const resultsRef = useRef(null);
 
   useEffect(() => {
+
+    const fetchNodeAnalysis = async () => {
+      if (nodes.length === 0) return;
+
+      try {
+        // const token = localStorage("");
+        const analysisPromises = nodes.map((node) =>
+          axios
+            .post(
+              BASE_URL+'/node-analysis/',
+              { id: node.id },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  // Authorization: `Bearer ${token}`,
+                },
+              }
+            )
+            .then((response) => ({
+              id: node.id,
+              properties_analyse: response.data.properties_analyse || {},
+            }))
+            .catch((error) => {
+              console.error(`Error fetching properties_analyse for node ${node.id}:`, error.message);
+              return { id: node.id, properties_analyse: {} };
+            })
+        );
+
+        const analysisResults = await Promise.all(analysisPromises);
+        console.log(analysisResults)
+        // Update nodes with properties_analyse
+        setNodes((prevNodes) =>
+          prevNodes.map((node) => {
+            const result = analysisResults.find((res) => res.id === node.id);
+            return {
+              ...node,
+              properties_analyse: {
+                ...result.properties_analyse,
+              },
+            };
+          })
+        );
+      } catch (error) {
+        console.error('Error fetching node analysis:', error.message);
+      }
+    };
+    
+    // Fetch analysis and update nodes
+    fetchNodeAnalysis();
+
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
+    
   }, [nodes.length]);
 
   useEffect(() => {
@@ -122,6 +173,7 @@ const GraphVisualization = React.memo(({
       );
       setSearchResults([]);
     } else {
+     
       setIsLoading(true); // Start loading
       try {
         const response = await axios.post(BASE_URL + '/recherche/', {
@@ -131,12 +183,14 @@ const GraphVisualization = React.memo(({
             'Content-Type': 'application/json',
           }
         });
+
         const limitedResults = response.data.slice(0, 50);
+        console.log(limitedResults)
         setSearchResults(limitedResults);
         //console.log(response.data);
       } catch (error) {
         console.error('Error searching database:', error);
-        setSearchResults([{ node: { id: 'error', label: 'Error performing search' }, score: 0 }]);
+     //   setSearchResults([{ node: { id: 'error', label: 'Error performing search' }, score: 0 }]);
       } finally {
         setIsLoading(false); // Stop loading
       }
@@ -144,8 +198,9 @@ const GraphVisualization = React.memo(({
   };
 
   const handleAddNodeToCanvas = (result) => {
+    console.log(result)
     setNodes(prevNodes => {
-      const node = createNode(result.properties, result.type, result.properties);
+      const node = createNode(result.id, result.properties.type, result.properties);
       if (prevNodes.some(n => n.id === node.id)) {
         return prevNodes;
       }
@@ -287,13 +342,13 @@ const GraphVisualization = React.memo(({
           }}
         >
           {searchResults.map((result, index) => {
-            const nodeType = result.type;
+            const nodeType = result.properties.type;
             const iconSrc = getNodeIcon(nodeType);
             const backgroundColor = getNodeColor(nodeType);
 
             return (
               <div
-                key={result.identity || index}
+                key={result.id || index}
                 style={{
                   padding: '8px',
                   cursor: 'pointer',
@@ -334,7 +389,7 @@ const GraphVisualization = React.memo(({
                     ))}
                   </div>
                   <div style={{ fontSize: '12px', color: '#666' }}>
-                    Score: {result.score.toFixed(2)}
+                    Score: {result.properties.score.toFixed(2)}
                   </div>
                 </div>
               </div>

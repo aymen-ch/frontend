@@ -1,22 +1,47 @@
-// src/components/SchemaVisualizer/NodeConfigForm.jsx
 import React, { useState, useEffect } from 'react';
 import { updateNodeConfig, getNodeColor, getNodeIcon, NODE_CONFIG } from '../../utils/Parser';
-
+import { fetchNodeProperties } from '../../utils/Urls';
 const NodeConfigForm = ({ selectedNode, onUpdate }) => {
   const [nodeType, setNodeType] = useState(selectedNode?.group || '');
   const [color, setColor] = useState('');
   const [size, setSize] = useState('');
   const [icon, setIcon] = useState('');
   const [labelKey, setLabelKey] = useState('');
+  const [properties, setProperties] = useState([]); // Store node properties
+  const [error, setError] = useState(null); // Handle fetch errors
 
-  // Load current config when nodeType changes
+  // Load current config and fetch properties when nodeType changes
   useEffect(() => {
     if (nodeType) {
+      // Load node config
       const config = NODE_CONFIG.nodeTypes[nodeType] || NODE_CONFIG.nodeTypes.default;
       setColor(config.color || getNodeColor(nodeType));
       setSize(config.size || NODE_CONFIG.defaultNodeSize);
       setIcon(config.icon || getNodeIcon(nodeType));
       setLabelKey(config.labelKey || '');
+
+      // Fetch node properties
+      const fetchProperties = async () => {
+        try {
+          const nodeProperties = await fetchNodeProperties(nodeType);
+          setProperties(nodeProperties || []);
+          setError(null);
+        } catch (err) {
+          console.error('Error fetching node properties:', err.message);
+          setError('Failed to load node properties.');
+          setProperties([]);
+        }
+      };
+
+      fetchProperties();
+    } else {
+      // Reset when nodeType is cleared
+      setProperties([]);
+      setLabelKey('');
+      setColor('');
+      setSize('');
+      setIcon('');
+      setError(null);
     }
   }, [nodeType]);
 
@@ -36,7 +61,7 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
       const config = {};
       if (color) config.color = color;
       if (size) config.size = parseInt(size, 10);
-      if (icon) config.icon = icon; // Saves "/icon/Personne.png"
+      if (icon) config.icon = icon;
       if (labelKey) config.labelKey = labelKey;
 
       await updateNodeConfig(nodeType || 'NewType', config);
@@ -47,11 +72,13 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
       }
     } catch (error) {
       console.error('Error updating node config:', error.message);
+      setError('Failed to update node configuration.');
     }
   };
 
   return (
     <div style={{ marginTop: '10px' }}>
+      {error && <div style={{ color: 'red', marginBottom: '8px' }}>{error}</div>}
       <form onSubmit={handleSubmit}>
         <label>
           Node Type:
@@ -114,14 +141,20 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
           </div>
         </label>
         <label>
-          Label Property Key(s):
-          <input
-            type="text"
+          Label Property Key:
+          <select
             value={labelKey}
             onChange={(e) => setLabelKey(e.target.value)}
-            placeholder="Property keys (comma-separated)"
             style={{ width: '100%', marginBottom: '8px', padding: '5px' }}
-          />
+            disabled={!nodeType || properties.length === 0}
+          >
+            <option value="">Select a property</option>
+            {properties.map((prop) => (
+              <option key={prop.name} value={prop.name}>
+                {prop.name} ({prop.type})
+              </option>
+            ))}
+          </select>
         </label>
         <button
           type="submit"

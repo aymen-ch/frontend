@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import cytoscape from 'cytoscape';
 import edgehandles from 'cytoscape-edgehandles';
-
+import { useGlobalContext } from '../../GlobalVariables';
 // Register the extension
 cytoscape.use(edgehandles);
 
 const useCytoVisualization = ({
   nvlRef,
-  combinedNodes,
-  combinedEdges,
   selectedNodes,
   setSelectedNodes,
   setContextMenu,
@@ -20,16 +18,17 @@ const useCytoVisualization = ({
 }) => {
   const ehInstance = useRef(null);
   const [newEdgeInput, setNewEdgeInput] = useState(null);
+  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
 
   useEffect(() => {
     if (!nvlRef.current){ console.log("has exit ") ;
       return;}
-    console.log(combinedNodes)
+    console.log(nodes)
     // Initialize Cytoscape and assign it directly to nvlRef.current
     const cy = cytoscape({
       container: nvlRef.current,
       elements: [
-        ...combinedNodes.map(node => ({
+        ...nodes.map(node => ({
           data: { 
             id: node.id, 
             label: `${node.captionnode}\n${node.type || ''}`,
@@ -41,7 +40,7 @@ const useCytoVisualization = ({
           },
           selected: selectedNodes.has(node.id),
         })),
-        ...combinedEdges.map(edge => ({
+        ...edges.map(edge => ({
           data: { 
             id: edge.id,
             source: edge.from,
@@ -235,7 +234,7 @@ const useCytoVisualization = ({
           label: edgeName
         };
         setselectedEdges(prev => new Set(prev).add(newEdge.id));
-        combinedEdges.push(newEdge);
+        edges.push(newEdge);
         
         // Remove temporary edge and add permanent one
         nvlRef.current.edges(`[id = "${newEdgeInput.tempId}"]`).remove();
