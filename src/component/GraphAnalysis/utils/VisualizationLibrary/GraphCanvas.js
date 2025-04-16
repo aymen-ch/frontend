@@ -4,6 +4,8 @@ import useNvlVisualization from './NvlVisualization';
 import useCytoVisualization from './CytoscapeVisualization';
 const GraphCanvas = ({
   nvlRef,
+  nodes,
+  edges,
   selectedNodes,
   setSelectedNodes,
   setContextMenu,
@@ -37,6 +39,8 @@ const GraphCanvas = ({
   // Use the NVL visualization hook
   const { getVisualizationComponent } = useNvlVisualization({
     nvlRef,
+    nodes,
+    edges,
     selectedNodes,
     setSelectedNodes,
     setContextMenu,

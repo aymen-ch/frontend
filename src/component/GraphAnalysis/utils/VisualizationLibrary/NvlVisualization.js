@@ -15,6 +15,8 @@ import { useGlobalContext } from '../../GlobalVariables';
 import { LabelManager,LabelManagerSchema } from '../Parser';
 const useNvlVisualization = ({
   nvlRef,
+  nodes,
+  edges,
   selectedNodes,
   setSelectedNodes,
   setContextMenu,
@@ -33,7 +35,6 @@ const useNvlVisualization = ({
   const minimapContainerRef = useRef(null);
   const [isMinimapReady, setIsMinimapReady] = useState(false);
   const [hoverdnode, sethovernode] = useState(null);
-  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
 
   const layoutoptions={
     direction:"up",
