@@ -307,14 +307,14 @@ const DetailsModule = ({
                     </li>
                   ))}
                    <h4>------les attribut d'analyse :--------------</h4>
-            {Object.entries(property_analyse).map(([key, value]) => (
+            {/* {Object.entries(property_analyse).map(([key, value]) => (
                                 <li key={key} className="list-group-item property-item">
                                   <strong className="property-key">{key}:</strong> 
                                   <span className="property-value">
                                     {typeof value === 'object' ? JSON.stringify(value) : value}
                                   </span>
                                 </li>
-                              ))}
+                              ))} */}
                 </ul>
               </>
             );

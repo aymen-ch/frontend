@@ -160,3 +160,73 @@ export const handleActionSelect = async (action, node, setActionsSubMenu, setCon
     setContextMenu(null);
   }
 };
+
+export const handleAdvancedExpand = async (
+  node,
+  setNodes,
+  setEdges,
+  {
+    attribute = '_betweenness',
+    threshold = 0.1,
+    max_level = 2 // Changed to match API parameter name
+  } = {}
+) => {
+  const token = localStorage.getItem('authToken');
+  
+  try {
+    console.log("parm" ,parseInt(node.id, 10),
+    attribute,
+    threshold,
+    max_level   );
+    const response = await axios.post(
+      `${BASE_URL}/expand_path_from_node/`,  // Matched your endpoint URL
+      {
+        id_start: parseInt(node.id, 10),
+        attribute,
+        threshold,
+        max_level  // Using exact parameter name from API
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      console.log("nodes_BOB2" ,response.data );
+
+      const { nodes: expandedNodes, edges: expandedEdges } = parsergraph(response.data.data);
+      
+      // Update state with new nodes and edges
+       setNodes(prevNodes => [...prevNodes, ...expandedNodes]);
+       setEdges(prevEdges => [...prevEdges, ...expandedEdges]);
+
+      
+
+      return { 
+        success: true, 
+        // nodes: expandedNodes, 
+        // edges: expandedEdges,
+        message: 'Path expanded successfully'
+      };
+    } else {
+      console.error('Failed to expand path from node');
+      return { 
+        success: false, 
+        error: 'API request failed',
+        status: response.status
+      };
+    }
+  } catch (error) {
+    console.error('Error expanding path:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.error || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+

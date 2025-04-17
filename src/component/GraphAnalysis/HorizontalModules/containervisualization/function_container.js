@@ -405,16 +405,47 @@ export const drawCirclesOnPersonneNodes = async (combinedNodes, setNodes) => {
   setNodes(updatedNodes);
 };
 
+export const CentralityByAttribute = async (combinedNodes, setNodes, attribute, group) => {
+  try {
+    // Define constants
+    const BASE_SIZE = 90;  // Default base size for nodes
+    const FACTOR = 100;    // Scaling factor for centrality visualization
+   
+    const updatedNodes = combinedNodes.map((node) => {
+      
+      
+      // Check if node matches the selected group and has the specified attribute
+      if (node.group === group && node.properties[attribute] !== undefined) {
+        // Calculate new size based on centrality
+    
+        console.log("h0" ,node.properties )
+        console.log("h1",node.group ,node.properties[attribute] )
+        console.log("h23",group ,attribute )
+        
+        const newSize = BASE_SIZE + FACTOR * node.properties[attribute];
+       
+        return {
+          ...node,
+          size: Math.max(BASE_SIZE, newSize),  // Ensure minimum size
+        };
+      }
+
+      // Return unchanged node if conditions aren't met
+      return node;
+    });
+
+    // Update nodes state
+    setNodes(updatedNodes);
+  } catch (error) {
+    console.error(`Error in CentralityByAttribute for ${attribute} on group ${group}:`, error);
+    throw error;  // Re-throw to allow caller to handle
+  }
+};
+
 
 export const BetweennessCentrality = async (combinedNodes, setNodes) => {
   try {
-    // Validate input parameters
-    // if (!Array.isArray(combinedNodes)) {
-    //   throw new Error('combinedNodes must be an array');
-    // }
-    // if (typeof setNodes !== 'function') {
-    //   throw new Error('setNodes must be a function');
-    // }
+
 
     // Define constants
     const BASE_SIZE = 90;  // Default base size for nodes
