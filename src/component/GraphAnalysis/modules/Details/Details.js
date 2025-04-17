@@ -257,7 +257,7 @@ const DetailsModule = ({
             const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
             const nodeColor = getNodeColor(nodeGroup);
             const nodeIcon = getNodeIcon(nodeGroup);
-            const property_analyse= matchedNode.properties_analyse
+            // const property_analyse= matchedNode.properties_analyse
             return (
               <>
                 <div 

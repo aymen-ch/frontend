@@ -18,11 +18,12 @@ setEdges,
 nodes,
 setActiveAggregations
 ) => {
+
+ 
 const nodeIds = nodes
   .filter((node) => type.includes(node.group))
   .map((node) => parseInt(node.id, 10));
-console.log("aggregation from bast ");
-
+  console.log("aggregation handled!!!!",nodeIds)
 try {
   const token = localStorage.getItem('authToken');
   const response = await axios.post(BASE_URL + '/agregate/', {

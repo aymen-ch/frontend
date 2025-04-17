@@ -14,7 +14,8 @@ const USER = 'neo4j';
 const PASSWORD = '12345678';
 
 const SchemaVisualizer = () => {
-   const {nodes,setNodes,edges,setEdges}= useGlobalContext()
+  const [nodes,setNodes] = useState([])
+  const [edges,setEdges] = useState([])
   const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [selectedEdges, setSelectedEdges] = useState(new Set());
   const [contextMenu, setContextMenu] = useState(null);
@@ -359,8 +360,8 @@ const SchemaVisualizer = () => {
         >
           <GraphCanvas
             nvlRef={nvlRef}
-            combinedNodes={nodes}
-            combinedEdges={edges}
+            nodes={nodes}
+            edges={edges}
             selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
             setContextMenu={setContextMenu}
