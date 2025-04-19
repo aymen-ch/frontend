@@ -1,34 +1,35 @@
 import React from 'react';
-import { getNodeColor, getNodeIcon } from '../../utils/Parser';
-import './NodeDetails.css'; // We'll create this CSS file
+import SchemaIcon from './SchemaIcon';
+import './NodeDetails.css';
 
 const NodeDetails = ({ nodeId, nodes }) => {
   const node = nodes.find((n) => n.id === nodeId);
   if (!node) return null;
 
-  const { group, color, icon } = {
+  const { group, color } = {
     group: node.group,
-    color: getNodeColor(node.group),
-    icon: getNodeIcon(node.group),
+    color: node.color || '#0066cc',
   };
 
   return (
-    <div className="node-details-container">
-      <div className="node-details-header">
-        <span className="node-type">
+    <div className="schema-viz-node-details-container">
+      <div className="schema-viz-node-details-header">
+        <span className="schema-viz-node-type">
           {nodeId.includes('_dup') ? 'End Node' : 'Start Node'}
         </span>
       </div>
-      <div className="node-info" style={{ backgroundColor: color }}>
-        <img
-          src={icon}
-          alt={`${group} icon`}
-          className="node-icon"
+      <div className="schema-viz-node-info" style={{ backgroundColor: color }}>
+        <SchemaIcon 
+          type="project-diagram" 
+          size={20} 
+          color="white" 
+          className="schema-viz-node-icon" 
         />
-        <span className="node-group">{group}</span>
+        <span className="schema-viz-node-group">{group}</span>
       </div>
     </div>
   );
 };
 
 export default NodeDetails;
+  

@@ -19,8 +19,9 @@ const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
 
 const Container_AlgorithmicAnalysis = () => {
-  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
-
+  //const { nodes, setNodes, edges, setEdges } = useGlobalContext();
+  const [nodes,setNodes] = useState([])
+  const [edges,setEdges] = useState([])
   const [SubGrapgTable, setSubGrapgTable] = useState({ results: [] });
   const [activeModule, setActiveModule] = useState(null);
   const nvlRef = useRef(null);

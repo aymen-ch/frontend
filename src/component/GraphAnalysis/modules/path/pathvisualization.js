@@ -463,8 +463,8 @@ const PathVisualization = React.memo(({
 
           <GraphCanvas
             nvlRef={nvlRef}
-            combinedNodes={nodes}
-            combinedEdges={edges}
+            nodes={nodes}
+            edges={edges}
             selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
             setContextMenu={setContextMenu}

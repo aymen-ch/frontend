@@ -35,28 +35,53 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
   const token = localStorage.getItem('authToken');
   const node_type = node.group;
   const id = parseInt(node.id, 10);
-  console.log(node_type)
+
   try {
-    const response = await axios.post(
-      BASE_URL + '/get_node_relationships/',
-      { node_type, id, relation_type: relationType },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+    // Check if relationType is a virtual relation
+    const virtualRelations = JSON.parse(localStorage.getItem('virtualRelations')) || [];
+    const virtualRelation = virtualRelations.find((vr) => vr.name === relationType);
+
+    let response;
+    if (virtualRelation) {
+      // Handle virtual relation, include path in payload
+      response = await axios.post(
+        BASE_URL + '/get_virtual_relationships/',
+        { 
+          node_type, 
+          id, 
+          virtual_relation: relationType,
+          path: virtualRelation.path 
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } else {
+      // Handle standard relation
+      response = await axios.post(
+        BASE_URL + '/get_node_relationships/',
+        { node_type, id, relation_type: relationType },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
 
     if (response.status === 200) {
-      console.log("testest",response.data)
+      console.log("Response data:", response.data);
       const graphData = parsergraph(response.data);
-          setNodes((prevNodes) => {
-            return [...prevNodes, ...graphData.nodes];
-          });
-          setEdges((prevEdges) => [...prevEdges, ...graphData.edges]);
+      setNodes((prevNodes) => {
+        return [...prevNodes, ...graphData.nodes];
+      });
+      setEdges((prevEdges) => [...prevEdges, ...graphData.edges]);
     } else {
-      console.error('Submission failed.');
+      console.error('Submission failed:', response.status);
     }
   } catch (error) {
     console.error('Error during submission:', error);
