@@ -238,6 +238,7 @@ const useNvlVisualization = ({
 
   const getVisualizationComponent = (hoveredEdge) => {
     console.log(nodes)
+    console.log("Djalil_edge" ,edges)
     const nvlProps = {
       nodes: nodes.map((node) => ({
         ...node,
