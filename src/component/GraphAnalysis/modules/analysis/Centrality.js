@@ -3,10 +3,13 @@ import axios from 'axios';
 import { Button, Spinner, Form } from 'react-bootstrap';
 import { BASE_URL } from '../../utils/Urls';
 import { CentralityByAttribute } from '../../HorizontalModules/containervisualization/function_container';
+import { parsergraph } from '../../utils/Parser';
+import TopKCentrality from './TopKCentrality';
 
 const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selectedCentralityAttribute, setSelectedCentralityAttribute, isBetweennessLoading, setIsBetweennessLoading }) => {
   const centralityAttributes = [
-    '_degree',
+    'degree_out',
+    'degree_in',
     '_betweennessCentrality',
     '_pagerank',
     '_articleRank',
@@ -102,6 +105,14 @@ const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selected
           'Centrality (Backend)'
         )}
       </Button>
+
+      <TopKCentrality
+      setNodes={setNodes}
+        selectedGroup={selectedGroup}
+        setSelectedGroup={setSelectedGroup}
+        selectedCentralityAttribute={selectedCentralityAttribute}
+        setSelectedCentralityAttribute={setSelectedCentralityAttribute}
+      />
     </div>
   );
 };

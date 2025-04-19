@@ -61,6 +61,7 @@ export const fetchNodeProperties = async (nodeId) => {
 
 // Parse graph data
 export const parsergraph = (searchResult) => {
+  console.log("searchResult2",searchResult)
   const nodes = searchResult.nodes.map((node) =>
     createNode(
       node.id,

@@ -50,10 +50,19 @@ const ContextMenu = ({
   const advancedAggregationSubRef = useRef(null);
   const [advancedExpandParams, setAdvancedExpandParams] = useState({
     attribute: '_betweenness',
-    threshold: 0.001,
+    threshold: 0.01,
     maxLevel: 5,
-    relationshipType: 'GROUPED_TRANSACTION',
   });
+
+  const centralityAttributes = [
+    'degree_out',
+    'degree_in',
+    '_betweennessCentrality',
+    '_pagerank',
+    '_articleRank',
+    '_eigenvector',
+    '_betweenness',
+  ];
 
   useEffect(() => {
     if (contextMenu?.node && contextMenu.visible) {
@@ -340,12 +349,17 @@ const ContextMenu = ({
           <div className="menu-items" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '5px' }}>Attribute:</label>
-              <input
-                type="text"
+              <select
                 value={advancedExpandParams.attribute}
                 onChange={(e) => setAdvancedExpandParams({ ...advancedExpandParams, attribute: e.target.value })}
                 style={{ width: '100%', padding: '5px' }}
-              />
+              >
+                {centralityAttributes.map((attr) => (
+                  <option key={attr} value={attr}>
+                    {attr}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: '5px' }}>Threshold:</label>
@@ -363,15 +377,6 @@ const ContextMenu = ({
                 type="number"
                 value={advancedExpandParams.maxLevel}
                 onChange={(e) => setAdvancedExpandParams({ ...advancedExpandParams, maxLevel: parseInt(e.target.value) })}
-                style={{ width: '100%', padding: '5px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Relationship Type:</label>
-              <input
-                type="text"
-                value={advancedExpandParams.relationshipType}
-                onChange={(e) => setAdvancedExpandParams({ ...advancedExpandParams, relationshipType: e.target.value })}
                 style={{ width: '100%', padding: '5px' }}
               />
             </div>
