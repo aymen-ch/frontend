@@ -11,6 +11,10 @@ const Analysis = ({
   ColorPersonWithClass,
   activeAggregations,
   setActiveAggregations,
+  setEdges,
+  setNodes,
+  nodes,
+  edges,
 }) => {
   const [depth, setDepth] = useState(1);
   const [nodeTypes, setNodeTypes] = useState([]);
@@ -22,7 +26,7 @@ const Analysis = ({
   const [selectedCentralityAttribute, setSelectedCentralityAttribute] = useState('_betweenness');
   const [selectedGroup, setSelectedGroup] = useState('Personne');
 
-  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
+  // const { nodes, setNodes, edges, setEdges } = useGlobalContext();
 
   useEffect(() => {
     const types = [...new Set(nodes.map((node) => node.group))];
