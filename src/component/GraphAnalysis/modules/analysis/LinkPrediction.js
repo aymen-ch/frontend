@@ -2,8 +2,9 @@ import React from 'react';
 import axios from 'axios';
 import { Button, Spinner } from 'react-bootstrap';
 import { BASE_URL } from '../../utils/Urls';
-import { parseAggregationResponse_advanced } from '../../utils/Parser';
+import { parseAggregationResponse_advanced , parsergraph} from '../../utils/Parser';
 import NodeClasificationBackEnd from './NodeClasificationBackEnd/NodeClasificationBackEnd';
+
 
 const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIsAggLoading, setNodes, setEdges, showNodeClassification, setShowNodeClassification }) => {
   const handleAggregationWithAlgorithm = async (depth) => {
@@ -21,9 +22,17 @@ const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIs
       });
 
       if (response.status === 200) {
-        const { nodes: parsedNodes, edges: parsedEdges } = await parseAggregationResponse_advanced(response.data[0].Result);
-        setNodes(parsedNodes);
-        setEdges(parsedEdges);
+        console.log("agragte with algo" , response)
+        
+        
+        const { nodes: expandedNodes, edges: expandedEdges } = parsergraph(response.data);
+        
+        // Update state with new nodes and edges
+          // setNodes(prevNodes => [...prevNodes, ...expandedNodes]);
+          // setEdges(prevEdges => [...prevEdges, ...expandedEdges]);
+        // const { nodes: parsedNodes, edges: parsedEdges } = await parseAggregationResponse_advanced(response.data[0].Result);
+        setNodes(expandedNodes);
+        setEdges(expandedEdges);
       } else {
         console.error('Advanced aggregation failed.');
       }
