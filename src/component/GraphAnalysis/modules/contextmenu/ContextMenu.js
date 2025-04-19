@@ -1,4 +1,3 @@
-// src/components/ContextMenu.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import {
   FaExpand,
@@ -21,8 +20,9 @@ import {
   handleNodeExpansion,
   handleAllConnections,
   handleActionSelect,
+ 
 } from './functions_node_click';
-
+import { getNodeColor,getNodeIcon } from '../../utils/Parser';
 const ContextMenu = ({
   contextMenu,
   setContextMenu,
@@ -47,7 +47,42 @@ const ContextMenu = ({
 
   useEffect(() => {
     if (contextMenu?.node && contextMenu.visible) {
-      fetchPossibleRelations(contextMenu.node, setPossibleRelations);
+      // Initialize possible relations
+      let relations = [];
+
+      // Fetch standard relations from backend
+      fetchPossibleRelations(contextMenu.node, (backendRelations) => {
+        // Map backend relations to include isVirtual: false
+        relations = backendRelations.map((rel) => ({
+          name: rel.name,
+          startNode: rel.startNode,
+          endNode: rel.endNode,
+          isVirtual: false,
+        }));
+
+        // Get virtual relations from local storage
+        const virtualRelations = JSON.parse(localStorage.getItem('virtualRelations')) || [];
+        const nodeGroup = contextMenu.node.group; // e.g., 'Wilaya'
+        console.log("virtuel", virtualRelations);
+
+        // Filter virtual relations where node group matches the start of the path
+        const matchingVirtualRelations = virtualRelations
+          .filter((vr) => vr.path[0] === nodeGroup)
+          .map((vr) => ({
+            name: vr.name,
+            startNode: vr.path[0],
+            endNode: vr.path[vr.path.length - 1],
+            isVirtual: true,
+          }));
+
+        // Combine backend and virtual relations, ensuring no duplicates by name
+        const combinedRelations = [...relations, ...matchingVirtualRelations];
+        const uniqueRelations = Array.from(
+          new Map(combinedRelations.map((rel) => [rel.name, rel])).values()
+        );
+
+        setPossibleRelations(uniqueRelations);
+      });
     }
   }, [contextMenu]);
 
@@ -109,7 +144,7 @@ const ContextMenu = ({
           node.id === contextMenu.node.id ? { ...node, activated: true } : node
         )
       );
-    } else if (action === 'Deactivated') { // New action for deactivation
+    } else if (action === 'Deactivated') {
       setNodes((prev) =>
         prev.map((node) =>
           node.id === contextMenu.node.id ? { ...node, activated: false } : node
@@ -173,17 +208,17 @@ const ContextMenu = ({
               Select Node
             </button>
           )}
-      {contextMenu.node?.activated ? (
-  <button className="menu-item" onClick={() => handleContextMenuAction('Deactivated')}>
-    <FaTimes style={{ marginRight: '10px', color: '#e63946' }} />
-    Deactivate
-  </button>
-) : (
-  <button className="menu-item" onClick={() => handleContextMenuAction('Activated')}>
-    <FaCheck style={{ marginRight: '10px', color: '#38b000' }} />
-    Activate
-  </button>
-)}
+          {contextMenu.node?.activated ? (
+            <button className="menu-item" onClick={() => handleContextMenuAction('Deactivated')}>
+              <FaTimes style={{ marginRight: '10px', color: '#e63946' }} />
+              Deactivate
+            </button>
+          ) : (
+            <button className="menu-item" onClick={() => handleContextMenuAction('Activated')}>
+              <FaCheck style={{ marginRight: '10px', color: '#38b000' }} />
+              Activate
+            </button>
+          )}
           <div className="menu-divider"></div>
           <button className="menu-item" onClick={() => setContextMenu(null)}>
             <FaTimesCircle style={{ marginRight: '10px', color: '#6c757d' }} />
@@ -216,16 +251,54 @@ const ContextMenu = ({
               Expand All
             </button>
             {possibleRelations.length > 0 ? (
-              possibleRelations.map((relation, index) => (
-                <button
-                  key={index}
-                  className="menu-item"
-                  onClick={() => handleContextMenuAction('Expand Specific Relation', relation)}
-                >
-                  <FaArrowRight style={{ marginRight: '10px', color: '#4361ee' }} />
-                  {relation}
-                </button>
-              ))
+              possibleRelations.map((relation, index) => {
+                const startIconPath = getNodeIcon(relation.startNode);
+                const endIconPath = getNodeIcon(relation.endNode);
+                return (
+                  <button
+                    key={index}
+                    className={`menu-item ${relation.isVirtual ? 'virtual-relation' : ''}`}
+                    onClick={() => handleContextMenuAction('Expand Specific Relation', relation.name)}
+                  >
+                    <FaArrowRight
+                      style={{ marginRight: '10px', color: relation.isVirtual ? '#38b000' : '#4361ee' }}
+                    />
+                    <span className="relation-display">
+                      <span className="node-start" style={{ color: getNodeColor(relation.startNode) }}>
+                        {startIconPath && (
+                          <span
+                            className="icon-container"
+                            style={{ backgroundColor: getNodeColor(relation.startNode) }}
+                          >
+                            <img
+                              src={startIconPath}
+                              alt={`${relation.startNode} icon`}
+                              className="node-icon"
+                            />
+                          </span>
+                        )}
+                        {relation.startNode}
+                      </span>
+                      <span className="relation-name"> ---- {relation.name} ----{'>'} </span>
+                      <span className="node-end" style={{ color: getNodeColor(relation.endNode) }}>
+                        {endIconPath && (
+                          <span
+                            className="icon-container"
+                            style={{ backgroundColor: getNodeColor(relation.endNode) }}
+                          >
+                            <img
+                              src={endIconPath}
+                              alt={`${relation.endNode} icon`}
+                              className="node-icon"
+                            />
+                          </span>
+                        )}
+                        {relation.endNode}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })
             ) : (
               <div className="no-relations">No relations available</div>
             )}
@@ -242,33 +315,63 @@ const ContextMenu = ({
         >
           <div className="menu-header">Action Options</div>
           <div className="menu-items">
-          {contextMenu.node.group === 'Affaire' && (
-            <button
-              className="menu-item"
-              onClick={() => handleActionSelect('Copy Node', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges,setActiveAggregations)}
-            >
-              <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
-              Affaire dans la meme region
-            </button>
-          )}
+            {contextMenu.node.group === 'Affaire' && (
+              <button
+                className="menu-item"
+                onClick={() =>
+                  handleActionSelect(
+                    'Copy Node',
+                    contextMenu.node,
+                    setActionsSubMenu,
+                    setContextMenu,
+                    setNodes,
+                    setEdges,
+                    setActiveAggregations
+                  )
+                }
+              >
+                <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
+                Affaire dans la meme region
+              </button>
+            )}
             {contextMenu.node.group === 'Personne' && (
               <button
                 className="menu-item"
-                onClick={() => handleActionSelect('Show Person Profile', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges,setActiveAggregations)}
+                onClick={() =>
+                  handleActionSelect(
+                    'Show Person Profile',
+                    contextMenu.node,
+                    setActionsSubMenu,
+                    setContextMenu,
+                    setNodes,
+                    setEdges,
+                    setActiveAggregations
+                  )
+                }
               >
                 <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
                 Show Person Profile
               </button>
             )}
-             {contextMenu.node.group === 'Personne' && (
-            <button
-              className="menu-item"
-  onClick={() => handleActionSelect('Show tree of criminal', contextMenu.node, setActionsSubMenu, setContextMenu , setNodes ,setEdges,setActiveAggregations )}
-            >
-              <FaCodeFork style={{ marginRight: '10px', color: '#4361ee' }} />
-              Show tree of criminal
-            </button>
-               )}
+            {contextMenu.node.group === 'Personne' && (
+              <button
+                className="menu-item"
+                onClick={() =>
+                  handleActionSelect(
+                    'Show tree of criminal',
+                    contextMenu.node,
+                    setActionsSubMenu,
+                    setContextMenu,
+                    setNodes,
+                    setEdges,
+                    setActiveAggregations
+                  )
+                }
+              >
+                <FaCodeFork style={{ marginRight: '10px', color: '#4361ee' }} />
+                Show tree of criminal
+              </button>
+            )}
           </div>
         </div>
       )}

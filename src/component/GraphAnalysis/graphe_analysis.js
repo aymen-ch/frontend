@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './graphe_anaylsis.css'
 import Container_AlgorithmicAnalysis from './HorizontalModules/containervisualization/Container_AlgorithmicAnalysis';
-import SchemaViewer from './HorizontalModules/schema/schema';
+import SchemaVisualizer from './HorizontalModules/schema/schema';
 import SettingsPage from './HorizontalModules/Settings/SettingsPage';
 import { GlobalProvider } from './GlobalVariables';
 const Graphe_analysis = () => {
@@ -17,7 +17,7 @@ const Graphe_analysis = () => {
   const SchemaPage = () => (
     <div className="module-content">
         <GlobalProvider>
-      <SchemaViewer/>
+      <SchemaVisualizer/>
       </GlobalProvider>
     </div>
   );

@@ -2,114 +2,20 @@
 import React, { useEffect, useState, useRef } from 'react';
 import neo4j from 'neo4j-driver';
 import Sidebar from './sidebar';
+import PathBuilder from './PathBuilder';
 import GraphCanvas from '../../utils/VisualizationLibrary/GraphCanvas';
 import LayoutControl from '../../modules/layout/Layoutcontrol';
-import { createNode, createEdge, parsergraph, createNodeHtml } from '../../utils/Parser';
+import { createNode, createEdge, parsergraph,createNodeHtml } from '../../utils/Parser';
 import virtualRelationsData from '../../modules/aggregation/aggregations.json';
 import { useGlobalContext } from '../../GlobalVariables';
-import SchemaIcon from './SchemaIcon';
 
 const URI = 'neo4j://localhost:7687';
 const USER = 'neo4j';
 const PASSWORD = '12345678';
 
-// Styles isolés pour le composant SchemaVisualizer
-const schemaVisualizerStyles = {
-  container: {
-    height: '100vh', 
-    width: '100vw', 
-    display: 'flex', 
-    flexDirection: 'column'
-  },
-  header: {
-    background: '#2c3e50', 
-    color: 'white', 
-    padding: '10px 20px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-  },
-  title: {
-    margin: 0, 
-    fontSize: '20px', 
-    fontWeight: '600',
-    display: 'flex',
-    alignItems: 'center'
-  },
-  toolbar: {
-    display: 'flex', 
-    gap: '15px'
-  },
-  layoutControls: {
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '10px'
-  },
-  layoutLabel: {
-    fontSize: '14px'
-  },
-  layoutButton: (isActive) => ({
-    background: isActive ? '#3498db' : 'transparent',
-    color: isActive ? 'white' : '#ecf0f1',
-    border: 'none',
-    borderRadius: '4px',
-    padding: '5px 10px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px'
-  }),
-  toggleButton: {
-    background: 'transparent',
-    color: 'white',
-    border: '1px solid rgba(255,255,255,0.3)',
-    borderRadius: '4px',
-    padding: '5px 10px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px'
-  },
-  mainContent: {
-    flex: 1, 
-    display: 'flex', 
-    minHeight: 0, 
-    position: 'relative'
-  },
-  graphContainer: (sidebarCollapsed) => ({
-    flex: 1,
-    position: 'relative',
-    marginRight: sidebarCollapsed ? '0' : '350px',
-    transition: 'margin-right 0.3s ease'
-  }),
-  controlsPanel: {
-    position: 'absolute',
-    bottom: '20px',
-    left: '20px',
-    background: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-    padding: '10px',
-    zIndex: 100
-  },
-  sidebarContainer: (sidebarCollapsed) => ({
-    position: 'fixed',
-    top: '58px', // Hauteur du header
-    right: sidebarCollapsed ? '-350px' : '0',
-    width: '350px',
-    height: 'calc(100vh - 58px)',
-    background: '#ffffff',
-    boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
-    overflowY: 'auto',
-    zIndex: 1000,
-    transition: 'right 0.3s ease',
-  })
-};
-
 const SchemaVisualizer = () => {
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
+  const [nodes,setNodes] = useState([])
+  const [edges,setEdges] = useState([])
   const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [selectedEdges, setSelectedEdges] = useState(new Set());
   const [contextMenu, setContextMenu] = useState(null);
@@ -120,8 +26,6 @@ const SchemaVisualizer = () => {
   const [pathResult, setPathResult] = useState(null);
   const nvlRef = useRef(null);
   const [virtualRelations, setVirtualRelations] = useState(virtualRelationsData);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeLayout, setActiveLayout] = useState('force');
 
   // Handle node selection and update selectedItem
   useEffect(() => {
@@ -136,6 +40,7 @@ const SchemaVisualizer = () => {
         });
       }
     } else if (selectedEdges.size === 1) {
+      console.log(selectedEdges)
       const edgeid = [...selectedEdges][0];
       const edge = edges.find((e) => e.id === edgeid);
       if (edge) {
@@ -143,29 +48,30 @@ const SchemaVisualizer = () => {
           id: edge.id,
           group: edge.group,
           properties: edge.properties || {},
-          from: edge.from,
-          to: edge.to
         });
       }
-    } else {
+    }else
+    
+    {
       setSelectedItem(null);
     }
-  }, [selectedNodes, selectedEdges, edges, nodes]);
+  }, [selectedNodes,selectedEdges,edges, nodes]);
 
   // Redraw graph after config changes
   const redrawGraph = (nodeType, config) => {
+    console.log("rendre ")
     if (nvlRef.current && nodes.length > 0) {
       const nodesToUpdate = nodes
-        .filter((node) => node.group === nodeType)
-        .map((node) => ({
-          id: node.id,
-          color: config.color || node.color,
-          size: config.size || node.size,
-          image: config.icon || node.image,
-          label: config.labelKey
-            ? node.properties[config.labelKey] || node.label
-            : node.label,
-          html: createNodeHtml(
+      .filter((node) => node.group === nodeType)
+      .map((node) => ({
+        id: node.id,
+        color: config.color || node.color,
+        size: config.size || node.size,
+        image: config.icon || node.image,
+        label: config.labelKey
+          ? node.properties[config.labelKey] || node.label
+          : node.label,
+         html : createNodeHtml(
             config.icon,
             node.group,
             node.selected,
@@ -176,27 +82,27 @@ const SchemaVisualizer = () => {
             '', // Icon
             config.size
           )
-        }));
+      }));
 
-      // Update graph with new node properties
-      try {
-        nvlRef.current.addAndUpdateElementsInGraph(nodesToUpdate, []);
-        console.log(`Updated ${nodesToUpdate.length} nodes of type ${nodeType}`);
-        setNodes((prevNodes) =>
-          prevNodes.map((node) => {
-            if (node.group === nodeType) {
-              const label = config.labelKey
-                ? node.properties[config.labelKey] || node.label
-                : node.label;
-              const size = config.size || node.size;
-              const image = config.icon || node.image;
-              return {
-                ...node,
-                color: config.color || node.color,
-                size,
-                image,
-                label,
-                html: createNodeHtml(
+    // Update graph with new node properties
+    try {
+      nvlRef.current.addAndUpdateElementsInGraph(nodesToUpdate, []);
+      console.log(`Updated ${nodesToUpdate.length} nodes of type ${nodeType}`);
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => {
+          if (node.group === nodeType) {
+            const label = config.labelKey
+              ? node.properties[config.labelKey] || node.label
+              : node.label;
+            const size = config.size || node.size;
+            const image = config.icon || node.image;
+            return {
+              ...node,
+              color: config.color || node.color,
+              size,
+              image,
+              label,
+                 html : createNodeHtml(
                   label,
                   nodeType,
                   node.selected,
@@ -207,13 +113,15 @@ const SchemaVisualizer = () => {
                   '',
                   size
                 )
-              };
-            }
-            return node;
-          }));
-      } catch (error) {
-        console.error('Error updating nodes in graph:', error);
-      }
+                     
+            };
+          }
+          return node;
+        }));
+    } catch (error) {
+      console.error('Error updating nodes in graph:', error);
+    }
+      console.log("updated!!")
     }
   };
 
@@ -437,61 +345,19 @@ const SchemaVisualizer = () => {
     }
   }, []);
 
-  const handleLayoutChange = (layout) => {
-    setActiveLayout(layout);
-    if (nvlRef.current) {
-      nvlRef.current.applyLayout(layout);
-    }
-  };
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   return (
-    <div className="schema-viz-container" style={schemaVisualizerStyles.container}>
-      {/* Header avec barre d'outils */}
-      <header style={schemaVisualizerStyles.header}>
-        <h2 style={schemaVisualizerStyles.title}>
-          <SchemaIcon type="project-diagram" size={18} style={{ marginRight: '10px' }} />
-          Neo4j Schema Visualizer
-        </h2>
-        <div style={schemaVisualizerStyles.toolbar}>
-          <div style={schemaVisualizerStyles.layoutControls}>
-            <span style={schemaVisualizerStyles.layoutLabel}>Layout:</span>
-            <button 
-              onClick={() => handleLayoutChange('force')}
-              style={schemaVisualizerStyles.layoutButton(activeLayout === 'force')}
-            >
-              <SchemaIcon type="atom" size={14} /> Force
-            </button>
-            <button 
-              onClick={() => handleLayoutChange('circle')}
-              style={schemaVisualizerStyles.layoutButton(activeLayout === 'circle')}
-            >
-              <SchemaIcon type="circle-notch" size={14} /> Circle
-            </button>
-            <button 
-              onClick={() => handleLayoutChange('grid')}
-              style={schemaVisualizerStyles.layoutButton(activeLayout === 'grid')}
-            >
-              <SchemaIcon type="th" size={14} /> Grid
-            </button>
-          </div>
-          <button 
-            onClick={toggleSidebar}
-            style={schemaVisualizerStyles.toggleButton}
-          >
-            <SchemaIcon type={sidebarCollapsed ? 'expand' : 'compress'} size={14} />
-            {sidebarCollapsed ? 'Show Details' : 'Hide Details'}
-          </button>
-        </div>
-      </header>
-
-      {/* Contenu principal */}
-      <div style={schemaVisualizerStyles.mainContent}>
-        {/* Canvas de graphe */}
-        <div style={schemaVisualizerStyles.graphContainer(sidebarCollapsed)}>
+    <div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column' }}>
+      <h2 style={{ margin: '10px 0', textAlign: 'center', height: '40px' }}>
+        Neo4j Schema Visualizer
+      </h2>
+      <div style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}>
+        <div
+          style={{
+            flex: 1,
+            position: 'relative',
+            marginRight: '400px',
+          }}
+        >
           <GraphCanvas
             nvlRef={nvlRef}
             nodes={nodes}
@@ -507,18 +373,27 @@ const SchemaVisualizer = () => {
             selectedEdges={selectedEdges}
             setselectedEdges={setSelectedEdges}
           />
-          
-          {/* Contrôles flottants */}
-          <div style={schemaVisualizerStyles.controlsPanel}>
+          <div>
             <LayoutControl nvlRef={nvlRef} nodes={nodes} edges={edges} />
           </div>
         </div>
-
-        {/* Barre latérale */}
-        <div style={schemaVisualizerStyles.sidebarContainer(sidebarCollapsed)}>
-          <Sidebar 
-            selectedItem={selectedItem} 
-            onUpdate={redrawGraph}
+        <div
+          style={{
+            position: 'fixed',
+            top: '40px',
+            right: 0,
+            width: '400px',
+            height: 'calc(100vh - 40px)',
+            background: '#f0f0f0',
+            borderLeft: '1px solid #ccc',
+            overflowY: 'auto',
+            padding: '15px',
+            zIndex: 1000,
+            boxSizing: 'border-box',
+          }}
+        >
+          <Sidebar selectedItem={selectedItem} onUpdate={redrawGraph} />
+          <PathBuilder
             isPathBuilding={isPathBuilding}
             setIsPathBuilding={setIsPathBuilding}
             selectedNodes={selectedNodes}

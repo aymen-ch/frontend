@@ -154,3 +154,49 @@
   padding: 8px 12px;
   color: #888;
 }
+
+/* Existing virtual-relation style */
+.virtual-relation {
+  color: #38b000; /* Green color for virtual relations */
+  font-weight: bold; /* Make virtual relations stand out */
+}
+
+/* Style for relation display container */
+.relation-display {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between node and relation parts */
+  font-size: 14px;
+}
+
+/* Style for start and end node spans */
+.node-start,
+.node-end {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Space between icon and text */
+  font-weight: 500;
+}
+
+/* Style for relation name */
+.relation-name {
+  color: inherit; /* Inherit color from parent (green for virtual, default for normal) */
+  font-style: italic; /* Make relation name distinct */
+}
+
+/* Style for icon container */
+.icon-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px; /* Space around the icon */
+  border-radius: 4px; /* Rounded corners for background */
+}
+
+/* Style for node icons */
+.node-icon {
+  width: 16px; /* Fixed size for image icons */
+  height: 16px;
+  vertical-align: middle;
+  object-fit: contain; /* Ensure image fits without distortion */
+}

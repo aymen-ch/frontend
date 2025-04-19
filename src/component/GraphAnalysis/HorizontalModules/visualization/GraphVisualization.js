@@ -66,48 +66,48 @@ const GraphVisualization = React.memo(({
   const resultsRef = useRef(null);
 
   useEffect(() => {
-
+     console.log("inshallah")
     const fetchNodeAnalysis = async () => {
       if (nodes.length === 0) return;
 
       try {
         // const token = localStorage("");
-        // const analysisPromises = nodes.map((node) =>
-        //   axios
-        //     .post(
-        //       BASE_URL+'/node-analysis/',
-        //       { id: node.id },
-        //       {
-        //         headers: {
-        //           'Content-Type': 'application/json',
-        //           // Authorization: `Bearer ${token}`,
-        //         },
-        //       }
-        //     )
-        //     .then((response) => ({
-        //       id: node.id,
-        //       properties_analyse: response.data.properties_analyse || {},
-        //     }))
-        //     .catch((error) => {
-        //       console.error(`Error fetching properties_analyse for node ${node.id}:`, error.message);
-        //       return { id: node.id, properties_analyse: {} };
-        //     })
-        // );
+        const analysisPromises = nodes.map((node) =>
+          axios
+            .post(
+              BASE_URL+'/node-analysis/',
+              { id: node.id },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  // Authorization: `Bearer ${token}`,
+                },
+              }
+            )
+            .then((response) => ({
+              id: node.id,
+              properties_analyse: response.data.properties_analyse || {},
+            }))
+            .catch((error) => {
+              console.error(`Error fetching properties_analyse for node ${node.id}:`, error.message);
+              return { id: node.id, properties_analyse: {} };
+            })
+        );
 
-        // const analysisResults = await Promise.all(analysisPromises);
-        // console.log(analysisResults)
+        const analysisResults = await Promise.all(analysisPromises);
+        console.log("analysis  result",analysisResults)
         // Update nodes with properties_analyse
-        // setNodes((prevNodes) =>
-        //   prevNodes.map((node) => {
-        //     const result = analysisResults.find((res) => res.id === node.id);
-        //     return {
-        //       ...node,
-        //       properties_analyse: {
-        //         ...result?.properties_analyse,
-        //       },
-        //     };
-        //   })
-        // );
+        setNodes((prevNodes) =>
+          prevNodes.map((node) => {
+            const result = analysisResults.find((res) => res.id === node.id);
+            return {
+              ...node,
+              properties_analyse: {
+                ...result?.properties_analyse,
+              },
+            };
+          })
+        );
       } catch (error) {
         console.error('Error fetching node analysis:', error.message);
       }
