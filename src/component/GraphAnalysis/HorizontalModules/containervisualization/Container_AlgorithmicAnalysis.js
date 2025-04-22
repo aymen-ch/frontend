@@ -300,7 +300,7 @@ return (
 
               {activeModule === 'Analysis' && (
                 <div className="analysis-module">
-                  <h6 style={{ marginBottom: '15px', color: '#2c3e50' }}>Analysis Module</h6>
+       
                   <Analysis
                     setEdges={setEdges}
                     setNodes={setNodes}

@@ -2,6 +2,7 @@
 .import-card {
     border: 1px solid #ddd;
     border-radius: 5px;
+    min-height: 30vh;
     height: 100%;
   }
   

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Tabs, Tab } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartBar, faProjectDiagram, faLink, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { useGlobalContext } from '../../GlobalVariables';
 import AttributeAnalysis from './AttributeAnalysis';
 import Centrality from './Centrality';
 import LinkPrediction from './LinkPrediction';
 import Community from './Community';
+import './Analysis.css';
 
 const Analysis = ({
   drawCirclesOnPersonneNodes,
@@ -20,13 +23,12 @@ const Analysis = ({
   const [nodeTypes, setNodeTypes] = useState([]);
   const [selectedAffaires, setSelectedAffaires] = useState([]);
   const [showNodeClassification, setShowNodeClassification] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // For SecteurActiviti
-  const [isAggLoading, setIsAggLoading] = useState(false); // For Aggregation with Algorithm
-  const [isBetweennessLoading, setIsBetweennessLoading] = useState(false); // For Centrality
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAggLoading, setIsAggLoading] = useState(false);
+  const [isBetweennessLoading, setIsBetweennessLoading] = useState(false);
   const [selectedCentralityAttribute, setSelectedCentralityAttribute] = useState('_betweenness');
-  const [selectedGroup, setSelectedGroup] = useState('Personne');
-
-  // const { nodes, setNodes, edges, setEdges } = useGlobalContext();
+  const [selectedGroup, setSelectedGroup] = useState('');
+  const [activeTab, setActiveTab] = useState('attribute');
 
   useEffect(() => {
     const types = [...new Set(nodes.map((node) => node.group))];
@@ -37,17 +39,12 @@ const Analysis = ({
     setSelectedAffaires(affids);
   }, [nodes]);
 
-  return (
-    <Container fluid className="p-3 bg-white shadow-sm rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">
-        Analysis Module
-      </h3>
-
-      <Tabs defaultActiveKey="attribute" id="analysis-tabs" className="mb-3">
-        <Tab eventKey="attribute" title="Attribute Analysis">
-          <AttributeAnalysis />
-        </Tab>
-        <Tab eventKey="centrality" title="Centrality">
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'attribute':
+        return <AttributeAnalysis />;
+      case 'centrality':
+        return (
           <Centrality
             nodes={nodes}
             setNodes={setNodes}
@@ -58,8 +55,9 @@ const Analysis = ({
             isBetweennessLoading={isBetweennessLoading}
             setIsBetweennessLoading={setIsBetweennessLoading}
           />
-        </Tab>
-        <Tab eventKey="linkPrediction" title="Link Prediction">
+        );
+      case 'linkPrediction':
+        return (
           <LinkPrediction
             selectedAffaires={selectedAffaires}
             depth={depth}
@@ -71,8 +69,9 @@ const Analysis = ({
             showNodeClassification={showNodeClassification}
             setShowNodeClassification={setShowNodeClassification}
           />
-        </Tab>
-        <Tab eventKey="community" title="Community">
+        );
+      case 'community':
+        return (
           <Community
             nodes={nodes}
             setNodes={setNodes}
@@ -80,8 +79,45 @@ const Analysis = ({
             setIsLoading={setIsLoading}
             ColorPersonWithClass={ColorPersonWithClass}
           />
-        </Tab>
-      </Tabs>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Container fluid className="analysis-container">
+      <div className="analysis-tabs">
+        <div
+          className={`tab-card ${activeTab === 'attribute' ? 'active' : ''}`}
+          onClick={() => setActiveTab('attribute')}
+        >
+          <FontAwesomeIcon icon={faChartBar} className="tab-icon" />
+          <span>Attribute Analysis</span>
+        </div>
+        <div
+          className={`tab-card ${activeTab === 'centrality' ? 'active' : ''}`}
+          onClick={() => setActiveTab('centrality')}
+        >
+          <FontAwesomeIcon icon={faProjectDiagram} className="tab-icon" />
+          <span>Centrality</span>
+        </div>
+        <div
+          className={`tab-card ${activeTab === 'linkPrediction' ? 'active' : ''}`}
+          onClick={() => setActiveTab('linkPrediction')}
+        >
+          <FontAwesomeIcon icon={faLink} className="tab-icon" />
+          <span>Link Prediction</span>
+        </div>
+        <div
+          className={`tab-card ${activeTab === 'community' ? 'active' : ''}`}
+          onClick={() => setActiveTab('community')}
+        >
+          <FontAwesomeIcon icon={faUsers} className="tab-icon" />
+          <span>Community</span>
+        </div>
+      </div>
+      <div className="tab-content">{renderContent()}</div>
     </Container>
   );
 };

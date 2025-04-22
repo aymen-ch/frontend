@@ -1,10 +1,10 @@
-import React from 'react';
 import axios from 'axios';
 import { Button, Spinner, Form } from 'react-bootstrap';
 import { BASE_URL } from '../../utils/Urls';
 import { CentralityByAttribute } from '../../HorizontalModules/containervisualization/function_container';
 import { parsergraph } from '../../utils/Parser';
 import TopKCentrality from './TopKCentrality';
+import React, { useEffect, useState } from 'react';
 
 const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selectedCentralityAttribute, setSelectedCentralityAttribute, isBetweennessLoading, setIsBetweennessLoading }) => {
   const centralityAttributes = [
@@ -17,7 +17,33 @@ const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selected
     '_betweenness',
   ];
 
-  const groupOptions = ['Personne', 'Account'];
+  const [nodeData, setNodeData] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+      const fetchNodeTypes = async () => {
+          try {
+              const token = localStorage.getItem('authToken');
+              const response = await axios.get(BASE_URL+'/node-types/', {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+              });
+              if (response.status !== 200) {
+                  throw new Error('Network response was not ok');
+              }
+              setNodeData(response.data.node_types);
+              // Set the first node type as selected if nodeData is not empty
+              if (response.data.node_types.length > 0) {
+                  setSelectedGroup(response.data.node_types[0].type);
+              }
+          } catch (error) {
+              console.error('Error fetching data:', error);
+              setError(error.message || 'An error occurred');
+          }
+      };
+      fetchNodeTypes();
+  }, []);
 
   const handleCentralityBackend = async () => {
     try {
@@ -52,9 +78,9 @@ const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selected
           value={selectedGroup}
           onChange={(e) => setSelectedGroup(e.target.value)}
         >
-          {groupOptions.map((group) => (
-            <option key={group} value={group}>
-              {group}
+          {nodeData.map((node, index) => (
+            <option key={node.type} value={node.type}>
+              {node.type}
             </option>
           ))}
         </Form.Control>
@@ -107,7 +133,7 @@ const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selected
       </Button>
 
       <TopKCentrality
-      setNodes={setNodes}
+        setNodes={setNodes}
         selectedGroup={selectedGroup}
         setSelectedGroup={setSelectedGroup}
         selectedCentralityAttribute={selectedCentralityAttribute}
