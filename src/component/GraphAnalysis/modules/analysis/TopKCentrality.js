@@ -46,9 +46,9 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
 
   const handleAddNodeToVisualization = (node) => {
     const parsedResult = parsergraph({ nodes: [node], edges: [] });
-    console.log("added" , parsedResult)
+    console.log("added", parsedResult);
     const newNode = parsedResult.nodes[0]; // Get the single parsed node
-    setNodes(prevNodes => [...prevNodes, newNode]);
+    setNodes((prevNodes) => [...prevNodes, newNode]);
   };
 
   return (
@@ -95,22 +95,24 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
       </Button>
       {error && <div className="text-danger">{error}</div>}
       {topKnodes.length > 0 && (
-        <ListGroup>
-          {topKnodes.map((node, index) => (
-            <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-              <span>
-                Node ID: {node.id || 'N/A'}, {selectedCentralityAttribute}: {node.properties[selectedCentralityAttribute] || 'N/A'}
-              </span>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => handleAddNodeToVisualization(node)}
-              >
-                +
-              </Button>
-            </ListGroup.Item>
-          ))}
-        </ListGroup>
+        <div style={{ maxHeight: '900px', overflowY: 'auto' }}>
+          <ListGroup>
+            {topKnodes.map((node, index) => (
+              <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                <span>
+                  Node ID: {node.id || 'N/A'}, {selectedCentralityAttribute}: {node.properties[selectedCentralityAttribute] || 'N/A'}
+                </span>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => handleAddNodeToVisualization(node)}
+                >
+                  +
+                </Button>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        </div>
       )}
     </div>
   );

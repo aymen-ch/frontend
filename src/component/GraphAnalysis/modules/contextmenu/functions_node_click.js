@@ -453,26 +453,23 @@ export const handleAdvancedExpand = async (
   node,
   setNodes,
   setEdges,
-  {
-    attribute = '_betweenness',
-    threshold = 0.1,
-    max_level = 2 // Changed to match API parameter name
-  } = {}
+  advancedExpandParams
 ) => {
   const token = localStorage.getItem('authToken');
   
   try {
-    console.log("parm" ,parseInt(node.id, 10),
-    attribute,
-    threshold,
-    max_level   );
+    // console.log("parm" ,parseInt(node.id, 10),
+    // attribute,
+    // threshold,
+    // max_level   );
+    const { attribute, threshold, maxLevel } = advancedExpandParams; // Destructure the params
     const response = await axios.post(
       `${BASE_URL}/expand_path_from_node/`,  // Matched your endpoint URL
       {
         id_start: parseInt(node.id, 10),
-        attribute,
-        threshold,
-        max_level  // Using exact parameter name from API
+        attribute, // Use destructured value
+        threshold, // Use destructured value
+        max_level: maxLevel, // Map maxLevel to max_level for API
       },
       {
         headers: {
