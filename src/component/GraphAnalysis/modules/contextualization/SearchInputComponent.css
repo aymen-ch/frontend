@@ -1,137 +1,242 @@
 /* SearchInputComponent.css */
 
-/* Container styling */
-.container {
-    max-width: 1200px;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --text-dark: #212529;
+    --text-light: #6c757d;
+    --bg-light: #f8f9fa;
+    --bg-white: #ffffff;
+    --border-color: #dee2e6;
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius: 12px;
 }
 
-/* Form elements styling */
+.search-container {
+    background-color: var(--bg-light);
+    padding: 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    max-width: 860px;
+    margin: 30px auto;
+    transition: all 0.3s ease-in-out;
+}
+
+.search-container h5 {
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 24px;
+    font-size: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
 .form-label {
     font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
+    color: var(--text-light);
+    margin-bottom: 6px;
 }
 
 .form-select,
 .form-control {
-    border-radius: 6px;
-    border: 1px solid #ced4da;
-    padding: 8px 12px;
-    transition: border-color 0.2s ease-in-out;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    padding: 10px 14px;
+    font-size: 15px;
 }
 
 .form-select:focus,
 .form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: var(--primary);
+    box-shadow: 0 0 8px rgba(13, 110, 253, 0.2);
 }
 
-/* Checkbox and radio styling */
-.form-check {
-    margin-right: 15px;
-    margin-bottom: 10px;
+.node-types-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
 }
 
-.form-check-input {
+.node-type-item {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-white);
+    padding: 8px 14px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, background-color 0.3s;
     cursor: pointer;
-    margin-top: 2px;
 }
 
-.form-check-label {
-    color: #555;
-    font-size: 0.95rem;
-    cursor: pointer;
-    padding-left: 5px;
+.node-type-item:hover {
+    transform: translateY(-2px);
+    background-color: var(--primary-light);
+}
+
+.node-type-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    margin-right: 10px;
+
+    border: 1px solid var(--border-color);
+}
+
+.node-type-label {
+    font-size: 14px;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.categories-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .form-check-input:checked {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: var(--primary);
+    border-color: var(--primary);
 }
 
-/* Date inputs container */
 .date-inputs {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     flex-wrap: wrap;
+    margin-bottom: 20px;
 }
 
-.date-inputs .date-wrapper {
+.date-wrapper {
     flex: 1;
-    min-width: 150px;
+    min-width: 200px;
 }
 
-/* Depth section styling */
 .depth-options {
     display: flex;
-    flex-wrap: nowrap;
-    gap: 15px;
-    margin-bottom: 10px;
-}
-
-.depth-options .form-check {
-    margin-bottom: 0;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .advanced-option {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    margin-top: 16px;
 }
 
-/* Error message styling */
 .alert-danger {
-    margin-top: 15px;
-    padding: 10px;
     border-radius: 6px;
+    padding: 12px;
+    font-size: 14px;
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 576px) {
+    .search-container {
+        padding: 16px;
+        margin: 12px;
+    }
+
     .date-inputs {
         flex-direction: column;
+        gap: 16px;
     }
 
-    .d-flex.flex-wrap {
-        flex-direction: column;
+    .node-type-item {
+        padding: 6px 12px;
     }
 
-    .form-check {
-        margin-right: 0;
+    .node-type-icon {
+        width: 22px;
+        height: 22px;
     }
 
-    .depth-options {
-        flex-direction: column;
-        gap: 8px;
+    .node-type-label {
+        font-size: 13px;
     }
 }
-
-/* Hover effects */
-.form-check-label:hover {
-    color: #007bff;
+.filter-section-title {
+    font-size: 13px;
+    font-weight: 200;
+    width: 380px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    border-left: 4px solid var(--primary);
+    padding-left: 10px;
+    background-color: var(--primary-light);
+    border-radius: 4px;
+    display: inline-block;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 
-.form-select:hover,
-.form-control:hover {
-    border-color: #80bdff;
+.filter-section-title-total {
+    font-size: 16px;
+    font-weight: 400;
+    width: 380px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    border-left: 4px solid var(--primary);
+    padding-left: 10px;
+    background-color:rgb(190, 218, 193);
+    border-radius: 4px;
+    display: inline-block;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 
-/* Disabled state styling */
-.form-select:disabled,
-.form-control:disabled {
-    background-color: #e9ecef;
-    cursor: not-allowed;
+/* Titles for filters */
+.filter-section-title {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+    border-left: 4px solid var(--primary);
+    padding: 6px 14px;
+    background-color: var(--primary-light);
+    border-radius: 6px;
+    display: inline-block;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    letter-spacing: 0.3px;
 }
 
-/* Section spacing */
-.mb-3 {
-    margin-bottom: 20px !important;
+/* Node icon styling - no object-fit to avoid squishing icons */
+.node-type-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.mt-4 {
-    margin-top: 25px !important;
+/* Optional: add inner icon size control if you're using <img> inside .node-type-icon */
+.node-type-icon img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
+
+/* Improve font style across form elements */
+.form-label,
+.node-type-label,
+.filter-section-title {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Optionally boost node-type-label */
+.node-type-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+    letter-spacing: 0.25px;
+}
+

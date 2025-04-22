@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { BASE_URL } from '../../utils/Urls';
 import { parseAggregationResponse,SubGraphParser } from '../../utils/Parser';
 import axios from 'axios';
-import { computeDagreLayout_1, computeCytoscapeLayout, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout } from "../../modules/layout/layout";
+import { computeDagreLayout_1, computeCytoscapeLayout, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout,computeGeospatialLayout } from "../../modules/layout/layout";
 import { FreeLayoutType } from '@neo4j-nvl/base';
 
 export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
@@ -27,71 +27,157 @@ export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
 
 
  
-  export const handleLayoutChange = async (newLayoutType, graphRef, combinedNodes, combinedEdges, setLayoutType, library_type='nvl') => {
-    //setLayoutType(newLayoutType);
-  
+ 
+
+  export const handleLayoutChange = async (
+    newLayoutType,
+    graphRef,
+    combinedNodes,
+    combinedEdges,
+    setLayoutType,
+    library_type = 'cytoscape'
+  ) => {
     if (!graphRef.current) {
       console.error('Graph reference not found');
       return;
     }
-    console.log(graphRef.current)
+  
     try {
       if (library_type === 'cytoscape') {
-        // Cytoscape-specific layout handling
-        let options = {
-          name: 'breadthfirst',
-        
-          fit: true, // whether to fit the viewport to the graph
-          directed: false, // whether the tree is directed downwards (or edges can point in any direction if false)
-          padding: 30, // padding on fit
-          circle: false, // put depths in concentric circles if true, put depths top down if false
-          grid: false, // whether to create an even grid into which the DAG is placed (circle:false only)
-          spacingFactor: 1.75, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
-          boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-          avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
-          nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm
-          roots: undefined, // the roots of the trees
-          depthSort: undefined, // a sorting function to order nodes at equal depth. e.g. function(a, b){ return a.data('weight') - b.data('weight') }
-          animate: false, // whether to transition the node positions
-          animationDuration: 500, // duration of animation in ms if enabled
-          animationEasing: undefined, // easing of animation if enabled,
-          animateFilter: function ( node, i ){ return true; }, // a function that determines whether the node should be animated.  All nodes animated by default on animate enabled.  Non-animated nodes are positioned immediately when the layout starts
-          ready: undefined, // callback on layoutready
-          stop: undefined, // callback on layoutstop
-          transform: function (node, position ){ return position; } // transform a given node position. Useful for changing flow direction in discrete layouts
+        // Base options for all Cytoscape layouts
+        let baseOptions = {
+          fit: true,
+          padding: 30,
+          avoidOverlap: true,
+          nodeDimensionsIncludeLabels: false,
+          animate: true,
+          animationDuration: 500,
         };
-        
-        var layout = graphRef.current.layout(options);
-
-        layout.run();
   
+        let options;
+  
+        switch (newLayoutType) {
+          case 'dagre':
+            options = {
+              ...baseOptions,
+              name: 'dagre',
+              rankDir: 'TB', // Top-to-bottom for hierarchical layout
+              nodeSep: 50,
+              edgeSep: 10,
+              rankSep: 50,
+            };
+            break;
+  
+          case 'Operationnelle_Soutien_Leader':
+            // Approximate with a concentric layout to emphasize leadership/support hierarchy
+            options = {
+              ...baseOptions,
+              name: 'concentric',
+              levelWidth: (nodes) => 1, // Customize based on node hierarchy if needed
+              minNodeSpacing: 60,
+              concentric: (node) => {
+                // Define hierarchy: e.g., 'leader' nodes at center
+                const nodeData = node.data();
+                return nodeData.type === 'leader' ? 3 : nodeData.type === 'soutien' ? 2 : 1;
+              },
+              equidistant: false,
+            };
+            break;
+  
+          case 'elk':
+            // Map to 'cose' or 'fcose' for force-directed layout similar to ELK
+            options = {
+              ...baseOptions,
+              name: 'fcose', // Fast Compound Spring Embedder
+              quality: 'default',
+              randomize: true,
+              nodeSeparation: 75,
+              idealEdgeLength: (edge) => 50,
+            };
+            break;
+  
+          case 'computeLinearLayout':
+            // Use 'grid' or 'circle' for linear arrangement
+            options = {
+              ...baseOptions,
+              name: 'grid',
+              rows: 1, // Single row for linear layout
+              condense: true,
+              sort: (a, b) => a.data('id').localeCompare(b.data('id')), // Sort nodes by ID
+            };
+            break;
+  
+          case 'geospatial':
+            // Compute positions externally and apply them (since Cytoscape doesn't have a geospatial layout)
+            const nodesWithPositions = computeGeospatialLayout(combinedNodes, 800, 800);
+            console.log(combinedNodes)
+            combinedNodes.forEach((node) => {
+              const nodeId = node?.id;
+              if (!nodeId) {
+                console.warn('Node missing id:', node);
+                return;
+              }
+            
+              const pos = nodesWithPositions.find((n) => n.id === nodeId);
+              if (pos) {
+                node.position = { x: pos.x, y: pos.y };
+              } else {
+                console.warn(`Position not found for node with id: ${nodeId}`);
+              }
+            });
+            
+            options = {
+              ...baseOptions,
+              name: 'preset', // Use preset positions
+            };
+            break;
+  
+          default:
+            // Fallback to breadthfirst
+            options = {
+              ...baseOptions,
+              name: 'breadthfirst',
+              directed: false,
+              spacingFactor: 1.75,
+            };
+            break;
+        }
+  
+        const layout = graphRef.current.layout(options);
+        layout.run();
       } else {
-        // NVL library handling
+        // Non-Cytoscape (nvl) branch remains unchanged
         let nodesWithPositions;
-        
+  
         if (newLayoutType === 'dagre') {
           graphRef.current.setLayout(FreeLayoutType);
           nodesWithPositions = computeDagreLayout_1(combinedNodes, combinedEdges);
-        } 
-        else if (newLayoutType === 'Operationnelle_Soutien_Leader') {
+        } else if (newLayoutType === 'Operationnelle_Soutien_Leader') {
           graphRef.current.setLayout(FreeLayoutType);
           nodesWithPositions = Operationnelle_Soutien_Leader(combinedNodes, combinedEdges);
-        } 
-        else if (newLayoutType === 'elk') {
+        } else if (newLayoutType === 'elk') {
           graphRef.current.setLayout(FreeLayoutType);
           nodesWithPositions = computeForceDirectedLayout(combinedNodes, combinedEdges);
-        } 
-        else if (newLayoutType === 'computeLinearLayout') {
+        } else if (newLayoutType === 'computeLinearLayout') {
           graphRef.current.setLayout(FreeLayoutType);
           nodesWithPositions = computeLinearLayout(combinedNodes, combinedEdges, 300);
-        }
-        else {
+        } else if (newLayoutType === 'geospatial') {
+          graphRef.current.setLayout(FreeLayoutType);
+          nodesWithPositions = computeGeospatialLayout(combinedNodes, 800, 800);
+        } else {
           graphRef.current.setLayout(newLayoutType);
+          setLayoutType(newLayoutType);
           return;
         }
-        
+  
         graphRef.current.setNodePositions(nodesWithPositions);
+        nodesWithPositions.forEach((node) => {
+          console.log(`Pinning node ${node.id} at position x:${node.x}, y:${node.y}`);
+          graphRef.current.pinNode(node.id);
+        });
       }
+      console.log("ne layout",newLayoutType)
+      setLayoutType(newLayoutType); // Update the layout type state
     } catch (error) {
       console.error('Error in handleLayoutChange:', error);
       throw error;

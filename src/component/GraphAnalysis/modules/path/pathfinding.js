@@ -64,6 +64,45 @@ setPathEdges(formattedEdges);
     }
   };
 
+
+  const startPathFinding_shortest = async () => {
+    setIsPathFindingStarted(true);
+    console.log("selected nodes  ", nvlRef.current.getSelectedNodes());
+    
+    if (nvlRef.current.getSelectedNodes().length>0) {
+        setIsBoxPath(true)
+        const nodeIds = nvlRef.current.getSelectedNodes().map((node) => parseInt(node.id, 10));
+      try {
+        const response = await axios.post(
+          `${BASE_URL}/shortestpath/`,
+          {ids: nodeIds},
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          const paths = response.data.paths;
+          if(response.data.paths.length == 0 ){
+            setPathisempty(true) ;
+            console.log("path is videdd ");
+          }
+          console.log("response path :" , response);
+          
+          setAllPaths(paths);
+          setCurrentPathIndex(0);
+          updatePathNodesAndEdges(paths[0],nvlRef.current.getSelectedNodes());
+        } else {
+          console.error('Failed to fetch all connections.');
+        }
+      } catch (error) {
+        console.error('Error fetching all connections:', error);
+      }
+    }
+  };
+
   return (
     <>
     <div
@@ -106,7 +145,7 @@ setPathEdges(formattedEdges);
 
     </div>
     <button
-onClick={startPathFinding}
+onClick={startPathFinding_shortest}
 style={{
   background: 'rgb(95 124 87)',
   color: 'white',

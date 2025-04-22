@@ -112,12 +112,12 @@ const PathBuilder = ({
         onMouseOver={(e) => (e.target.style.backgroundColor = '#45a049')}
         onMouseOut={(e) => (e.target.style.backgroundColor = '#4CAF50')}
       >
-        Start Path Building
+        Ajouter aggregation
       </button>
 
       {isPathBuilding && (
         <div style={{ marginTop: '10px' }}>
-          <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Path Construction</h4>
+          <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>----selectionee node de debut et node de fin----</h4>
 
           {selectedNodes.size > 0 && (
             <div style={{ background: '#f8f9fa', padding: '10px', borderRadius: '4px', marginBottom: '10px' }}>

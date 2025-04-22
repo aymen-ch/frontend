@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import {
   FaExpand,
   FaEdit,
@@ -13,6 +14,7 @@ import {
   FaTimesCircle,
   FaCog,
   FaSlidersH,
+  FaPlus, // Add this
 } from 'react-icons/fa';
 import { FaLocationDot, FaCodeFork } from 'react-icons/fa6';
 import './contextmenu.css';
@@ -22,9 +24,11 @@ import {
   handleAllConnections,
   handleActionSelect,
   handleAdvancedExpand,
+  handleNodeExpansion_selected
  
 } from './functions_node_click';
 import { getNodeColor,getNodeIcon } from '../../utils/Parser';
+import { BASE_URL } from '../../utils/Urls';
 const ContextMenu = ({
   contextMenu,
   setContextMenu,
@@ -54,7 +58,13 @@ const ContextMenu = ({
     threshold: 0.01,
     maxLevel: 5,
   });
-
+  const [availableActions, setAvailableActions] = useState([]);
+  const actionIcons = {
+    'Affaire dans la meme region': FaLocationDot,
+    'Show Criminal Network': FaCodeFork,
+    'Show Person Profile': FaInfoCircle,
+    // Add more action-to-icon mappings as needed
+  };
   const centralityAttributes = [
     'degree_out',
     'degree_in',
@@ -95,6 +105,7 @@ const ContextMenu = ({
             isVirtual: true,
           }));
 
+          
         // Combine backend and virtual relations, ensuring no duplicates by name
         const combinedRelations = [...relations, ...matchingVirtualRelations];
         const uniqueRelations = Array.from(
@@ -103,6 +114,15 @@ const ContextMenu = ({
 
         setPossibleRelations(uniqueRelations);
       });
+
+      axios
+        .post(BASE_URL+'/get_available_actions/', { node_type: contextMenu.node.group })
+        .then((response) => {
+          setAvailableActions(response.data.actions || []);
+        })
+        .catch((error) => {
+          console.error('Error fetching available actions:', error);
+        });
     }
   }, [contextMenu]);
 
@@ -217,6 +237,36 @@ const ContextMenu = ({
     } else if (action === 'all connections') {
       handleAllConnections(selectedNodes, setAllPaths, setCurrentPathIndex, setPathNodes, setPathEdges, setIsBoxPath);
     }
+    else if (action === 'Disable Others') {
+      const clickedNodeId = contextMenu.node.id;
+      // Find all direct neighbors by checking edges
+      const enabledNodeIds = new Set([clickedNodeId]); // Include clicked node
+      setEdges((prevEdges) => {
+        prevEdges.forEach((edge) => {
+          if (edge.from === clickedNodeId) {
+            enabledNodeIds.add(edge.to);
+          } else if (edge.to === clickedNodeId) {
+            enabledNodeIds.add(edge.from);
+          }
+        });
+        // Update edges: enable only those where both nodes are enabled
+        const updatedEdges = prevEdges.map((edge) => ({
+          ...edge,
+          disabled: !(enabledNodeIds.has(edge.from) && enabledNodeIds.has(edge.to)),
+        }));
+        return updatedEdges;
+      });
+      // Update nodes: enable only clicked node and neighbors
+      setNodes((prevNodes) =>
+        prevNodes.map((node) => ({
+          ...node,
+          disabled: !enabledNodeIds.has(node.id),
+        }))
+      );
+    }else if (action === 'Expand All seleced nodes'){
+         //// add function 
+         handleNodeExpansion_selected(selectedNodes, setNodes, setEdges);
+    }
 
     setContextMenu(null);
     setSubContextMenu(null);
@@ -301,6 +351,10 @@ const ContextMenu = ({
             <FaTrash style={{ marginRight: '10px' }} />
             Delete Node
           </button>
+          <button className="menu-item danger" onClick={() => handleContextMenuAction('Disable Others')}>
+            <FaTrash style={{ marginRight: '10px' }} />
+            Disable Other
+          </button>
         </div>
       </div>
 
@@ -317,6 +371,7 @@ const ContextMenu = ({
               <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
               Expand All
             </button>
+
             {possibleRelations.length > 0 ? (
               possibleRelations.map((relation, index) => {
                 const startIconPath = getNodeIcon(relation.startNode);
@@ -369,98 +424,72 @@ const ContextMenu = ({
             ) : (
               <div className="no-relations">No relations available</div>
             )}
+            <hr></hr>
+             {selectedNodes.size > 0 && (<button className="menu-item" onClick={() => handleContextMenuAction('Expand All seleced nodes')}>
+              <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
+              Expand All seleced nodes
+            </button>)}
           </div>
         </div>
       )}
 
-      {actionsSubMenu?.visible && (
-        <div
-          className="sub-context-menu"
-          style={{ '--sub-context-menu-y': `${actionsSubMenu.y}px`, '--sub-context-menu-x': `${actionsSubMenu.x}px` }}
-          ref={actionsSubRef}
-          onMouseLeave={() => setActionsSubMenu(null)}
-        >
-          <div className="menu-header">Action Options</div>
-          <div className="menu-items">
-            {contextMenu.node.group === 'Affaire' && (
-              <button
-                className="menu-item"
-                onClick={() => handleActionSelect('Copy Node', contextMenu.node, setActionsSubMenu, setContextMenu, setNodes, setEdges, setActiveAggregations)}
-              >
-                <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
-                Affaire dans la meme region
-              </button>
-            )}
-            {contextMenu.node.group === 'Affaire' && (
-              <button
-                className="menu-item"
-                onClick={() =>
-                  handleActionSelect(
-                    'Copy Node',
-                    contextMenu.node,
-                    setActionsSubMenu,
-                    setContextMenu,
-                    setNodes,
-                    setEdges,
-                    setActiveAggregations
-                  )
-                }
-              >
-                <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
-                Affaire dans la meme region
-              </button>
-            )}
-            {contextMenu.node.group === 'Personne' && (
-              <button
-                className="menu-item"
-                onClick={() =>
-                  handleActionSelect(
-                    'Show Person Profile',
-                    contextMenu.node,
-                    setActionsSubMenu,
-                    setContextMenu,
-                    setNodes,
-                    setEdges,
-                    setActiveAggregations
-                  )
-                }
-                onClick={() => handleActionSelect('Show Person Profile', contextMenu.node, setActionsSubMenu, setContextMenu, setNodes, setEdges, setActiveAggregations)}
-              >
-                <FaLocationDot style={{ marginRight: '10px', color: '#4361ee' }} />
-                Show Person Profile
-              </button>
-            )}
-            {contextMenu.node.group === 'Personne' && (
-              <button
-                className="menu-item"
-                onClick={() => handleActionSelect('Show tree of criminal', contextMenu.node, setActionsSubMenu, setContextMenu, setNodes, setEdges, setActiveAggregations)}
-              >
-                <FaCodeFork style={{ marginRight: '10px', color: '#4361ee' }} />
-                Show tree of criminal
-              </button>
-            )}
-            {contextMenu.node.group === 'Personne' && (
-              <button
-                className="menu-item"
-                onClick={() =>
-                  handleActionSelect(
-                    'Show tree of criminal',
-                    contextMenu.node,
-                    setActionsSubMenu,
-                    setContextMenu,
-                    setNodes,
-                    setEdges,
-                    setActiveAggregations
-                  )
-                }
-              >
-                <FaCodeFork style={{ marginRight: '10px', color: '#4361ee' }} />
-                Show tree of criminal
-              </button>
-            )}
-          </div>
-        </div>
+{actionsSubMenu?.visible && (
+  <div
+    className="sub-context-menu"
+    style={{ '--sub-context-menu-y': `${actionsSubMenu.y}px`, '--sub-context-menu-x': `${actionsSubMenu.x}px` }}
+    ref={actionsSubRef}
+    onMouseLeave={() => setActionsSubMenu(null)}
+  >
+    <div className="menu-header">Action Options</div>
+    <div className="menu-items">
+      {availableActions.length > 0 ? (
+        availableActions.map((action, index) => {
+          const Icon = actionIcons[action.name] || FaCog; // Fallback to FaCog if no icon defined
+          return (
+            <button
+              key={index}
+              className="menu-item"
+              onClick={() =>
+                handleActionSelect(
+                  action.name,
+                  contextMenu.node,
+                  setActionsSubMenu,
+                  setContextMenu,
+                  setNodes,
+                  setEdges,
+                  setActiveAggregations
+                )
+              }
+            >
+              <Icon style={{ marginRight: '10px', color: '#4361ee' }} />
+              {action.name}
+            </button>
+          );
+        })
+      ) : (
+        <div className="no-relations">No actions available</div>
       )}
+      <div className="menu-divider"></div>
+      <button
+        className="menu-item"
+        onClick={() =>
+          handleActionSelect(
+            'add_action',
+            contextMenu.node,
+            setActionsSubMenu,
+            setContextMenu,
+            setNodes,
+            setEdges,
+            setActiveAggregations
+          )
+        }
+      >
+        <FaPlus style={{ marginRight: '10px', color: '#38b000' }} />
+        Add New Action
+      </button>
+    </div>
+  </div>
+)}
 
       {advancedAggregationSubMenu?.visible && (
         <div

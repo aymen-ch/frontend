@@ -35,30 +35,76 @@ export const buttonStyle = {
   
   export const searchStyle = {
     position: 'absolute',
-    zIndex: 50,
-    top: '15px',
+    zIndex: 100, // Increased from 50 to ensure it’s above other elements (e.g., graph nodes)
+    top: '20px', // Slightly increased for better spacing from the top edge
     left: '50%',
     transform: 'translateX(-50%)',
     display: 'flex',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
-    borderRadius: '25px',
-    padding: '8px 15px',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)',
-    transition: 'all 0.3s ease',
+    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 250, 0.98))', // Subtle gradient for depth
+    borderRadius: '30px', // Softer, more modern rounded corners
+    padding: '10px 18px', // Slightly more padding for comfort
+    boxShadow: `
+      0 4px 12px rgba(0, 0, 0, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.06),
+      inset 0 1px 1px rgba(255, 255, 255, 0.5) // Inner highlight for glassmorphism
+    `,
+    border: '1px solid rgba(200, 210, 220, 0.3)', // Subtle border with softer color
+    transition: 'all 0.3s ease, box-shadow 0.2s ease, transform 0.2s ease', // Smooth transitions
     width: 'auto',
-    minWidth: '300px',
-    maxWidth: '450px',
-    border: '1px solid rgba(0, 0, 0, 0.05)',
+    minWidth: '320px', // Slightly wider for better usability
+    maxWidth: '500px', // Increased for larger screens
     '&:hover': {
-      boxShadow: '0 6px 20px rgba(0, 0, 0, 0.12), 0 2px 5px rgba(0, 0, 0, 0.06)',
+      boxShadow: `
+        0 6px 16px rgba(0, 0, 0, 0.1),
+        0 3px 6px rgba(0, 0, 0, 0.08),
+        inset 0 1px 1px rgba(255, 255, 255, 0.5)
+      `,
+      transform: 'translateX(-50%) scale(1.02)', // Subtle lift effect
     },
     '&:focus-within': {
-      backgroundColor: 'rgba(255, 255, 255, 1)',
-      borderColor: 'rgba(66, 153, 225, 0.3)',
-    }
+      background: 'linear-gradient(145deg, rgba(255, 255, 255, 1), rgba(250, 251, 253, 1))', // Brighter on focus
+      borderColor: 'rgba(58, 102, 219, 0.5)', // Match #3a66db with opacity
+      boxShadow: `
+        0 6px 16px rgba(58, 102, 219, 0.2),
+        0 3px 6px rgba(0, 0, 0, 0.08),
+        inset 0 1px 1px rgba(255, 255, 255, 0.5)
+      `,
+      transform: 'translateX(-50%) scale(1.02)', // Consistent lift effect
+    },
+    // Accessibility improvements
+    outline: 'none',
+    '&:focus': {
+      outline: '2px solid rgba(58, 102, 219, 0.3)', // Accessible focus ring
+      outlineOffset: '2px',
+    },
+    // Input-specific styling (assuming the search bar contains an input)
+    '& input': {
+      border: 'none',
+      background: 'transparent',
+      color: '#1a202c', // Dark text for high contrast
+      fontSize: '4rem',
+      fontWeight: 400,
+      padding: '6px 10px',
+      width: '100%',
+      '&:focus': {
+        outline: 'none', // Remove default input outline
+      },
+      '&::placeholder': {
+        color: 'rgba(113, 128, 150, 0.7)', // Softer placeholder color
+        fontWeight: 400,
+      },
+    },
+    // Icon styling (assuming a search icon, e.g., magnifying glass)
+    '& svg': {
+      color: '#718096', // Neutral gray for icons
+      marginRight: '8px',
+      transition: 'color 0.2s ease',
+    },
+    '&:focus-within svg': {
+      color: '#3a66db', // Match theme color on focus
+    },
   };
-  
   // Additional style for the select element (you might want to add this)
   export const searchSelectStyle = {
     marginLeft: '10px',
@@ -105,3 +151,6 @@ export const buttonStyle = {
     width: '220px',
     boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
   };
+
+
+  

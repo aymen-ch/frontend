@@ -20,7 +20,7 @@ const DetailsModule = ({
   const [showDetails, setShowDetails] = useState(false);
   const [expandedDetails, setExpandedDetails] = useState({});
   const [sizeProperty, setSizeProperty] = useState(''); // New state for selected size property
- console.log(nodeColors)
+ 
   // Get unique node types from combinedNodes
   const nodeTypes = [...new Set(combinedNodes.map(node => node.group))];
   
@@ -249,6 +249,7 @@ const DetailsModule = ({
 
       {/* Existing Node Properties Section */}
       {nodetoshow  && (
+        
         <div className="properties-container">
           {(() => {
             const matchedNode = combinedNodes.find(node => 

@@ -10,11 +10,13 @@ const GraphCanvas = ({
   setSelectedNodes,
   setContextMenu,
   setContextMenuRel,
+  SetContextMenucanvas,
   setnodetoshow,
   setrelationtoshow,
   ispath,
   setselectedEdges,
-  selectedEdges
+  selectedEdges,
+  layoutType
 }) => {
   const [shiftPressed, setShiftPressed] = useState(false);
   const [hoveredEdge, sethoverEdge] = useState(null);
@@ -37,7 +39,7 @@ const GraphCanvas = ({
   }, []);
 
   // Use the NVL visualization hook
-  const { getVisualizationComponent } = useNvlVisualization({
+  const { getVisualizationComponent } = useCytoVisualization({
     nvlRef,
     nodes,
     edges,
@@ -45,6 +47,7 @@ const GraphCanvas = ({
     setSelectedNodes,
     setContextMenu,
     setContextMenuRel,
+    SetContextMenucanvas,
     setnodetoshow,
     setrelationtoshow,
     shiftPressed,
@@ -52,6 +55,7 @@ const GraphCanvas = ({
     setselectedEdges,
     sethoverEdge,
     ispath,
+    layoutType
   });
 
   const VisualizationComponent = getVisualizationComponent(hoveredEdge);

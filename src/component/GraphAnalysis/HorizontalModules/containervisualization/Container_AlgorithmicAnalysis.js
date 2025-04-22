@@ -88,12 +88,35 @@ const Container_AlgorithmicAnalysis = () => {
   }, [relationtoshow]);
 
   const extractAffaires = () => {
-    return SubGrapgTable.results.map((result, index) => ({
-      id: result.affaire.id, // Use index as a unique identifier
-      type: result.affaire.properties.Number, // Assuming `affaire.type` is the property you want to display
-      date: result.affaire.properties.date,
-
-    }));
+    return SubGrapgTable.results.map((result, index) => {
+      // Base affaire properties
+      const affaireData = {
+        id: result.affaire.id, // Unique identifier for the affaire
+        type: result.affaire.properties.Number, // Affaire type (e.g., Number)
+        date: result.affaire.properties.date, // Affaire date
+      };
+  
+      // Extract properties from related nodes
+      if (result.nodes && Array.isArray(result.nodes)) {
+        result.nodes.forEach((node) => {
+          const nodeType = node.node_type || node.group || 'unknown'; // Fallback to 'unknown' if node_type or group is undefined
+          const nodeProperties = node.properties || {};
+          console.log('tettt',nodeType)
+          // Add each node property to affaireData, prefixed with nodeType to avoid key collisions
+          Object.entries(nodeProperties).forEach(([key, value]) => {
+            // Example: if node is 'daira' and key is 'nomarabe', key becomes 'daira_nomarabe'
+            affaireData[`${nodeType}_${key}`] = value;
+            
+          });
+  
+          // Optionally, include the node_type itself as a property
+          affaireData[`${nodeType}_type`] = nodeType;
+          
+        });
+      }
+  
+      return affaireData;
+    });
   };
 
   const handlePrevSubGraph = () => {
@@ -170,6 +193,7 @@ return (
             setActiveAggregations={setActiveAggregations}
             selectedEdges={selectedEdges}
             setselectedEdges={setselectedEdges}
+            setSubGrapgTable={setSubGrapgTable}
           />
           {isBoxPath > 0 && (
             <div className="path-visualization-overlay">
@@ -283,7 +307,7 @@ return (
                   edges={edges}
                   setNodes={setNodes}
                   setEdges={setEdges}
-                  selectedNodes={nvlRef.current?.getSelectedNodes()}
+                  selectedNodes={selectedNodes}
                 />
               )}
               
@@ -320,11 +344,18 @@ return (
       
       {SubGrapgTable.results.length > 0 && combinedNodes.length>0 && (
         <div className="timeline-container">
-          <TimelineBar 
+          {/* <TimelineBar 
             affaires={extractAffaires()}
             setAffairesInRange={setAffairesInRange}
-          />
-        </div>
+            
+          /> */}
+
+              <TimelineBar 
+                  data={extractAffaires()}
+                  setItemsInRange={setAffairesInRange}
+                  attributes={['Affaire_date']}
+                />
+              </div>
       )}
     </div>
   );

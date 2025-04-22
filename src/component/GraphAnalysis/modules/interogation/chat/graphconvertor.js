@@ -18,7 +18,7 @@ export const convertNeo4jToGraph = (records) => {
 
           // Add start node
           newNodes.push(createNode(start.properties, start.labels[0], start.properties, false));
-
+               
           // Add end node
           newNodes.push(createNode(end.properties, end.labels[0], end.properties, false));
 
@@ -26,8 +26,9 @@ export const convertNeo4jToGraph = (records) => {
           newEdges.push(createEdge(relationship, start.identity, end.identity));
         });
       } else if ('labels' in field) {
+        console.log(field)
         // Handle individual node
-        newNodes.push(createNode(field.properties, field.labels[0], field.properties, false));
+        newNodes.push(createNode(field.identity, field.labels[0], field.properties, false));
       } else if ('type' in field) {
         // Handle individual relationship
         newEdges.push(createEdge(field, field.start, field.end));

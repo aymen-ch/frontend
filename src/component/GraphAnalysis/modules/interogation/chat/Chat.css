@@ -815,3 +815,330 @@
 .table-wrapper::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+
+.input-group {
+  display: flex;
+  flex-direction: row; /* Single row for all elements */
+  align-items: center;
+  gap: 8px; /* Reduced gap for compactness */
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input-options {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px; /* Reduced gap */
+  flex-shrink: 0; /* Prevent options from shrinking too much */
+}
+
+.chat-input {
+  flex: 1; /* Take remaining space */
+  min-width: 100px; /* Minimum width for usability */
+  max-width: 50%; /* Limit textarea width */
+  padding: 6px; /* Reduced padding */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+  font-size: 14px;
+  height: 60px; /* Fixed height for consistency */
+  box-sizing: border-box;
+}
+
+.response-type-dropdown,
+.model-dropdown {
+  padding: 6px; /* Reduced padding */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px; /* Slightly smaller font */
+  background-color: #fff;
+  cursor: pointer;
+  width: 100px; /* Fixed width for compactness */
+  min-width: 80px; /* Minimum width */
+}
+
+.max-corrections-input {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Tighter gap */
+}
+
+.corrections-number-input {
+  width: 50px; /* Compact width */
+  padding: 6px; /* Reduced padding */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+.corrections-number-input::-webkit-inner-spin-button,
+.corrections-number-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.increment-decrement-button {
+  padding: 0;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 24px; /* Smaller buttons */
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.increment-decrement-button:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+.increment-decrement-button:hover:not(:disabled) {
+  background-color: #357abd;
+}
+
+.response-type-dropdown:disabled,
+.model-dropdown:disabled,
+.corrections-number-input:disabled,
+.send-button:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+.send-button {
+  padding: 6px 12px; /* Reduced padding */
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap; /* Prevent text wrapping */
+  min-width: 60px; /* Ensure button doesn’t shrink too much */
+}
+
+.send-button:hover:not(:disabled) {
+  background-color: #357abd;
+}
+
+/* Media query for very small screens (e.g., <400px) */
+@media (max-width: 400px) {
+  .input-group {
+    gap: 4px; /* Tighter gap */
+  }
+
+  .input-options {
+    gap: 4px;
+  }
+
+  .chat-input {
+    max-width: 40%; /* Further reduce textarea width */
+    min-width: 80px;
+    font-size: 12px;
+  }
+
+  .response-type-dropdown,
+  .model-dropdown {
+    width: 80px;
+    min-width: 60px;
+    font-size: 12px;
+  }
+
+  .corrections-number-input {
+    width: 40px;
+    font-size: 12px;
+  }
+
+  .increment-decrement-button {
+    width: 20px;
+    height: 20px;
+  }
+
+  .send-button {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 50px;
+  }
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.chat-input-area {
+  resize: none;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  min-height: 60px;
+  line-height: 1.4;
+}
+
+.chat-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-label {
+  font-size: 13px;
+  color: #555;
+}
+
+.toolbar-select {
+  padding: 4px 8px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.correction-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.corrections-number {
+  width: 50px;
+  text-align: center;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.icon-button {
+  background: #f1f1f1;
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.send-button {
+  background-color: #2196f3;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.send-button:hover {
+  background-color: #1976d2;
+}
+
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* full height */
+  overflow: hidden;
+}
+
+.chat-window {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.message {
+  margin-bottom: 10px;
+}
+
+.loading-spinner {
+  margin-top: 10px;
+}
+
+.edit-message {
+  margin-bottom: 10px;
+}
+
+.query-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.query-modal {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+.query-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-input-container {
+  border-top: 1px solid #ccc;
+  padding: 10px;
+  background: white;
+}
+
+/* Add this to your global or parent CSS */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.chat-window {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background-color: #f9f9f9;
+}

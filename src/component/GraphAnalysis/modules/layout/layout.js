@@ -6,11 +6,105 @@ import cytoscape from 'cytoscape';
 import cise from 'cytoscape-cise';
 import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force';
 // Register the CISe layout with Cytoscape
+import cola from 'cytoscape-cola';
+cytoscape.use(cola); // Register the CoLa layout with Cytoscape
+export const computeColaLayout = (nodes, edges, width = 800, height = 800) => {
+  // Create a new Cytoscape instance
+  const cy = cytoscape({
+    elements: {
+      nodes: nodes.map((node) => ({
+        data: { id: node.id },
+      })),
+      edges: edges.map((edge) => ({
+        data: { id: `${edge.from}-${edge.to}`, source: edge.from, target: edge.to },
+      })),
+    },
+  });
+
+  // Define optional constraints (e.g., fix some nodes or set relative positions)
+  const constraints = [];
+  // Example constraint: Fix the first node at the center (optional)
+  if (nodes.length > 0) {
+    constraints.push({
+      type: 'alignment', // Align nodes along an axis (e.g., x or y)
+      axis: 'x', // Align along the y-axis
+      nodes: [{ node: nodes[0].id, offset: 0 }], // Fix the first node
+    });
+  }
+
+  // Apply the CoLa layout
+  const layout = cy.layout({
+    name: 'cola', // Use the CoLa layout
+    animate: false, // Disable animation for faster computation
+    fit: false, // Do not fit the graph to the viewport
+    boundingBox: { x1: 0, y1: 0, w: width, h: height }, // Set the layout bounding box
+    nodeSpacing: 400, // Minimum space between nodes
+    edgeLength: 150, // Ideal edge length
+    convergenceThreshold: 4, // Stop when forces are small
+    constraints: constraints, // Apply any user-defined constraints
+  });
+
+  // Run the layout
+  layout.run();
+
+  // Extract node positions from the Cytoscape instance
+  const nodesWithPositions = nodes.map((node) => {
+    const cyNode = cy.getElementById(node.id);
+    return {
+      id: node.id,
+      x: cyNode.position('x'),
+      y: cyNode.position('y'),
+    };
+  });
+
+  // Destroy the Cytoscape instance to free up memory
+  cy.destroy();
+
+  return nodesWithPositions;
+};
+
 cytoscape.use(cise);
 
 
 
 
+export const computeGeospatialLayout = (nodes, width = 800, height = 800) => {
+  // Define map bounds (e.g., world coordinates)
+  const latMin = -90, latMax = 90; // Latitude range
+  const lngMin = -180, lngMax = 180; // Longitude range
+
+  // Function to project lat/lng to pixel coordinates
+  const projectToPixel = (lat, lng) => {
+    // Simple linear projection (Mercator-like)
+    const x = ((lng - lngMin) / (lngMax - lngMin)) * width;
+    const y = ((latMax - lat) / (latMax - latMin)) * height; // Invert y-axis (map convention)
+    return { x, y };
+  };
+
+  const nodesWithPositions = nodes.map(node => {
+    const lat = node.properties?.latitude || node.properties?.lat;
+    const lng = node.properties?.longitude || node.properties?.lng;
+
+    if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
+      const { x, y } = projectToPixel(parseFloat(lat), parseFloat(lng));
+      return {
+        id: node.id,
+        x: Math.max(0, Math.min(width, x)), // Clamp to canvas
+        y: Math.max(0, Math.min(height, y)),
+      };
+    } else {
+      // Fallback: Place at canvas center
+      console.warn(`Node ${node.id} missing lat/lng, placing at center`);
+      return {
+        id: node.id,
+        x: width / 2,
+        y: height / 2,
+      };
+    }
+  });
+
+  return nodesWithPositions;
+};
 
 export const computeForceDirectedLayout = (nodes, edges, width=800, height=800) => {
   // Transform edges to use `source` and `target` instead of `from` and `to`
@@ -520,3 +614,11 @@ export const computeCombinedLayout = (nodes, edges) => {
 
   return dagreNodes;
 };
+
+
+
+
+////////////////////// manus 
+
+
+

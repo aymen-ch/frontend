@@ -3,6 +3,7 @@ import axios from 'axios';
 import ContextMenu from '../../modules/contextmenu/ContextMenu';
 import GraphCanvas from '../../utils/VisualizationLibrary/GraphCanvas';
 import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWindow/PersonProfileWindow";
+import AddActionWindow from "../../modules/Windows/Actions/PersonProfileWindow/Actions";
 import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa'; // Added FaSpinner
 import { FaDiaspora } from "react-icons/fa6";
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
@@ -23,6 +24,7 @@ import { BASE_URL } from '../../utils/Urls';
 import { getNodeColor, getNodeIcon, createNode } from '../../utils/Parser';
 import LayoutControl from '../../modules/layout/Layoutcontrol';
 import ContextMenuRel from '../../modules/contextmenu/contextmenuRelarion';
+import ContextMenucanvas from '../../modules/contextmenu/contextmenucanvas';
 import { useGlobalContext } from '../../GlobalVariables';
 const GraphVisualization = React.memo(({
   setEdges,
@@ -45,9 +47,13 @@ const GraphVisualization = React.memo(({
   setActiveAggregations,
   selectedEdges,
     setselectedEdges,
+    setSubGrapgTable
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [contextMenuRel, setContextMenuRel] = useState(null);
+  const [ContextMenucanvass, SetContextMenucanvass] = useState(null);
+
+
   const [allPaths, setAllPaths] = useState([]);
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
   const [render, setRenderer] = useState("canvas");
@@ -66,7 +72,6 @@ const GraphVisualization = React.memo(({
   const resultsRef = useRef(null);
 
   useEffect(() => {
-     console.log("inshallah")
     const fetchNodeAnalysis = async () => {
       if (nodes.length === 0) return;
 
@@ -261,9 +266,10 @@ const GraphVisualization = React.memo(({
     }
   };
 
-  const handleEarth = () => {
+  const handleDelete = () => {
     setNodes([]);
     setEdges([]);
+    setSubGrapgTable({ results: [] })
   };
 
   const handlewebgl = () => {
@@ -291,7 +297,7 @@ const GraphVisualization = React.memo(({
     <div style={containerStyle(isFullscreen)}>
       <div ref={searchRef} style={{ ...searchStyle, display: 'flex', alignItems: 'center' }}>
         <FaSearch 
-          style={{ marginRight: '5px', cursor: 'pointer' }} 
+          style={{ marginRight: '5px', cursor: 'pointer',width:'200px' }} 
           onClick={handleSearchClick}
         />
         <input
@@ -307,7 +313,7 @@ const GraphVisualization = React.memo(({
           />
         ) : inputValue && (
           <FaTimes
-            style={{ marginRight: '5px', cursor: 'pointer', color: '#666' }}
+            style={{ marginRight: '5px', cursor: 'pointer', color: '#666',width: '200px' }}
             onClick={handleClearSearch}
             title="Clear search"
           />
@@ -401,6 +407,8 @@ const GraphVisualization = React.memo(({
         nvlRef={nvlRef}
         nodes={nodes}
         edges={edges}
+        layoutType={layoutType}
+        setLayoutType={setLayoutType} 
       />
 
       <button
@@ -435,7 +443,7 @@ const GraphVisualization = React.memo(({
 
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '100px', left: '10px' }}
-        onClick={handleEarth}
+        onClick={handleDelete}
         title="Global View"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
@@ -471,6 +479,7 @@ const GraphVisualization = React.memo(({
         setSelectedNodes={setSelectedNodes}
         setContextMenu={setContextMenu}
         setContextMenuRel={setContextMenuRel}
+        SetContextMenucanvas={SetContextMenucanvass}
         setnodetoshow={setnodetoshow}
         ispath={ispath}
         setrelationtoshow={setrelationtoshow}
@@ -478,6 +487,7 @@ const GraphVisualization = React.memo(({
         setNodes={setNodes}
         selectedEdges={selectedEdges}
         setselectedEdges={setselectedEdges}
+        layoutType={layoutType}
       /> 
 
       {contextMenu && contextMenu.visible && (
@@ -509,8 +519,24 @@ const GraphVisualization = React.memo(({
         />
       )}
 
+{ContextMenucanvass && ContextMenucanvass.visible && (
+        <ContextMenucanvas
+        ContextMenucanvas={ContextMenucanvass}
+          SetContextMenucanvas={SetContextMenucanvass}
+          setNodes={setNodes}
+          setEdges={setEdges}
+          selectedNodes={selectedNodes}
+          setSelectedNodes = {setSelectedNodes}
+          selectedEdges={selectedEdges}
+          setselectedEdges={setselectedEdges}
+        />
+      )}
+
       {activeWindow === 'PersonProfile' && (
         <PersonProfileWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
+      )}
+      {activeWindow === 'add_action' && (
+        <AddActionWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
     </div>
   );

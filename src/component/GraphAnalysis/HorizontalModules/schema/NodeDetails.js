@@ -1,35 +1,40 @@
 import React from 'react';
-import SchemaIcon from './SchemaIcon';
+import { getNodeColor, getNodeIcon } from '../../utils/Parser';
 import './NodeDetails.css';
+import { FaCircle, FaArrowRight, FaInfoCircle } from 'react-icons/fa';
 
 const NodeDetails = ({ nodeId, nodes }) => {
   const node = nodes.find((n) => n.id === nodeId);
   if (!node) return null;
 
-  const { group, color } = {
+  const { group, color, icon } = {
     group: node.group,
-    color: node.color || '#0066cc',
+    color: getNodeColor(node.group),
+    icon: getNodeIcon(node.group),
   };
 
   return (
-    <div className="schema-viz-node-details-container">
-      <div className="schema-viz-node-details-header">
-        <span className="schema-viz-node-type">
-          {nodeId.includes('_dup') ? 'End Node' : 'Start Node'}
+    <div className="node-details-container">
+      <div className="node-details-header">
+        <span className="node-type">
+          <FaInfoCircle />
+          {nodeId.includes('_dup') ? 'Nœud Final' : 'Nœud Initial'}
         </span>
       </div>
-      <div className="schema-viz-node-info" style={{ backgroundColor: color }}>
-        <SchemaIcon 
-          type="project-diagram" 
-          size={20} 
-          color="white" 
-          className="schema-viz-node-icon" 
-        />
-        <span className="schema-viz-node-group">{group}</span>
+      <div className="node-info" style={{ backgroundColor: color }}>
+        {icon ? (
+          <img
+            src={icon}
+            alt={`${group} icon`}
+            className="node-icon"
+          />
+        ) : (
+          <FaCircle className="node-icon" />
+        )}
+        <span className="node-group">{group}</span>
       </div>
     </div>
   );
 };
 
 export default NodeDetails;
-  

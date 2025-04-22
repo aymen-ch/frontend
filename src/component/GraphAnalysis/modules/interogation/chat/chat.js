@@ -14,19 +14,22 @@ import {
 import "@fontsource/fira-code"; // Fira Code font
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Using Dracula theme
-import { convertNeo4jToGraph,convertNeo4jToTable } from './graphconvertor';
+import { convertNeo4jToGraph, convertNeo4jToTable } from './graphconvertor';
+import ChatInput from './input';
+
 const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [responseType, setResponseType] = useState('Text');
+  const [responseType, setResponseType] = useState('Graph');
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editedText, setEditedText] = useState('');
   const [copiedMessageId, setCopiedMessageId] = useState(null);
-  const [showQueryModal, setShowQueryModal] = useState(null); // Tracks which message ID's query is shown in modal
+  const [showQueryModal, setShowQueryModal] = useState(null);
   const [editingQueryId, setEditingQueryId] = useState(null);
   const [editedQuery, setEditedQuery] = useState('');
-
+  const [maxCorrections, setMaxCorrections] = useState(3); // Default max corrections
+  const [selectedModel, setSelectedModel] = useState('hf.co/DavidLanz/text2cypher-gemma-2-9b-it-finetuned-2024v1:latest'); // Default model
   const handleEditQuery = (messageId, currentQuery) => {
     setEditingQueryId(messageId);
     setEditedQuery(currentQuery);
@@ -36,7 +39,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     try {
       setIsLoading(true);
       const originalMessage = messages.find(msg => msg.id === messageId);
-      
+      console.log(originalMessage)
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.id === messageId ? { ...msg, cypherQuery: editedQuery } : msg
@@ -50,9 +53,9 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
       );
   
-      const originalResponseType = originalMessage.type === 'table' ? 'table' : 'graph';
-  
-      if (originalResponseType === 'graph') {
+      const originalResponseType = originalMessage.type === 'Table' ? 'Table' : 'Graph';
+      console.log(originalResponseType)
+      if (originalResponseType === 'Graph') {
         try {
           const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
           
@@ -65,7 +68,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                 msg.id === messageId
                   ? { 
                       ...msg, 
-                      text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة..',
+                      text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
                       cypherQuery: editedQuery,
                       sender: 'bot'
                     }
@@ -81,7 +84,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
               msg.id === messageId
                 ? { 
                     ...msg, 
-                    text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. قد لا يُرجع الاستعلام العُقد والعلاقات. يرجى تعديل استعلام Cypher لإرجاع بيانات متوافقة مع الرسم البياني (العُقد والعلاقات).',
+                    text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. يرجى تصحيح استعلام Cypher لإرجاع العُقد والعلاقات.',
                     cypherQuery: editedQuery,
                     sender: 'bot'
                   }
@@ -89,9 +92,9 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             )
           );
         }
-      } else if (originalResponseType === 'table') {
+      } else if (originalResponseType === 'Table') {
         const { columns, rows } = convertNeo4jToTable(nvlResult.records);
-        
+        console.log("him")
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg.id === messageId
@@ -100,7 +103,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                   text: JSON.stringify({ columns, rows }, null, 2),
                   cypherQuery: editedQuery,
                   sender: 'bot',
-                  type: 'table'
+                  type: 'Table'
                 }
               : msg
           )
@@ -139,13 +142,25 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   };
 
   useEffect(() => {
-    if (selectedNodes.length > 0) {
-      const selectedNodeIds = selectedNodes.map(node => node.id).join(', ');
-      setInputText(`لقد قمت بتحديد العقد التالية بالمعرفات: ${selectedNodeIds}`);
+    console.log('selectedNodes:', selectedNodes);
+    if (selectedNodes.size > 0) {
+      const selectedNodeObjects = Array.from(selectedNodes)
+        .map(nodeId => nodes.find(node => node.id === nodeId))
+        .filter(node => node);
+
+      if (selectedNodeObjects.length > 0) {
+        const formattedText = selectedNodeObjects
+          .map(node => `${node.group || 'Unknown'}: ${node.id}`)
+          .join(', ');
+
+        setInputText(`Selected: ${formattedText}`);
+      } else {
+        setInputText('No valid nodes found');
+      }
     } else {
       setInputText('');
     }
-  }, [selectedNodes]);
+  }, [selectedNodes, nodes]);
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
@@ -161,6 +176,9 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         {
           question: inputText,
           answer_type: responseType,
+          model:selectedModel,
+          maxCorrections:maxCorrections
+          
         },
         {
           headers: {
@@ -169,7 +187,20 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         }
       );
   
-      if (responseType === 'graph') {
+      // Check if the API response is "je ne peux pas repondre"
+      if (response.data.response === "je ne peux pas répondre") {
+        const botMessage = {
+          id: messages.length + 2,
+          text: 'je ne peux pas repondre. يرجى تصحيح استعلام Cypher أو تقديم سؤال أكثر تحديدًا.',
+          sender: 'bot',
+          type:responseType,
+          cypherQuery: response.data.cypher || null, // Always include cypherQuery if available
+        };
+        setMessages((prevMessages) => [...prevMessages, botMessage]);
+        return;
+      }
+  
+      if (responseType === 'Graph') {
         const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
         const nvlGraph = await driver.executeQuery(
           response.data.cypher,
@@ -180,7 +211,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         try {
           const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
           
-          // Only update if we have valid graph data
           if (newNodes.length > 0 || newEdges.length > 0) {
             setNodes([...nodes, ...newNodes]);
             setEdges([...edges, ...newEdges]);
@@ -189,7 +219,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
               id: messages.length + 2,
               text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
               sender: 'bot',
-              cypherQuery: response.data.cypher
+              type:"graph",
+              cypherQuery: response.data.cypher // Always include cypherQuery
             };
             setMessages((prevMessages) => [...prevMessages, botMessage]);
           } else {
@@ -198,28 +229,39 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         } catch (conversionError) {
           const botMessage = {
             id: messages.length + 2,
-            text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. قد لا يُرجع الاستعلام العُقد والعلاقات. يرجى تعديل استعلام Cypher لإرجاع بيانات متوافقة مع الرسم البياني (العُقد والعلاقات).',
+            text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. يرجى تصحيح استعلام Cypher لإرجاع العُقد والعلاقات.',
             sender: 'bot',
-            cypherQuery: response.data.cypher
+            type: 'Graph',
+            cypherQuery: response.data.cypher // Always include cypherQuery
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
-      } else if (responseType === 'table') {
+      } else if (responseType === 'Table') {
         const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
         const nvlTable = await driver.executeQuery(
           response.data.cypher,
           {},
           { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
         );
-        const { columns, rows } = convertNeo4jToTable(nvlTable.records);
-        const botMessage = {
-          id: messages.length + 2,
-          text: JSON.stringify({ columns, rows }, null, 2),
-          sender: 'bot',
-          cypherQuery: response.data.cypher,
-          type: 'table',
-        };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
+        try {
+          const { columns, rows } = convertNeo4jToTable(nvlTable.records);
+          const botMessage = {
+            id: messages.length + 2,
+            text: JSON.stringify({ columns, rows }, null, 2),
+            sender: 'bot',
+            cypherQuery: response.data.cypher, // Always include cypherQuery
+            type: 'Table',
+          };
+          setMessages((prevMessages) => [...prevMessages, botMessage]);
+        } catch (conversionError) {
+          const botMessage = {
+            id: messages.length + 2,
+            text: 'لا يمكن تحويل نتيجة الاستعلام إلى جدول. يرجى تصحيح استعلام Cypher لإرجاع بيانات صحيحة.',
+            sender: 'bot',
+            cypherQuery: response.data.cypher // Always include cypherQuery
+          };
+          setMessages((prevMessages) => [...prevMessages, botMessage]);
+        }
       } else {
         const botMessage = {
           id: messages.length + 2,
@@ -227,6 +269,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             ? JSON.stringify(response.data, null, 2)
             : response.data.response.replace(/\n/g, '<br>'),
           sender: 'bot',
+          cypherQuery: response.data.cypher || null // Include cypherQuery if available
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
       }
@@ -234,7 +277,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       console.error('Error sending message:', error);
       const errorMessage = {
         id: messages.length + 2,
-        text: 'Failed to get a response from the chatbot: ' + error.message,
+        text: 'فشل في الحصول على رد من الشات بوت: ' + error.message,
         sender: 'error',
       };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
@@ -272,10 +315,9 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       console.error('Failed to copy text:', error);
     }
   };
+
   return (
     <div className="chat-container">
-      <h3 className="chat-header">Chat</h3>
-      <p className="chat-subheader">Interact with the graph using the chat.</p>
 
       <div className="chat-window">
         {messages.map((message) => (
@@ -305,34 +347,40 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             ) : (
               <>
                 <strong>{message.sender === 'user' ? 'You:' : 'Bot:'}</strong>{' '}
-                {message.type === 'table' ? (
+                {message.type === 'Table' ? (
                   (() => {
-                    const { columns, rows } = JSON.parse(message.text);
-                    return (
-                      <div className="table-wrapper">
-                        <table className="styled-table">
-                          <thead>
-                            <tr>
-                              {columns.map(col => (
-                                <th key={col.key}>{col.label}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {rows.map((row, rowIndex) => (
-                              <tr key={rowIndex}>
+                    try {
+                      const { columns, rows } = JSON.parse(message.text);
+                      return (
+                        <div className="table-wrapper">
+                          <table className="styled-table">
+                            <thead>
+                              <tr>
                                 {columns.map(col => (
-                                  <td key={col.key}>{row[col.key]}</td>
+                                  <th key={col.key}>{col.label}</th>
                                 ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    );
+                            </thead>
+                            <tbody>
+                              {rows.map((row, rowIndex) => (
+                                <tr key={rowIndex}>
+                                  {columns.map(col => (
+                                    <td key={col.key}>{row[col.key]}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    } catch (error) {
+                      return (
+                        <span className="message-text" dangerouslySetInnerHTML={{ __html: message.text }} />
+                      );
+                    }
                   })()
                 ) : (
-                  <span className="message-text">{message.text}</span>
+                  <span className="message-text" dangerouslySetInnerHTML={{ __html: message.text }} />
                 )}
                 {message.cypherQuery && (
                   <button
@@ -371,8 +419,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         )}
       </div>
 
-      {/* ... Query Modal ... */}
-  
       {showQueryModal && (
         <div className="query-modal-overlay" onClick={handleCloseQueryModal}>
           <div 
@@ -450,8 +496,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             ) : (
               <div className="query-view-container">
                 <SyntaxHighlighter
-                  language="cypher" // Specify Cypher language (though it might fall back to generic highlighting)
-                  style={dracula} // Using Dracula theme
+                  language="cypher"
+                  style={dracula}
                   customStyle={{
                     maxHeight: '300px',
                     overflowY: 'auto',
@@ -462,7 +508,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                     fontSize: '14px',
                     border: '1px solid #3e3e3e'
                   }}
-                  showLineNumbers // Optional: adds line numbers
+                  showLineNumbers
                 >
                   {messages.find(msg => msg.id === showQueryModal)?.cypherQuery || ''}
                 </SyntaxHighlighter>
@@ -492,38 +538,18 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         </div>
       )}
 
-      <div className="input-group">
-        <textarea
-          className="chat-input"
-          placeholder="Type a message..."
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
-          disabled={isLoading}
-          rows="3"
-        />
-        <select
-          className="response-type-dropdown"
-          value={responseType}
-          onChange={(e) => setResponseType(e.target.value)}
-          disabled={isLoading}
-        >
-          <option value="graph">Graph</option>
-          <option value="table">Table</option>
-        </select>
-        <button
-          className="send-button"
-          onClick={handleSendMessage}
-          disabled={isLoading}
-        >
-          Send
-        </button>
-      </div>
+<ChatInput
+        inputText={inputText}
+        setInputText={setInputText}
+        responseType={responseType}
+        setResponseType={setResponseType}
+        isLoading={isLoading}
+        handleSendMessage={handleSendMessage}
+        maxCorrections={maxCorrections}
+        setMaxCorrections={setMaxCorrections}
+        selectedModel={selectedModel}
+        setSelectedModel={setSelectedModel}
+      />
     </div>
   );
 };

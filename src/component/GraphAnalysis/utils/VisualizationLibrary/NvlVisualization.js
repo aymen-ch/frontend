@@ -1,5 +1,4 @@
-// NvlVisualization.js
-import { useEffect, useRef,useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
 import {
   PanInteraction,
@@ -9,10 +8,59 @@ import {
   ClickInteraction,
   HoverInteraction,
 } from '@neo4j-nvl/interaction-handlers';
-import { createNodeHtml,calculateNodeConfig } from '../Parser';
+import { createNodeHtml } from '../Parser';
 import { IconPersonWithClass } from '../../HorizontalModules/containervisualization/function_container';
 import { useGlobalContext } from '../../GlobalVariables';
-import { LabelManager,LabelManagerSchema } from '../Parser';
+import { LabelManager, LabelManagerSchema } from '../Parser';
+import { MapContainer, TileLayer } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+// CSS to ensure NVL nodes remain interactive and style the drag handle
+const styles = `
+  .nvl-wrapper.geospatial .node, 
+  .nvl-wrapper.geospatial .relationship {
+    pointer-events: auto !important;
+  }
+  .minimap-container {
+    position: relative;
+    cursor: default; /* Default cursor for minimap */
+  }
+  .drag-handle {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    background-color: #333;
+    border-radius: 4px;
+    cursor: move; /* Move cursor for drag handle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    user-select: none;
+    z-index: 10; /* Lower z-index for drag handle */
+  }
+  .drag-handle:hover {
+    background-color: #555;
+  }
+`;
+
+// Inject styles into the document
+const styleSheet = document.createElement('style');
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
+
 const useNvlVisualization = ({
   nvlRef,
   nodes,
@@ -21,6 +69,7 @@ const useNvlVisualization = ({
   setSelectedNodes,
   setContextMenu,
   setContextMenuRel,
+  SetContextMenucanvas,
   setnodetoshow,
   setrelationtoshow,
   shiftPressed,
@@ -28,28 +77,115 @@ const useNvlVisualization = ({
   setselectedEdges,
   sethoverEdge,
   ispath,
+  layoutType,
 }) => {
   const previouslyHoveredNodeRef = useRef(null);
   const selectedNodeRef = useRef(null);
   const selectedRelationRef = useRef(null);
   const minimapContainerRef = useRef(null);
+  const dragHandleRef = useRef(null);
   const [isMinimapReady, setIsMinimapReady] = useState(false);
   const [hoverdnode, sethovernode] = useState(null);
+  const { setNodes } = useGlobalContext();
+  const layoutoptions = {
+    direction: 'up',
+    packing: 'bin',
+  };
 
-  const layoutoptions={
-    direction:"up",
-    packing: "bin"
-}
+  // State for minimap dragging
+  const [minimapPosition, setMinimapPosition] = useState({ bottom: 100, right: 80 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
   useEffect(() => {
     if (minimapContainerRef.current) {
       setIsMinimapReady(true);
     }
   }, []);
 
+  // Handle mouse down to start dragging
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent graph interactions
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+    });
+  };
+
+  // Handle touch start for mobile devices
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent graph interactions
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({
+      x: touch.clientX,
+      y: touch.clientY,
+    });
+  };
+
+  // Handle mouse move to update position
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
+    setMinimapPosition((prev) => ({
+      bottom: Math.max(0, Math.min(window.innerHeight - 150, prev.bottom - deltaY)), // Constrain within viewport
+      right: Math.max(0, Math.min(window.innerWidth - 200, prev.right - deltaX)), // Constrain within viewport
+    }));
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  // Handle touch move for mobile devices
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - dragStart.x;
+    const deltaY = touch.clientY - dragStart.y;
+    setMinimapPosition((prev) => ({
+      bottom: Math.max(0, Math.min(window.innerHeight - 150, prev.bottom - deltaY)), // Constrain within viewport
+      right: Math.max(0, Math.min(window.innerWidth - 200, prev.right - deltaX)), // Constrain within viewport
+    }));
+    setDragStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  // Handle mouse up to stop dragging
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Handle touch end for mobile devices
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Add event listeners for dragging to the drag handle
+  useEffect(() => {
+    const handle = dragHandleRef.current;
+    if (!handle) return;
+
+    handle.addEventListener('mousedown', handleMouseDown);
+    handle.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      handle.removeEventListener('mousedown', handleMouseDown);
+      handle.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isDragging, dragStart]);
 
   useEffect(() => {
     if (!nvlRef.current) return;
-    
+
     // Initialize interaction handlers
     const panInteraction = new PanInteraction(nvlRef.current);
     const boxSelectInteraction = new BoxSelectInteraction(nvlRef.current);
@@ -60,7 +196,7 @@ const useNvlVisualization = ({
 
     dragNodeInteraction.mouseDownNode = null;
 
-    // Configure interactions based on shift key
+    // Configure interactions based on shift key and layout type
     if (shiftPressed) {
       boxSelectInteraction.updateCallback('onBoxSelect', ({ nodes, rels }) => {
         setSelectedNodes((prevSelected) => {
@@ -80,8 +216,14 @@ const useNvlVisualization = ({
         });
       });
       panInteraction.destroy();
+      zoomInteraction.destroy();
+    } else if (layoutType === 'geospatial') {
+      panInteraction.destroy();
+      zoomInteraction.destroy();
+      boxSelectInteraction.destroy();
     } else {
       panInteraction.updateCallback('onPan', () => console.log('onPan'));
+      zoomInteraction.updateCallback('onZoom', () => console.log('onZoom'));
       boxSelectInteraction.destroy();
     }
 
@@ -143,6 +285,15 @@ const useNvlVisualization = ({
       }
     });
 
+    clickInteraction.updateCallback('onCanvasRightClick', (event) => {
+      event.preventDefault();
+      SetContextMenucanvas({
+        visible: true,
+        x: event.clientX - 230,
+        y: event.clientY - 200,
+      });
+    });
+
     // Hover interaction
     hoverInteraction.updateCallback('onHover', (element, hitElements, event) => {
       if (!hitElements || ((!hitElements.nodes || hitElements.nodes.length === 0) && 
@@ -155,7 +306,7 @@ const useNvlVisualization = ({
         setrelationtoshow(selectedRelationRef.current);
         sethoverEdge(null);
         setnodetoshow(selectedNodeRef.current);
-        sethovernode(null)
+        sethovernode(null);
         return;
       }
 
@@ -166,33 +317,13 @@ const useNvlVisualization = ({
             const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
             if (previousShadowEffect) previousShadowEffect.remove();
           }
-          console.log(hoveredNode.data)
           const hoverEffectPlaceholder = hoveredNode.data.html;
           if (hoverEffectPlaceholder) {
             setnodetoshow(hoveredNode.data.id);
             setrelationtoshow(null);
-             sethovernode(hoveredNode.data.id)
-         
-            /// make the node hover 
-            // const config = calculateNodeConfig(hoveredNode.data.size);
-            // const centerWrapper = hoverEffectPlaceholder.querySelector('div[style*="transform: translate(-50%, -50%)"]');
-            // if (centerWrapper) {
-            //   const shadowEffect = document.createElement('div');
-            //   shadowEffect.id = 'test';
-            //   shadowEffect.style.position = 'absolute';
-            //   shadowEffect.style.top = config.borderTop;
-            //   shadowEffect.style.left = config.borderTop;
-            //   shadowEffect.style.transform = 'translate(-50%, -50%)';
-            //   shadowEffect.style.width = config.Nodewidth;
-            //   shadowEffect.style.height = config.Nodewidth;
-            //   shadowEffect.style.borderRadius = '50%';
-            //   shadowEffect.style.border = '15px solid rgba(84, 207, 67, 0.8)';
-            //   shadowEffect.style.zIndex = '5';
-            //   shadowEffect.style.pointerEvents = 'none';
-            //   centerWrapper.appendChild(shadowEffect);
-            // }
-            previouslyHoveredNodeRef.current = hoverEffectPlaceholder;
+            sethovernode(hoveredNode.data.id);
           }
+          previouslyHoveredNodeRef.current = hoverEffectPlaceholder;
         }
       }
 
@@ -205,7 +336,6 @@ const useNvlVisualization = ({
             previouslyHoveredNodeRef.current = null;
           }
           setnodetoshow(null);
-          console.log(hoveredEdge.data)
           setrelationtoshow(hoveredEdge.data);
           sethoverEdge(hoveredEdge.data.id);
         }
@@ -221,33 +351,40 @@ const useNvlVisualization = ({
       dragNodeInteraction.destroy();
       hoverInteraction.destroy();
     };
-    
-  }, [nvlRef, shiftPressed, setSelectedNodes, setContextMenu, setnodetoshow, setrelationtoshow, setselectedEdges, sethoverEdge,isMinimapReady]);
+  }, [nvlRef, shiftPressed, setSelectedNodes, setContextMenu, setnodetoshow, setrelationtoshow, setselectedEdges, sethoverEdge, isMinimapReady, layoutType]);
+
   const nvlOptions = {
-    minimapContainer: minimapContainerRef.current, // Reference to the DOM element for the minimap
-    relationshipThreshold: 0,
-    disableTelemetry:true,
+    minimapContainer: minimapContainerRef.current,
+    disableTelemetry: true,
     styling: {
       disabledItemFontColor: '#808080',
       selectedBorderColor: 'rgba(71, 39, 134, 0.9)',
-      dropShadowColor: 'rgba(85, 83, 174, 0.5)'
-        },
-    initialZoom:1,
-    layoutOptions:layoutoptions
+      dropShadowColor: 'rgba(85, 83, 174, 0.5)',
+      backgroundColor: 'transparent',
+    },
+    initialZoom: 1,
+    layoutOptions: layoutoptions,
   };
 
   const getVisualizationComponent = (hoveredEdge) => {
-    console.log(nodes)
-    console.log("Djalil_edge" ,edges)
     const nvlProps = {
       nodes: nodes.map((node) => ({
         ...node,
-        hovered:node.id==hoverdnode ,
+        hovered: node.id === hoverdnode,
         selected: selectedNodes?.has(node.id),
-        html: createNodeHtml(node.ischema 
-          ? LabelManagerSchema(node.group, node.properties) 
-          : LabelManager(node.group, { ...node.properties, ...node.properties_analyse }),
-        node.group, selectedNodes?.has(node.id), node.selecte === true, 1, node.id, IconPersonWithClass(node), "🔴",node.size),
+        html: createNodeHtml(
+          node.ischema
+            ? LabelManagerSchema(node.group, node.properties)
+            : LabelManager(node.group, { ...node.properties, ...node.properties_analyse }),
+          node.group,
+          selectedNodes?.has(node.id),
+          node.selecte === true,
+          1,
+          node.id,
+          IconPersonWithClass(node),
+          '🔴',
+          node.size
+        ),
       })),
       rels: edges.map((edge) => ({
         ...edge,
@@ -257,10 +394,40 @@ const useNvlVisualization = ({
       })),
     };
 
+    // Calculate map center based on nodes with lat/lng
+    const validNodes = nodes.filter(node => {
+      const lat = node.properties?.latitude || node.properties?.lat;
+      const lng = node.properties?.longitude || node.properties?.lng;
+      return lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng);
+    });
+    const centerLat = validNodes.length
+      ? validNodes.reduce((sum, node) => sum + parseFloat(node.properties.latitude || node.properties.lat), 0) / validNodes.length
+      : 0;
+    const centerLng = validNodes.length
+      ? validNodes.reduce((sum, node) => sum + parseFloat(node.properties.longitude || node.properties.lng), 0) / validNodes.length
+      : 0;
+    const mapCenter = validNodes.length ? [centerLat, centerLng] : [0, 0];
+
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        {/* Main visualization */}
-       
+        {/* Leaflet Map Background - Shown only for geospatial layout */}
+        {/* {layoutType === 'geospatial' && (
+          <MapContainer
+            center={mapCenter}
+            zoom={2}
+            style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'auto' }}
+            boxZoom={true}
+            keyboard={true}
+            touchZoom={true}
+            zoomControl={true}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+          </MapContainer>
+        )} */}
+        {/* NVL Visualization */}
         {(isMinimapReady || !ispath) && (
           <InteractiveNvlWrapper
             ref={nvlRef}
@@ -268,25 +435,34 @@ const useNvlVisualization = ({
             nvlOptions={nvlOptions}
             allowDynamicMinZoom={true}
             onError={(error) => console.error('NVL Error:', error)}
-            style={{ width: '100%', height: '100%', border: '1px solid lightgray' }}
+            className={`nvl-wrapper ${layoutType === 'geospatial' ? 'geospatial' : ''}`}
           />
         )}
         {/* Minimap container */}
         <div
-          ref={ispath ?  minimapContainerRef:null}
+          ref={minimapContainerRef}
+          className="minimap-container"
           style={{
             position: 'absolute',
-            bottom: '100px',
-            right: '80px',
+            bottom: `${minimapPosition.bottom}px`,
+            right: `${minimapPosition.right}px`,
             width: '200px',
             height: '150px',
             backgroundColor: 'white',
             border: '1px solid lightgray',
             borderRadius: '4px',
             overflow: 'hidden',
-            display: ispath ? 'block' : 'none', // Conditional display based on ispath
+            display: ispath ? 'block' : 'none',
           }}
-        />
+        >
+          <div
+            ref={dragHandleRef}
+            className="drag-handle"
+            title="Drag to move minimap"
+          >
+            ☰
+          </div>
+        </div>
       </div>
     );
   };

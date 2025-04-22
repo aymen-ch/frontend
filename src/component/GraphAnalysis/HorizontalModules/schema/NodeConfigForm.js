@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { updateNodeConfig, getNodeColor, getNodeIcon, NODE_CONFIG } from '../../utils/Parser';
 import { fetchNodeProperties } from '../../utils/Urls';
+import './nodeconfig.css'
 const NodeConfigForm = ({ selectedNode, onUpdate }) => {
   const [nodeType, setNodeType] = useState(selectedNode?.group || '');
   const [color, setColor] = useState('');
@@ -10,8 +11,13 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
   const [properties, setProperties] = useState([]); // Store node properties
   const [error, setError] = useState(null); // Handle fetch errors
 
+  useEffect(() => {
+    setNodeType(selectedNode?.group || '')
+
+  },[selectedNode])
   // Load current config and fetch properties when nodeType changes
   useEffect(() => {
+   
     if (nodeType) {
       // Load node config
       const config = NODE_CONFIG.nodeTypes[nodeType] || NODE_CONFIG.nodeTypes.default;
@@ -19,6 +25,7 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
       setSize(config.size || NODE_CONFIG.defaultNodeSize);
       setIcon(config.icon || getNodeIcon(nodeType));
       setLabelKey(config.labelKey || '');
+
 
       // Fetch node properties
       const fetchProperties = async () => {
@@ -55,6 +62,14 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
     }
   };
 
+  if (!selectedNode) {
+    return (
+      <div className="sidebar-container">
+        <h3 className="sidebar-title">NodeConfig</h3>
+        <p className="sidebar-placeholder">Select a node to change his color or icon.</p>
+      </div>
+    );
+  }
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -75,77 +90,74 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
       setError('Failed to update node configuration.');
     }
   };
-
   return (
-    <div style={{ marginTop: '10px' }}>
-      {error && <div style={{ color: 'red', marginBottom: '8px' }}>{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <label>
-          Node Type:
+    <div className="node-config-container">
+      <h3 className="sidebar-title">Node Configuration</h3>
+  
+      {error && <div className="error-alert">{error}</div>}
+  
+      <form className="node-config-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Node Type</label>
           <input
             type="text"
             value={nodeType}
             onChange={(e) => setNodeType(e.target.value)}
             placeholder="Enter node type"
-            style={{ width: '100%', marginBottom: '8px', padding: '5px' }}
+            className="form-control"
           />
-        </label>
-        <label>
-          Color:
+        </div>
+  
+        <div className="form-group">
+          <label>Color</label>
           <input
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            style={{ width: '100%', marginBottom: '8px' }}
+            className="form-control"
+            style={{ height: '40px', padding: 0 }}
           />
-        </label>
-        <label>
-          Size:
+        </div>
+  
+        <div className="form-group">
+          <label>Size</label>
           <input
             type="number"
             value={size}
             onChange={(e) => setSize(e.target.value)}
             placeholder="Node size"
-            style={{ width: '100%', marginBottom: '8px', padding: '5px' }}
+            className="form-control"
           />
-        </label>
-        <label>
-          Icon Path:
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+        </div>
+  
+        <div className="form-group">
+          <label>Icon</label>
+          <div className="icon-selector">
             <input
               type="text"
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
-              placeholder="Select or enter icon path"
-              style={{ width: '70%', padding: '5px', marginRight: '5px' }}
+              placeholder="Enter icon path"
+              className="form-control"
             />
-            <label
-              style={{
-                padding: '5px 10px',
-                background: '#0066cc',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer',
-              }}
-            >
+            <label className="icon-upload-btn">
               Browse
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleIconSelect}
                 style={{ display: 'none' }}
-                title="Choose an icon file"
               />
             </label>
           </div>
-        </label>
-        <label>
-          Label Property Key:
+        </div>
+  
+        <div className="form-group">
+          <label>Label Property Key</label>
           <select
             value={labelKey}
             onChange={(e) => setLabelKey(e.target.value)}
-            style={{ width: '100%', marginBottom: '8px', padding: '5px' }}
+            className="form-control"
             disabled={!nodeType || properties.length === 0}
           >
             <option value="">Select a property</option>
@@ -155,24 +167,13 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
               </option>
             ))}
           </select>
-        </label>
-        <button
-          type="submit"
-          style={{
-            width: '100%',
-            padding: '8px',
-            background: '#0066cc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '3px',
-            cursor: 'pointer',
-          }}
-        >
-          Apply
-        </button>
+        </div>
+  
+        <button type="submit" className="apply-btn">Apply</button>
       </form>
     </div>
   );
+  
 };
 
 export default NodeConfigForm;

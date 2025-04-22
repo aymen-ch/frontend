@@ -93,7 +93,7 @@ export const createNode = (
   aggregatedproperties = null,
   ischema = false
 ) => {
-  console.log("create")
+  console.log("create");
   const nodeSize = NODE_CONFIG.nodeTypes[nodeType]?.size || NODE_CONFIG.defaultNodeSize;
   const node = {
     id: id.toString(),
@@ -109,12 +109,13 @@ export const createNode = (
       id.toString(),
       nodeSize
     ),
-    ischema:ischema,
+    ischema: ischema,
     selecte: isSelected,
     captionnode: ischema ? LabelManagerSchema(nodeType, properties) : LabelManager(nodeType, properties),
     aggregatedproperties,
     properties,
     image: getNodeIcon(nodeType),
+    activated: true, // Set activate to true for new nodes
   };
 
   if (properties._class) {
@@ -123,9 +124,9 @@ export const createNode = (
   if (properties._betweennessCentrality) {
     node._betweennessCentrality = properties._betweennessCentrality;
   }
+
   return node;
 };
-
 // Utility function to create an edge object
 export const createEdge = (rel, startId, endId, color = null,aggregationPath=null) => ({
   id: rel.id ? rel.id.toString() : `${startId}-${endId}`,

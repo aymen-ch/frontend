@@ -1,7 +1,7 @@
 import React, { useEffect, useState, memo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { fetchNodeProperties, submitSearch } from '../../utils/Urls';
-import { getNodeIcon, getNodeColor, LabelManager, createNode,createEdge,parsergraph } from '../../utils/Parser';
+import { getNodeIcon, getNodeColor, LabelManager, createNode, createEdge, parsergraph } from '../../utils/Parser';
 
 const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, setNodeTypes }) => {
   const [nodeProperties, setNodeProperties] = useState([]);
@@ -31,7 +31,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
 
   useEffect(() => {
     if (!searchResult) return;
-    console.log(searchResult)
+    console.log(searchResult);
     const graphData = parsergraph(searchResult);
     setNodes((prevNodes) => {
       return [...prevNodes, ...graphData.nodes];
@@ -43,6 +43,12 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
     let value = e.target.value;
     if (propertyType === 'int') {
       value = value ? parseInt(value, 10) : '';
+    } else if (propertyName.toLowerCase() === 'date') {
+      // Convert YYYY-MM-DD to MM-DD-YYYY
+      if (value) {
+        const [year, month, day] = value.split('-');
+        value = `${month}-${day}-${year}`;
+      }
     }
     setFormValues({ ...formValues, [propertyName]: value });
   };
@@ -56,7 +62,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
     try {
       const searchPayload = {
         values: formValues,
-        operations: operations
+        operations: operations,
       };
       const result = await submitSearch(selectedNodeType, searchPayload);
       setSearchResult(result);
@@ -66,9 +72,11 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
   };
 
   const intOperationOptions = ['=', '!=', '>', '<', '>=', '<='];
-  const stringOperationOptions = [ '=', 'contains','startswith', 'endswith'];
+  const stringOperationOptions = ['=', 'contains', 'startswith', 'endswith'];
+  const dateOperationOptions = ['=', '!=', '>', '<', '>=', '<='];
 
-  const getOperationOptions = (propertyType) => {
+  const getOperationOptions = (propertyType, propertyName) => {
+    if (propertyName.toLowerCase() === 'date') return dateOperationOptions;
     if (propertyType === 'int') return intOperationOptions;
     if (propertyType === 'str') return stringOperationOptions;
     return [];
@@ -77,7 +85,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
   return (
     <div className="container mt-4">
       {error && <div className="alert alert-danger">{error}</div>}
-  
+
       {nodeProperties
         .filter((property) => !property.name.startsWith('_'))
         .length > 0 && (
@@ -111,36 +119,37 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                 .filter((property) => !property.name.startsWith('_'))
                 .map((property, index) => {
                   console.log(`Property: ${property.name}, Type: ${property.type}`); // Debug log
-                  const showOperations = property.type === 'int' || property.type === 'str';
+                  const isDate = property.name.toLowerCase() === 'date';
+                  const showOperations = property.type === 'int' || property.type === 'str' || isDate;
                   return (
                     <div key={index} className="mb-3">
                       <label className="form-label fw-bold d-flex align-items-center">
-                        {property.name} ({property.type}):
+                        {property.name} ({isDate ? 'date' : property.type}):
                       </label>
                       <div className="input-group">
                         {showOperations && (
                           <select
                             className="form-select"
-                            style={{ 
-                              maxWidth: property.type === 'int' ? '90px' : '120px', 
-                              borderRadius: '5px 0 0 5px' 
+                            style={{
+                              maxWidth: isDate || property.type === 'int' ? '90px' : '120px',
+                              borderRadius: '5px 0 0 5px',
                             }}
-                            value={operations[property.name] || (property.type === 'int' ? '=' : 'contains')}
+                            value={operations[property.name] || (isDate ? '=' : property.type === 'int' ? '=' : 'contains')}
                             onChange={(e) => handleOperationChange(property.name, e.target.value)}
                           >
-                            {getOperationOptions(property.type).map((op) => (
+                            {getOperationOptions(property.type, property.name).map((op) => (
                               <option key={op} value={op}>{op}</option>
                             ))}
                           </select>
                         )}
                         <input
-                          type={property.type === 'int' ? 'number' : 'text'}
+                          type={isDate ? 'date' : property.type === 'int' ? 'number' : 'text'}
                           className="form-control"
                           style={{
                             borderRadius: showOperations ? '0 5px 5px 0' : '5px',
-                            border: '1px solid #ced4da'
+                            border: '1px solid #ced4da',
                           }}
-                          onChange={(e) => handleInputChange(e, property.name, property.type)}
+                          onChange={(e) => handleInputChange(e, property.name, isDate ? 'date' : property.type)}
                         />
                       </div>
                     </div>
