@@ -96,7 +96,13 @@ const DatabaseManager = ({
       );
       setSuccess(response.data.message);
       setError('');
+      // Optimistically update the databases state with the new database
+      setDatabases((prevDatabases) => [
+        ...prevDatabases,
+        { name: newDbName, status: 'online' },
+      ]);
       setNewDbName('');
+      // Fetch all databases to ensure consistency
       fetchAllDatabases();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create database');
