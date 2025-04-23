@@ -60,20 +60,63 @@
   background: #555;
 }
 
-/* Scrollable chart container */
-.chart-scroll-container {
-    overflow-x: auto;
-    width: 100%;
-    padding-bottom: 10px; /* Space for scrollbar */
+
+
+.recharts-brush-traveller {
+  fill: #8884d8;
+}
+
+.recharts-brush-texts {
+  font-size: 12px;
+  fill: #666;
+}
+
+/* Chart tooltip */
+.custom-tooltip {
+  background-color: white;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.custom-tooltip-label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.custom-tooltip-value {
+  color: #82ca9d;
+}
+
+/* Brush styling */
+.recharts-brush-slide {
+    fill: #f0f0f0;
   }
   
-  /* Ensure the chart has a minimum width and clarity */
-  .chart-scroll-container .recharts-wrapper {
-    min-width: 1000px; /* Minimum width to ensure clarity */
+  .recharts-brush-traveller {
+    fill: #8884d8;
   }
   
-  /* Improve chart readability */
-  .recharts-text {
+  .recharts-brush-texts {
     font-size: 12px;
-    font-weight: 500;
+    fill: #666;
+  }
+  
+  /* Chart tooltip */
+  .custom-tooltip {
+    background-color: white;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .custom-tooltip-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .custom-tooltip-value {
+    color: #82ca9d;
   }
