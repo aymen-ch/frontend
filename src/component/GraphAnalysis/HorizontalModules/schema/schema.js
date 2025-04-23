@@ -11,6 +11,7 @@ import { useGlobalContext } from '../../GlobalVariables';
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base'; 
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import NodeConfigForm from './NodeConfigForm';
+
 import axios from 'axios';
 import { BASE_URL } from '../../utils/Urls';
 
@@ -21,7 +22,7 @@ const PASSWORD = '12345678';
 const SchemaVisualizer = () => {
   const [nodes,setNodes] = useState([])
   const [edges,setEdges] = useState([])
-  const [activeModule, setActiveModule] = useState(null);
+  const [activeModule, setActiveModule] = useState('Detail');
   const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [selectedEdges, setSelectedEdges] = useState(new Set());
@@ -394,27 +395,7 @@ const SchemaVisualizer = () => {
           </div>
         </div>
         
-        {/* Sidebar Toggle Button */}
-        <button
-          onClick={toggleSidebar}
-          style={{
-            position: 'fixed',
-            right: isSidebarVisible ? '400px' : '0',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1001,
-            background: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: isSidebarVisible ? '4px 0 0 4px' : '0 4px 4px 0',
-            padding: '10px 5px',
-            cursor: 'pointer',
-            transition: 'right 0.3s ease-in-out',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-          }}
-        >
-          {isSidebarVisible ? <FaChevronRight /> : <FaChevronLeft />}
-        </button>
+ 
         
         {/* Sidebar */}
         <div
