@@ -4,6 +4,7 @@ import Container_AlgorithmicAnalysis from './HorizontalModules/containervisualiz
 import SchemaVisualizer from './HorizontalModules/schema/schema';
 import SettingsPage from './HorizontalModules/Settings/SettingsPage';
 import { GlobalProvider } from './GlobalVariables';
+import Dashboard from './HorizontalModules/DashBoard/Dashboard'; // Add this import
 const Graphe_analysis = () => {
   const [activeModule, setActiveModule] = useState('Schema'); // Default active module
 
@@ -30,8 +31,7 @@ const Graphe_analysis = () => {
 
   const DashboardPage = () => (
     <div className="module-content">
-      <h2>Dashboard Page</h2>
-      <p>This is the Dashboard module content.</p>
+      <Dashboard/> {/* Use the Dashboard component here */}
     </div>
   );
 

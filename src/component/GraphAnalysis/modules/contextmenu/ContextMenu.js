@@ -311,7 +311,7 @@ const ContextMenu = ({
             ref={advancedAggregationButtonRef}
           >
             <FaSlidersH style={{ marginRight: '10px', color: '#4361ee' }} />
-            Advanced Aggregation
+            Advanced Expand
             <FaArrowRight style={{ marginLeft: 'auto', fontSize: '12px', color: '#6c757d' }} />
           </button>
           {contextMenu.node?.selected ? (
@@ -498,7 +498,7 @@ const ContextMenu = ({
           ref={advancedAggregationSubRef}
           onMouseLeave={() => setAdvancedAggregationSubMenu(null)}
         >
-          <div className="menu-header">Advanced Aggregation</div>
+          <div className="menu-header">Advanced Expand</div>
           <div className="menu-items" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '5px' }}>Attribute:</label>

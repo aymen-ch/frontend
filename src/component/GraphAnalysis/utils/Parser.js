@@ -115,7 +115,7 @@ export const createNode = (
     aggregatedproperties,
     properties,
     image: getNodeIcon(nodeType),
-    activated: true, // Set activate to true for new nodes
+    activated: false, // Set activate to true for new nodes
   };
 
   if (properties._class) {
