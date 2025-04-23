@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
 import {
@@ -14,7 +15,7 @@ import { useGlobalContext } from '../../GlobalVariables';
 import { LabelManager, LabelManagerSchema } from '../Parser';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -24,35 +25,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// CSS to ensure NVL nodes remain interactive and style the drag handle
+// CSS to ensure NVL nodes remain interactive
 const styles = `
   .nvl-wrapper.geospatial .node, 
   .nvl-wrapper.geospatial .relationship {
     pointer-events: auto !important;
-  }
-  .minimap-container {
-    position: relative;
-    cursor: default; /* Default cursor for minimap */
-  }
-  .drag-handle {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    width: 20px;
-    height: 20px;
-    background-color: #333;
-    border-radius: 4px;
-    cursor: move; /* Move cursor for drag handle */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 12px;
-    user-select: none;
-    z-index: 10; /* Lower z-index for drag handle */
-  }
-  .drag-handle:hover {
-    background-color: #555;
   }
 `;
 
@@ -83,105 +60,19 @@ const useNvlVisualization = ({
   const selectedNodeRef = useRef(null);
   const selectedRelationRef = useRef(null);
   const minimapContainerRef = useRef(null);
-  const dragHandleRef = useRef(null);
   const [isMinimapReady, setIsMinimapReady] = useState(false);
   const [hoverdnode, sethovernode] = useState(null);
-  const { setNodes } = useGlobalContext();
+  const {setNodes}  =useGlobalContext()
   const layoutoptions = {
     direction: 'up',
     packing: 'bin',
   };
-
-  // State for minimap dragging
-  const [minimapPosition, setMinimapPosition] = useState({ bottom: 100, right: 80 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (minimapContainerRef.current) {
       setIsMinimapReady(true);
     }
   }, []);
-
-  // Handle mouse down to start dragging
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevent graph interactions
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX,
-      y: e.clientY,
-    });
-  };
-
-  // Handle touch start for mobile devices
-  const handleTouchStart = (e) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevent graph interactions
-    const touch = e.touches[0];
-    setIsDragging(true);
-    setDragStart({
-      x: touch.clientX,
-      y: touch.clientY,
-    });
-  };
-
-  // Handle mouse move to update position
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    const deltaX = e.clientX - dragStart.x;
-    const deltaY = e.clientY - dragStart.y;
-    setMinimapPosition((prev) => ({
-      bottom: Math.max(0, Math.min(window.innerHeight - 150, prev.bottom - deltaY)), // Constrain within viewport
-      right: Math.max(0, Math.min(window.innerWidth - 200, prev.right - deltaX)), // Constrain within viewport
-    }));
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
-
-  // Handle touch move for mobile devices
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - dragStart.x;
-    const deltaY = touch.clientY - dragStart.y;
-    setMinimapPosition((prev) => ({
-      bottom: Math.max(0, Math.min(window.innerHeight - 150, prev.bottom - deltaY)), // Constrain within viewport
-      right: Math.max(0, Math.min(window.innerWidth - 200, prev.right - deltaX)), // Constrain within viewport
-    }));
-    setDragStart({ x: touch.clientX, y: touch.clientY });
-  };
-
-  // Handle mouse up to stop dragging
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Handle touch end for mobile devices
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  // Add event listeners for dragging to the drag handle
-  useEffect(() => {
-    const handle = dragHandleRef.current;
-    if (!handle) return;
-
-    handle.addEventListener('mousedown', handleMouseDown);
-    handle.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchmove', handleTouchMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      handle.removeEventListener('mousedown', handleMouseDown);
-      handle.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [isDragging, dragStart]);
 
   useEffect(() => {
     if (!nvlRef.current) return;
@@ -218,6 +109,7 @@ const useNvlVisualization = ({
       panInteraction.destroy();
       zoomInteraction.destroy();
     } else if (layoutType === 'geospatial') {
+      // Disable NVL pan and zoom for geospatial layout to allow map interactions
       panInteraction.destroy();
       zoomInteraction.destroy();
       boxSelectInteraction.destroy();
@@ -285,6 +177,7 @@ const useNvlVisualization = ({
       }
     });
 
+
     clickInteraction.updateCallback('onCanvasRightClick', (event) => {
       event.preventDefault();
       SetContextMenucanvas({
@@ -293,7 +186,6 @@ const useNvlVisualization = ({
         y: event.clientY - 200,
       });
     });
-
     // Hover interaction
     hoverInteraction.updateCallback('onHover', (element, hitElements, event) => {
       if (!hitElements || ((!hitElements.nodes || hitElements.nodes.length === 0) && 
@@ -360,7 +252,7 @@ const useNvlVisualization = ({
       disabledItemFontColor: '#808080',
       selectedBorderColor: 'rgba(71, 39, 134, 0.9)',
       dropShadowColor: 'rgba(85, 83, 174, 0.5)',
-      backgroundColor: 'transparent',
+      backgroundColor: 'transparent', // Transparent to show map when active
     },
     initialZoom: 1,
     layoutOptions: layoutoptions,
@@ -411,11 +303,14 @@ const useNvlVisualization = ({
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
         {/* Leaflet Map Background - Shown only for geospatial layout */}
-        {/* {layoutType === 'geospatial' && (
+        {layoutType === 'geospatial' && (
           <MapContainer
             center={mapCenter}
             zoom={2}
             style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'auto' }}
+            // dragging={true}
+            // scrollWheelZoom={true}
+            // doubleClickZoom={true}
             boxZoom={true}
             keyboard={true}
             touchZoom={true}
@@ -426,7 +321,7 @@ const useNvlVisualization = ({
               attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
           </MapContainer>
-        )} */}
+        )}
         {/* NVL Visualization */}
         {(isMinimapReady || !ispath) && (
           <InteractiveNvlWrapper
@@ -436,16 +331,25 @@ const useNvlVisualization = ({
             allowDynamicMinZoom={true}
             onError={(error) => console.error('NVL Error:', error)}
             className={`nvl-wrapper ${layoutType === 'geospatial' ? 'geospatial' : ''}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              zIndex: 2,
+             
+              pointerEvents: layoutType === 'geospatial' ? 'none' : 'auto', // Disable canvas events in geospatial mode
+            }}
           />
         )}
         {/* Minimap container */}
         <div
           ref={minimapContainerRef}
-          className="minimap-container"
           style={{
             position: 'absolute',
-            bottom: `${minimapPosition.bottom}px`,
-            right: `${minimapPosition.right}px`,
+            bottom: '100px',
+            right: '80px',
             width: '200px',
             height: '150px',
             backgroundColor: 'white',
@@ -454,15 +358,7 @@ const useNvlVisualization = ({
             overflow: 'hidden',
             display: ispath ? 'block' : 'none',
           }}
-        >
-          <div
-            ref={dragHandleRef}
-            className="drag-handle"
-            title="Drag to move minimap"
-          >
-            ☰
-          </div>
-        </div>
+        />
       </div>
     );
   };
