@@ -7,11 +7,9 @@ import Container_AlgorithmicAnalysis from './HorizontalModules/containervisualiz
 import SchemaVisualizer from './HorizontalModules/schema/schema';
 import SettingsPage from './HorizontalModules/Settings/SettingsPage';
 import { GlobalProvider } from './GlobalVariables';
-<<<<<<< HEAD
 
-=======
-import Dashboard from './HorizontalModules/DashBoard/Dashboard'; // Add this import
->>>>>>> 6577ceea19a79b2e233e4a573b56b2e45942844b
+import Dashboard from './HorizontalModules/dashboard/Dashboard'; // Add this import
+
 const Graphe_analysis = () => {
   const { t, i18n } = useTranslation();
   const [activeModule, setActiveModule] = useState('Schema');
