@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { getNodeColor,getNodeIcon } from '../../utils/Parser';
-import './Sidebar.css'
+import './sidebar.css'
 const Sidebar = ({ selectedItem }) => {
   const [showNodeDetails, setShowNodeDetails] = useState(true);
 

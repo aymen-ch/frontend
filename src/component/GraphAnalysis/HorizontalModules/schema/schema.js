@@ -167,10 +167,9 @@ const SchemaVisualizer = () => {
       console.log("updated!!")
     }
   };
-
   const fetchSchema = async () => {
     const driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD));
-    const session = driver.session({database :currentDb});
+    const session = driver.session();
     try {
       const result = await session.run(`CALL db.schema.visualization()`);
       const schemaData = result.records[0];
