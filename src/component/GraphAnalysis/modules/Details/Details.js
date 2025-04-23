@@ -19,18 +19,36 @@ const DetailsModule = ({
   const [nodeColors, setNodeColors] = useState(NODE_CONFIG.nodeColors);
   const [showDetails, setShowDetails] = useState(false);
   const [expandedDetails, setExpandedDetails] = useState({});
-  const [sizeProperty, setSizeProperty] = useState(''); // New state for selected size property
- 
-  // Get unique node types from combinedNodes
+  const [sizeProperty, setSizeProperty] = useState('');
+
   const nodeTypes = [...new Set(combinedNodes.map(node => node.group))];
-  
-  
-  // Get unique properties for the selected node type
+
+  // Get unique numeric properties from both properties and properties_analyse
   const getPropertiesForNodeType = (nodeType) => {
     const nodesOfType = combinedNodes.filter(node => node.group === nodeType);
     if (nodesOfType.length === 0) return [];
+    
     const sampleNode = nodesOfType[0];
-    return Object.keys(sampleNode).filter(key => typeof sampleNode[key] === 'number'); // Only numeric properties
+    const numericProperties = [];
+
+    if (sampleNode.properties) {
+      Object.keys(sampleNode.properties).forEach(key => {
+        if (typeof sampleNode.properties[key] === 'number') {
+          numericProperties.push(`properties.${key}`);
+        }
+      });
+    }
+
+    if (sampleNode.properties_analyse) {
+      Object.keys(sampleNode.properties_analyse).forEach(key => {
+        if (typeof sampleNode.properties_analyse[key] === 'number') {
+          numericProperties.push(`properties_analyse.${key}`);
+        }
+      });
+    }
+
+    console.log(`Properties for ${nodeType}:`, numericProperties);
+    return numericProperties;
   };
 
   const toggleDetail = (detailKey) => {
@@ -41,14 +59,22 @@ const DetailsModule = ({
   };
 
   const handleSizeChange = (nodeType, newSize) => {
-    console.log(newSize)
-    const updatedSize = { ...nodeSize, [nodeType]: parseInt(newSize) };
-    setNodeSize(updatedSize);
+    const size = Math.max(50, parseInt(newSize) || NODE_CONFIG.defaultNodeSize || 100);
+    const updatedSizes = {};
+    combinedNodes.forEach(node => {
+      if (node.group === nodeType) {
+        updatedSizes[node.id] = size;
+      } else {
+        updatedSizes[node.id] = nodeSize[node.id] || NODE_CONFIG.defaultNodeSize || 100;
+      }
+    });
+    setNodeSize(updatedSizes);
+    console.log(`Manual size change for ${nodeType}:`, updatedSizes);
     if (onNodeConfigChange) {
       onNodeConfigChange({
         type: 'size',
         nodeType,
-        value: parseInt(newSize),
+        value: updatedSizes,
       });
     }
   };
@@ -68,36 +94,78 @@ const DetailsModule = ({
 
   const handleSizePropertyChange = (nodeType, property) => {
     setSizeProperty(property);
+    console.log(`Size property selected for ${nodeType}:`, property);
+
+    const defaultSize = NODE_CONFIG.defaultNodeSize || 100;
+    const updatedSizes = {};
+
+    // Initialize all nodes with default size
+    combinedNodes.forEach(node => {
+      updatedSizes[node.id] = nodeSize[node.id] || defaultSize;
+    });
+
     if (property) {
-      // Calculate sizes based on the selected property
       const nodesOfType = combinedNodes.filter(node => node.group === nodeType);
-      const values = nodesOfType.map(node => node[property] || 0);
+      const values = nodesOfType.map(node => {
+        let value = 0;
+        if (property.startsWith('properties.')) {
+          const propKey = property.split('.')[1];
+          value = node.properties?.[propKey] || 0;
+        } else if (property.startsWith('properties_analyse.')) {
+          const propKey = property.split('.')[1];
+          value = node.properties_analyse?.[propKey] || 0;
+        }
+        return value;
+      });
+
+      console.log(`Values for ${property} in ${nodeType}:`, values);
+
       const minValue = Math.min(...values);
       const maxValue = Math.max(...values);
       
-      const minSize = 50; // Minimum node size
-      const maxSize = 300; // Maximum node size
+      const minSize = 150;
+      const maxSize = 500;
 
-      const updatedSizes = {};
       nodesOfType.forEach(node => {
-        const value = node[property] || 0;
-        const normalizedSize = maxValue === minValue
-          ? minSize // Avoid division by zero
-          : minSize + ((value - minValue) / (maxValue - minValue)) * (maxSize - minSize);
-        updatedSizes[nodeType] = Math.round(normalizedSize);
+        const value = property.startsWith('properties.')
+          ? node.properties?.[property.split('.')[1]] || 0
+          : node.properties_analyse?.[property.split('.')[1]] || 0;
+        
+        let normalizedSize;
+        if (maxValue === minValue || maxValue === 0) {
+          normalizedSize = minSize;
+        } else {
+          normalizedSize = minSize + ((value - minValue) / (maxValue - minValue)) * (maxSize - minSize);
+        }
+        
+        normalizedSize = Math.max(minSize, Math.round(normalizedSize || minSize));
+        updatedSizes[node.id] = normalizedSize;
+        console.log(`Node ${node.id} (${node.group}) - ${property}: ${value}, Size: ${normalizedSize}`);
       });
+    }
 
-      setNodeSize(prev => ({ ...prev, ...updatedSizes }));
-      if (onNodeConfigChange) {
-        onNodeConfigChange({
-          type: 'size',
-          nodeType,
-          property,
-          value: updatedSizes[nodeType],
-        });
-      }
+    console.log('Updated sizes before onNodeConfigChange:', updatedSizes);
+    setNodeSize(updatedSizes);
+    if (onNodeConfigChange) {
+      onNodeConfigChange({
+        type: 'size',
+        nodeType,
+        property,
+        value: updatedSizes,
+      });
     }
   };
+
+  // Initialize node sizes
+  useEffect(() => {
+    const defaultSize = NODE_CONFIG.defaultNodeSize || 100;
+    const initialSizes = {};
+    combinedNodes.forEach(node => {
+      initialSizes[node.id] = nodeSize[node.id] || defaultSize;
+    });
+    setNodeSize(initialSizes);
+    console.log('Initial node sizes:', initialSizes);
+  }, [combinedNodes]);
 
   return (
     <>
@@ -106,9 +174,8 @@ const DetailsModule = ({
         toggleNodeTypeVisibility={toggleNodeTypeVisibility} 
       />
 
-      {/* Node Type Configuration Section */}
       <div className="node-config-container" style={{ marginBottom: '20px' }}>
-        <h3>Node Type Configuration</h3>
+        <h5>change size of node by:</h5>
         <select 
           value={selectedNodeType || ''} 
           onChange={(e) => setSelectedNodeType(e.target.value)}
@@ -122,7 +189,6 @@ const DetailsModule = ({
 
         {selectedNodeType && (
           <div className="config-controls">
-            {/* Size Property Selector */}
             <div style={{ marginBottom: '10px' }}>
               <label>Size By Property:</label>
               <select
@@ -137,15 +203,14 @@ const DetailsModule = ({
               </select>
             </div>
 
-            {/* Manual Size Slider (only shown if no property is selected) */}
             {!sizeProperty && (
               <div style={{ marginBottom: '10px' }}>
-                <label>Size: {nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize}px</label>
+                <label>Size: {nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}px</label>
                 <input
                   type="range"
                   min="50"
-                  max="300"
-                  value={nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize}
+                  max="500"
+                  value={nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}
                   onChange={(e) => handleSizeChange(selectedNodeType, e.target.value)}
                   style={{ width: '100%' }}
                 />
@@ -155,11 +220,9 @@ const DetailsModule = ({
         )}
       </div>
 
-      {/* Existing Relation Properties Section */}
       {relationtoshow && SelectecRelationData && (
         <div className="properties-container">
           {(() => {
-            console.log(SelectecRelationData);
             const matchedNode = combinedEdges.find(node => 
               node.id === SelectecRelationData.identity?.toString()
             );
@@ -247,9 +310,7 @@ const DetailsModule = ({
         </div>
       )}
 
-      {/* Existing Node Properties Section */}
-      {nodetoshow  && (
-        
+      {nodetoshow && (
         <div className="properties-container">
           {(() => {
             const matchedNode = combinedNodes.find(node => 
@@ -258,7 +319,7 @@ const DetailsModule = ({
             const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
             const nodeColor = getNodeColor(nodeGroup);
             const nodeIcon = getNodeIcon(nodeGroup);
-            // const property_analyse= matchedNode.properties_analyse
+            
             return (
               <>
                 <div 
@@ -298,8 +359,7 @@ const DetailsModule = ({
                   <span>{nodeGroup}</span>
                 </div>
                 <ul className="list-group properties-list">
-                
-                   {Object.entries(selectedNodeData).map(([key, value]) => (
+                  {Object.entries(selectedNodeData).map(([key, value]) => (
                     <li key={key} className="list-group-item property-item">
                       <strong className="property-key">{key}:</strong> 
                       <span className="property-value">
@@ -307,15 +367,15 @@ const DetailsModule = ({
                       </span>
                     </li>
                   ))}
-                   <h4>------les attribut d'analyse :--------------</h4>
-            {/* {Object.entries(property_analyse).map(([key, value]) => (
-                                <li key={key} className="list-group-item property-item">
-                                  <strong className="property-key">{key}:</strong> 
-                                  <span className="property-value">
-                                    {typeof value === 'object' ? JSON.stringify(value) : value}
-                                  </span>
-                                </li>
-                              ))} */}
+                  <h4>------les attribut d'analyse :--------------</h4>
+                  {matchedNode?.properties_analyse && Object.entries(matchedNode.properties_analyse).map(([key, value]) => (
+                    <li key={key} className="list-group-item property-item">
+                      <strong className="property-key">{key}:</strong> 
+                      <span className="property-value">
+                        {typeof value === 'object' ? JSON.stringify(value) : value}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </>
             );

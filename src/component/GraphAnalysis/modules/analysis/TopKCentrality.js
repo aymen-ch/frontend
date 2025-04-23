@@ -1,7 +1,7 @@
 import { parsergraph } from '../../utils/Parser';
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Form, Button, ListGroup, Spinner } from 'react-bootstrap';
+import { Form, Button, ListGroup, Spinner, Row, Col } from 'react-bootstrap';
 import { BASE_URL } from '../../utils/Urls';
 
 const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCentralityAttribute, setSelectedCentralityAttribute }) => {
@@ -46,7 +46,6 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
 
   const handleAddNodeToVisualization = (node) => {
     const parsedResult = parsergraph({ nodes: [node], edges: [] });
-    console.log("added", parsedResult);
     const newNode = parsedResult.nodes[0]; // Get the single parsed node
     setNodes((prevNodes) => [...prevNodes, newNode]);
   };
@@ -54,28 +53,40 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
   return (
     <div className="p-3 d-flex flex-column gap-3">
       <h5>Top K Centrality Nodes</h5>
-      <Form.Group controlId="rangeStart">
-        <Form.Label>Start Index</Form.Label>
-        <Form.Control
-          type="number"
-          value={start}
-          onChange={(e) => setStart(e.target.value)}
-          min="0"
-        />
-      </Form.Group>
-      <Form.Group controlId="rangeEnd">
-        <Form.Label>End Index</Form.Label>
-        <Form.Control
-          type="number"
-          value={end}
-          onChange={(e) => setEnd(e.target.value)}
-          min={start}
-        />
-      </Form.Group>
+
+      <Row className="g-2 mb-3">
+        <Col xs={6}>
+          <Form.Group controlId="rangeStart">
+            <Form.Label>Start Index</Form.Label>
+            <Form.Control
+              type="number"
+              size="sm"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              min="0"
+            />
+          </Form.Group>
+        </Col>
+        <Col xs={6}>
+          <Form.Group controlId="rangeEnd">
+            <Form.Label>End Index</Form.Label>
+            <Form.Control
+              type="number"
+              size="sm"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+              min={start}
+            />
+          </Form.Group>
+        </Col>
+      </Row>
+
       <Button
         variant="success"
         onClick={handleFetchNodes}
         disabled={isLoading || !selectedGroup || !selectedCentralityAttribute}
+        size="sm"
+        className="w-100 mb-3"
       >
         {isLoading ? (
           <>
@@ -93,12 +104,17 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
           'Fetch Nodes'
         )}
       </Button>
+
       {error && <div className="text-danger">{error}</div>}
+
       {topKnodes.length > 0 && (
-        <div style={{ maxHeight: '900px', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
           <ListGroup>
             {topKnodes.map((node, index) => (
-              <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+              <ListGroup.Item
+                key={index}
+                className="d-flex justify-content-between align-items-center"
+              >
                 <span>
                   Node ID: {node.id || 'N/A'}, {selectedCentralityAttribute}: {node.properties[selectedCentralityAttribute] || 'N/A'}
                 </span>

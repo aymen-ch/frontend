@@ -11,9 +11,9 @@ import { useGlobalContext } from '../../GlobalVariables';
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base'; 
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import NodeConfigForm from './NodeConfigForm';
-
+import { useTranslation } from "react-i18next";
 import { BASE_URL } from '../../utils/Urls';
-
+import '../../../../i18n'
 import axios from 'axios';
 // import { BASE_URL } from '../../utils/Urls';
 
@@ -22,9 +22,10 @@ const USER = 'neo4j';
 const PASSWORD = '12345678';
 
 const SchemaVisualizer = () => {
+  const { t } = useTranslation();
   const [nodes,setNodes] = useState([])
   const [edges,setEdges] = useState([])
-  const [activeModule, setActiveModule] = useState('Detail');
+  const [activeModule, setActiveModule] = useState(t("Detail"));
   const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [selectedEdges, setSelectedEdges] = useState(new Set());
@@ -398,7 +399,7 @@ const SchemaVisualizer = () => {
   return (
     <div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column' }}>
       <h2 style={{ margin: '10px 0', textAlign: 'center', height: '40px' }}>
-        Schema Visualizer
+      {t("Schema visualization")}
       </h2>
       <div style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}>
         <div
@@ -451,7 +452,7 @@ const SchemaVisualizer = () => {
 {true && (
           <div className="side-nav">
             <div className="side-nav-inner">
-              {['Detail', 'NodeConfig', 'Aggregation'].map((module) => (
+              {[t("Detail"), t('NodeConfig'), t('Aggregation')].map((module) => (
                 <div
                   key={module}
                   className={`side-nav-item ${activeModule === module ? 'active' : ''}`}
@@ -472,13 +473,13 @@ const SchemaVisualizer = () => {
             </div>
             
             <div className="module-content">
-            {activeModule === 'Detail' && (
+            {activeModule === t("Detail") && (
                 <Sidebar selectedItem={selectedItem}/>
               )}
-              {activeModule === 'NodeConfig' && (
+              {activeModule === t('NodeConfig') && (
                 <NodeConfigForm selectedNode={selectedItem} onUpdate={redrawGraph} />
               )}
-              {activeModule === 'Aggregation' && (
+              {activeModule === t('Aggregation') && (
                <PathBuilder
                isPathBuilding={isPathBuilding}
                setIsPathBuilding={setIsPathBuilding}

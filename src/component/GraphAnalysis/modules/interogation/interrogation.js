@@ -1,10 +1,10 @@
-// InterrogationModule.js
 import React from 'react';
 import Properties_introgation from '../interogation/Properties_introgation';
 import Template from '../interogation/tamplate';
 import Chat from '../interogation/chat/chat';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCogs, faListAlt, faComments } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next'; // Importing the translation hook
 
 const InterrogationModule = ({
   selectedOption,
@@ -15,6 +15,8 @@ const InterrogationModule = ({
   setEdges,
   selectedNodes
 }) => {
+  const { t } = useTranslation(); // Initialize the translation hook
+
   return (
     <>
       <div className="option-tabs">
@@ -23,21 +25,21 @@ const InterrogationModule = ({
           onClick={() => setSelectedOption('option1')}
         >
           <FontAwesomeIcon icon={faCogs} className="me-2" />
-          Properties
+          {t('Properties')} {/* Translated text */}
         </button>
         <button
           className={`btn option-tab ${selectedOption === 'option2' ? 'btn-info active' : 'btn-light'}`}
           onClick={() => setSelectedOption('option2')}
         >
           <FontAwesomeIcon icon={faListAlt} className="me-2" />
-          Template
+          {t('Template')} {/* Translated text */}
         </button>
         <button
           className={`btn option-tab ${selectedOption === 'option3' ? 'btn-info active' : 'btn-light'}`}
           onClick={() => setSelectedOption('option3')}
         >
           <FontAwesomeIcon icon={faComments} className="me-2" />
-          Chat
+          {t('Chat')} {/* Translated text */}
         </button>
       </div>
       

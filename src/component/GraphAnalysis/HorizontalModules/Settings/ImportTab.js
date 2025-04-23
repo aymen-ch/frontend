@@ -1,4 +1,3 @@
-// ImportTab.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import {
@@ -12,10 +11,12 @@ import {
   Dropdown,
 } from 'react-bootstrap';
 import { CheckCircleFill } from 'react-bootstrap-icons';
+import { useTranslation } from 'react-i18next'; // Importing the translation hook
 import { BASE_URL } from '../../utils/Urls';
 import './ImportTab.css';
 
 const ImportTab = () => {
+  const { t } = useTranslation(); // Initialize the translation hook
   const [nodesFile, setNodesFile] = useState(null);
   const [relationshipsFile, setRelationshipsFile] = useState(null);
   const [jsonFile, setJsonFile] = useState(null);
@@ -53,7 +54,7 @@ const ImportTab = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!nodesFile && !relationshipsFile && !jsonFile && !cypherFile) {
-      setError('Please select at least one file');
+      setError(t('Please select at least one file'));
       return;
     }
 
@@ -92,7 +93,7 @@ const ImportTab = () => {
       setNodes('');
       setRelationships('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to import file');
+      setError(err.response?.data?.error || t('Failed to import file'));
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,7 @@ const ImportTab = () => {
         return (
           <>
             <Form.Group controlId="nodesFile" className="mb-3">
-              <Form.Label>Nodes File (CSV)</Form.Label>
+              <Form.Label>{t('Nodes File (CSV)')}</Form.Label>
               <Form.Control
                 type="file"
                 onChange={handleNodesFileChange}
@@ -113,7 +114,7 @@ const ImportTab = () => {
               />
             </Form.Group>
             <Form.Group controlId="relationshipsFile" className="mb-3">
-              <Form.Label>Relationships File (CSV)</Form.Label>
+              <Form.Label>{t('Relationships File (CSV)')}</Form.Label>
               <Form.Control
                 type="file"
                 onChange={handleRelationshipsFileChange}
@@ -126,7 +127,7 @@ const ImportTab = () => {
       case 'json':
         return (
           <Form.Group controlId="jsonFile" className="mb-3">
-            <Form.Label>JSON File</Form.Label>
+            <Form.Label>{t('JSON File')}</Form.Label>
             <Form.Control
               type="file"
               onChange={handleJsonFileChange}
@@ -138,7 +139,7 @@ const ImportTab = () => {
       case 'cypher':
         return (
           <Form.Group controlId="cypherFile" className="mb-3">
-            <Form.Label>Cypher File</Form.Label>
+            <Form.Label>{t('Cypher File')}</Form.Label>
             <Form.Control
               type="file"
               onChange={handleCypherFileChange}
@@ -158,36 +159,35 @@ const ImportTab = () => {
         return (
           <>
             <Form.Group controlId="nodes" className="mb-3">
-              <Form.Label>Nodes Configuration (JSON)</Form.Label>
+              <Form.Label>{t('Nodes Configuration (JSON)')}</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
                 value={nodes}
                 onChange={(e) => setNodes(e.target.value)}
-                placeholder='e.g. [{"labels": ["Person"], "mapping": {"name": "name"}, "header": true}]'
+                placeholder={t('e.g. [{"labels": ["Person"], "mapping": {"name": "name"}, "header": true}]')}
                 disabled={loading}
               />
             </Form.Group>
             <Form.Group controlId="relationships" className="mb-3">
-            
-              <Form.Label>Relationships Configuration (JSON)</Form.Label>
+              <Form.Label>{t('Relationships Configuration (JSON)')}</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
                 value={relationships}
                 onChange={(e) => setRelationships(e.target.value)}
-                placeholder='e.g. [{"type": "KNOWS", "mapping": {"from": "source", "to": "target"}, "header": true}]'
+                placeholder={t('e.g. [{"type": "KNOWS", "mapping": {"from": "source", "to": "target"}, "header": true}]')}
                 disabled={loading}
               />
             </Form.Group>
             <Form.Group controlId="config" className="mb-3">
-              <Form.Label>APOC Configuration (JSON)</Form.Label>
+              <Form.Label>{t('APOC Configuration (JSON)')}</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
                 value={config}
                 onChange={(e) => setConfig(e.target.value)}
-                placeholder='e.g. {"delimiter": ",", "header": true}'
+                placeholder={t('e.g. {"delimiter": ",", "header": true}')}
                 disabled={loading}
               />
             </Form.Group>
@@ -196,13 +196,13 @@ const ImportTab = () => {
       case 'json':
         return (
           <Form.Group controlId="config" className="mb-3">
-            <Form.Label>APOC Configuration (JSON)</Form.Label>
+            <Form.Label>{t('APOC Configuration (JSON)')}</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
               value={config}
               onChange={(e) => setConfig(e.target.value)}
-              placeholder='e.g. {"write": true}'
+              placeholder={t('e.g. {"write": true}')}
               disabled={loading}
             />
           </Form.Group>
@@ -216,21 +216,21 @@ const ImportTab = () => {
 
   return (
     <Card className="import-card">
-      <Card.Header as="h4">Import File to Neo4j</Card.Header>
+      <Card.Header as="h4">{t('Import File to Neo4j')}</Card.Header>
       <Card.Body className="scrollable-body">
         <Form onSubmit={handleSubmit}>
           <Row>
             <Col md={12}>
               <Form.Group controlId="fileType" className="mb-3">
-                <Form.Label>File Type</Form.Label>
+                <Form.Label>{t('File Type')}</Form.Label>
                 <Dropdown onSelect={(key) => setFileType(key)}>
                   <Dropdown.Toggle variant="outline-secondary" id="dropdown-file-type" disabled={loading}>
-                    {fileType ? fileType.toUpperCase() : 'Select File Type'}
+                    {fileType ? fileType.toUpperCase() : t('Select File Type')}
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    <Dropdown.Item eventKey="csv">CSV</Dropdown.Item>
-                    <Dropdown.Item eventKey="json">JSON</Dropdown.Item>
-                    <Dropdown.Item eventKey="cypher">Cypher</Dropdown.Item>
+                    <Dropdown.Item eventKey="csv">{t('CSV')}</Dropdown.Item>
+                    <Dropdown.Item eventKey="json">{t('JSON')}</Dropdown.Item>
+                    <Dropdown.Item eventKey="cypher">{t('Cypher')}</Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
               </Form.Group>
@@ -254,10 +254,10 @@ const ImportTab = () => {
                   aria-hidden="true"
                   className="me-2"
                 />
-                Importing...
+                {t('Importing...')}
               </>
             ) : (
-              'Import File'
+              t('Import File')
             )}
           </Button>
         </Form>

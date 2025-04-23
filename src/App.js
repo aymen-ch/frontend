@@ -13,7 +13,7 @@ import Search from './component/user/pages/Search';
 // import GraphAnalysisComponent from './component/GraphAnalysis/GraphAnalysisComponent';
 import Register from './component/Register';
 import Graphe_analysis from './component/GraphAnalysis/graphe_analysis';
-
+import './i18n'
 function App() {
     console.log("dddd");
     useEffect(()=>{

@@ -120,7 +120,7 @@ const GraphVisualization = React.memo(({
     };
     
     // Fetch analysis and update nodes
-    // fetchNodeAnalysis();
+     fetchNodeAnalysis();
 
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
     

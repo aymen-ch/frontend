@@ -1,9 +1,11 @@
 import React from 'react';
 import { getNodeColor, getNodeIcon } from '../../utils/Parser';
 import './NodeDetails.css';
-import { FaCircle, FaArrowRight, FaInfoCircle } from 'react-icons/fa';
+import { FaCircle, FaInfoCircle } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 
 const NodeDetails = ({ nodeId, nodes }) => {
+  const { t } = useTranslation();
   const node = nodes.find((n) => n.id === nodeId);
   if (!node) return null;
 
@@ -13,12 +15,16 @@ const NodeDetails = ({ nodeId, nodes }) => {
     icon: getNodeIcon(node.group),
   };
 
+  const nodeTypeLabel = nodeId.includes('_dup')
+    ? t('Final Node')
+    : t('Initial Node');
+
   return (
     <div className="node-details-container">
       <div className="node-details-header">
         <span className="node-type">
           <FaInfoCircle />
-          {nodeId.includes('_dup') ? 'Nœud Final' : 'Nœud Initial'}
+          {nodeTypeLabel}
         </span>
       </div>
       <div className="node-info" style={{ backgroundColor: color }}>

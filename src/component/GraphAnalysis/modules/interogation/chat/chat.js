@@ -10,6 +10,7 @@ import {
   faCheck,
   faTimes,
   faEye,
+  faRedo, // Added for resume icon
 } from '@fortawesome/free-solid-svg-icons';
 import "@fontsource/fira-code"; // Fira Code font
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -126,6 +127,9 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     }
   };
 
+
+
+
   const handleCancelQueryEdit = () => {
     setEditingQueryId(null);
     setEditedQuery('');
@@ -161,7 +165,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       setInputText('');
     }
   }, [selectedNodes, nodes]);
-
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
   
@@ -176,9 +179,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         {
           question: inputText,
           answer_type: responseType,
-          model:selectedModel,
-          maxCorrections:maxCorrections
-          
+          model: selectedModel,
+          maxCorrections: maxCorrections,
         },
         {
           headers: {
@@ -187,21 +189,27 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         }
       );
   
-      // Check if the API response is "je ne peux pas repondre"
-      if (response.data.response === "je ne peux pas répondre") {
+      // Store raw response and include the original question for resuming
+      const rawResponse = {
+        ...response.data,
+        question: inputText, // Store the user question in rawResponse
+      };
+  
+      if (response.data.response === 'je ne peux pas répondre') {
         const botMessage = {
           id: messages.length + 2,
           text: 'je ne peux pas repondre. يرجى تصحيح استعلام Cypher أو تقديم سؤال أكثر تحديدًا.',
           sender: 'bot',
-          type:responseType,
-          cypherQuery: response.data.cypher || null, // Always include cypherQuery if available
+          type: responseType,
+          cypherQuery: response.data.cypher || null,
+          rawResponse, // Store raw response with question
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
         return;
       }
   
       if (responseType === 'Graph') {
-        const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
+        const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
         const nvlGraph = await driver.executeQuery(
           response.data.cypher,
           {},
@@ -210,21 +218,22 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   
         try {
           const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
-          
+  
           if (newNodes.length > 0 || newEdges.length > 0) {
             setNodes([...nodes, ...newNodes]);
             setEdges([...edges, ...newEdges]);
-            
+  
             const botMessage = {
               id: messages.length + 2,
               text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
               sender: 'bot',
-              type:"graph",
-              cypherQuery: response.data.cypher // Always include cypherQuery
+              type: 'Graph',
+              cypherQuery: response.data.cypher,
+              rawResponse, // Store raw response with question
             };
             setMessages((prevMessages) => [...prevMessages, botMessage]);
           } else {
-            throw new Error("No valid graph data returned");
+            throw new Error('No valid graph data returned');
           }
         } catch (conversionError) {
           const botMessage = {
@@ -232,12 +241,13 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. يرجى تصحيح استعلام Cypher لإرجاع العُقد والعلاقات.',
             sender: 'bot',
             type: 'Graph',
-            cypherQuery: response.data.cypher // Always include cypherQuery
+            cypherQuery: response.data.cypher,
+            rawResponse, // Store raw response with question
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
       } else if (responseType === 'Table') {
-        const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
+        const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
         const nvlTable = await driver.executeQuery(
           response.data.cypher,
           {},
@@ -249,8 +259,9 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             id: messages.length + 2,
             text: JSON.stringify({ columns, rows }, null, 2),
             sender: 'bot',
-            cypherQuery: response.data.cypher, // Always include cypherQuery
+            cypherQuery: response.data.cypher,
             type: 'Table',
+            rawResponse, // Store raw response with question
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         } catch (conversionError) {
@@ -258,18 +269,21 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             id: messages.length + 2,
             text: 'لا يمكن تحويل نتيجة الاستعلام إلى جدول. يرجى تصحيح استعلام Cypher لإرجاع بيانات صحيحة.',
             sender: 'bot',
-            cypherQuery: response.data.cypher // Always include cypherQuery
+            cypherQuery: response.data.cypher,
+            rawResponse, // Store raw response with question
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
       } else {
         const botMessage = {
           id: messages.length + 2,
-          text: responseType === 'JSON'
-            ? JSON.stringify(response.data, null, 2)
-            : response.data.response.replace(/\n/g, '<br>'),
+          text:
+            responseType === 'JSON'
+              ? JSON.stringify(response.data, null, 2)
+              : response.data.response.replace(/\n/g, '<br>'),
           sender: 'bot',
-          cypherQuery: response.data.cypher || null // Include cypherQuery if available
+          cypherQuery: response.data.cypher || null,
+          rawResponse, // Store raw response with question
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
       }
@@ -278,6 +292,102 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       const errorMessage = {
         id: messages.length + 2,
         text: 'فشل في الحصول على رد من الشات بوت: ' + error.message,
+        sender: 'error',
+      };
+      setMessages((prevMessages) => [...prevMessages, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleResumeResponse = async (messageId) => {
+    const botMessage = messages.find((msg) => msg.id === messageId);
+    if (!botMessage || !botMessage.rawResponse) {
+      console.error('No raw response available for resuming');
+      return;
+    }
+  
+    // Find the corresponding user message (the question that led to this bot message)
+    const userMessage = messages
+      .slice(0, messages.indexOf(botMessage))
+      .reverse()
+      .find((msg) => msg.sender === 'user');
+  
+    if (!userMessage) {
+      console.error('No corresponding user message found for resuming');
+      return;
+    }
+  
+    setIsLoading(true);
+  
+    try {
+      const resumeEndpoint = BASE_URL + '/chatbot/resume/';
+      const response = await axios.post(
+        resumeEndpoint,
+        {
+          raw_response: botMessage.rawResponse,
+          model: selectedModel,
+          question: userMessage.text, // Use the user message text as the question
+          cypher_query: botMessage.cypherQuery || '',
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+  
+      // Process the resumed response
+      const resumedResponse = response.data;
+      const newBotMessage = {
+        id: messages.length + 1,
+        text: resumedResponse.response || 'Resumed response processed.',
+        sender: 'bot',
+        type: botMessage.type || 'Text', // Use the original bot message type or default to Text
+        cypherQuery: resumedResponse.cypher || null,
+        rawResponse: resumedResponse, // Store the new raw response
+      };
+  
+      // Optionally execute the Cypher query if provided and relevant
+      if (resumedResponse.cypher && (botMessage.type === 'Graph' || botMessage.type === 'Table')) {
+        const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
+        const nvlResult = await driver.executeQuery(
+          resumedResponse.cypher,
+          {},
+          { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
+        );
+  
+        if (botMessage.type === 'Graph') {
+          try {
+            const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
+            if (newNodes.length > 0 || newEdges.length > 0) {
+              setNodes([...nodes, ...newNodes]);
+              setEdges([...edges, ...newEdges]);
+              newBotMessage.text = 'تم تحديث الرسم البياني بالعقد والحواف الجديدة (استئناف).';
+            } else {
+              throw new Error('No valid graph data returned');
+            }
+          } catch (conversionError) {
+            newBotMessage.text =
+              'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. يرجى تصحيح استعلام Cypher.';
+          }
+        } else if (botMessage.type === 'Table') {
+          try {
+            const { columns, rows } = convertNeo4jToTable(nvlResult.records);
+            newBotMessage.text = JSON.stringify({ columns, rows }, null, 2);
+          } catch (conversionError) {
+            newBotMessage.text =
+              'لا يمكن تحويل نتيجة الاستعلام إلى جدول. يرجى تصحيح استعلام Cypher.';
+          }
+        }
+      }
+  
+      setMessages((prevMessages) => [...prevMessages, newBotMessage]);
+    } catch (error) {
+      console.error('Error resuming response:', error);
+      const errorMessage = {
+        id: messages.length + 1,
+        text: 'فشل في استئناف الرد: ' + error.message,
         sender: 'error',
       };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
@@ -318,7 +428,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
 
   return (
     <div className="chat-container">
-
       <div className="chat-window">
         {messages.map((message) => (
           <div
@@ -356,7 +465,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                           <table className="styled-table">
                             <thead>
                               <tr>
-                                {columns.map(col => (
+                                {columns.map((col) => (
                                   <th key={col.key}>{col.label}</th>
                                 ))}
                               </tr>
@@ -364,7 +473,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                             <tbody>
                               {rows.map((row, rowIndex) => (
                                 <tr key={rowIndex}>
-                                  {columns.map(col => (
+                                  {columns.map((col) => (
                                     <td key={col.key}>{row[col.key]}</td>
                                   ))}
                                 </tr>
@@ -375,12 +484,18 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                       );
                     } catch (error) {
                       return (
-                        <span className="message-text" dangerouslySetInnerHTML={{ __html: message.text }} />
+                        <span
+                          className="message-text"
+                          dangerouslySetInnerHTML={{ __html: message.text }}
+                        />
                       );
                     }
                   })()
                 ) : (
-                  <span className="message-text" dangerouslySetInnerHTML={{ __html: message.text }} />
+                  <span
+                    className="message-text"
+                    dangerouslySetInnerHTML={{ __html: message.text }}
+                  />
                 )}
                 {message.cypherQuery && (
                   <button
@@ -388,6 +503,27 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                     onClick={() => handleShowQueryModal(message.id)}
                   >
                     <FontAwesomeIcon icon={faEye} /> Show Query
+                  </button>
+                )}
+                {/* Add Resume Response Button for Bot Messages with Raw Response */}
+                {message.sender === 'bot' && message.rawResponse && (
+                  <button
+                    className="resume-button"
+                    onClick={() => handleResumeResponse(message.id)}
+                    style={{
+                      background: '#f1c40f',
+                      color: 'white',
+                      border: 'none',
+                      padding: '5px 10px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      marginLeft: '5px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faRedo} /> Resume Response
                   </button>
                 )}
                 <div className="message-actions">
