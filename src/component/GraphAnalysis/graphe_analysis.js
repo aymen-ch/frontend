@@ -1,23 +1,20 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DropdownButton, Dropdown } from 'react-bootstrap';
-import { FaLanguage } from 'react-icons/fa';
+import { FaLanguage, FaProjectDiagram, FaCogs, FaTachometerAlt, FaChartLine } from 'react-icons/fa';
 import './graphe_anaylsis.css';
 import Container_AlgorithmicAnalysis from './HorizontalModules/containervisualization/Container_AlgorithmicAnalysis';
 import SchemaVisualizer from './HorizontalModules/schema/schema';
 import SettingsPage from './HorizontalModules/Settings/SettingsPage';
+import Dashboard from './HorizontalModules/DashBoard/Dashboard';
 import { GlobalProvider } from './GlobalVariables';
-
-
-
-import Dashboard from './HorizontalModules/DashBoard/Dashboard'; // Add this import
 
 const Graphe_analysis = () => {
   const { t, i18n } = useTranslation();
   const [activeModule, setActiveModule] = useState('Schema');
 
   const changeLanguage = (lng) => {
-    console.log(`Changing language to: ${lng}`); // Debug log
+    console.log(`Changing language to: ${lng}`);
     i18n.changeLanguage(lng);
   };
 
@@ -41,9 +38,7 @@ const Graphe_analysis = () => {
 
   const DashboardPage = () => (
     <div className="module-content">
-
-      <Dashboard/> {/* Use the Dashboard component here */}
-
+      <Dashboard />
     </div>
   );
 
@@ -68,31 +63,37 @@ const Graphe_analysis = () => {
     <div className="app-container">
       <nav className="navbar-horizontal">
         <ul className="navbar-nav">
-          {['Schema', 'Setting', 'Dashboard', 'Visualization'].map((module) => (
+          {[
+            { key: 'Schema', label: t('Schema visualization'), icon: <FaProjectDiagram /> },
+            { key: 'Setting', label: t('Settings'), icon: <FaCogs /> },
+            { key: 'Dashboard', label: t('Dashboard'), icon: <FaTachometerAlt /> },
+            { key: 'Visualization', label: t('Visualization'), icon: <FaChartLine /> },
+          ].map(({ key, label, icon }) => (
             <li
-              key={module}
-              className={`nav-item ${activeModule === module ? 'active' : ''}`}
-              onClick={() => handleModuleClick(module)}
+              key={key}
+              className={`nav-item ${activeModule === key ? 'active' : ''}`}
+              onClick={() => handleModuleClick(key)}
             >
-              {t(module === 'Schema' ? 'Schema visualization' : module === 'Setting' ? 'Settings' : module)}
+              {icon} <span>{label}</span>
             </li>
           ))}
         </ul>
-        <div className="language-dropdown-container" >
-  <DropdownButton
-    id="language-dropdown"
-    title={
-      <>
-        <FaLanguage className="language-icon" /> {t('Language')}: {i18n.language.toUpperCase()}
-      </>
-    }
-    style={{ zIndex: 2000 }}
-  >
-    <Dropdown.Item onClick={() => changeLanguage('ar')}>{t('Arabic')}</Dropdown.Item>
-    <Dropdown.Item onClick={() => changeLanguage('fr')}>{t('French')}</Dropdown.Item>
-  </DropdownButton>
-</div>
 
+        <div className="language-dropdown-container">
+          <DropdownButton
+            id="language-dropdown"
+            title={
+              <>
+                <FaLanguage className="language-icon" /> {t('Language')}: {i18n.language.toUpperCase()}
+              </>
+            }
+            variant="outline-light"
+            style={{ zIndex: 2000 }}
+          >
+            <Dropdown.Item onClick={() => changeLanguage('ar')}>{t('Arabic')}</Dropdown.Item>
+            <Dropdown.Item onClick={() => changeLanguage('fr')}>{t('French')}</Dropdown.Item>
+          </DropdownButton>
+        </div>
       </nav>
 
       <div className="container-fluid test">

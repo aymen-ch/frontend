@@ -28,11 +28,10 @@ setPathEdges(formattedEdges);
 
   const startPathFinding = async () => {
     setIsPathFindingStarted(true);
-    console.log("selected nodes  ", nvlRef.current.getSelectedNodes());
     
     if (nvlRef.current.getSelectedNodes().length>0) {
         setIsBoxPath(true)
-        const nodeIds = nvlRef.current.getSelectedNodes().map((node) => parseInt(node.id, 10));
+        const nodeIds = Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10));
       try {
         const response = await axios.post(
           `${BASE_URL}/get_all_connections/`,
@@ -67,11 +66,11 @@ setPathEdges(formattedEdges);
 
   const startPathFinding_shortest = async () => {
     setIsPathFindingStarted(true);
-    console.log("selected nodes  ", nvlRef.current.getSelectedNodes());
-    
-    if (nvlRef.current.getSelectedNodes().length>0) {
+
+    console.log(selectednodes)
+    if (selectednodes.size>0) {
         setIsBoxPath(true)
-        const nodeIds = nvlRef.current.getSelectedNodes().map((node) => parseInt(node.id, 10));
+        const nodeIds = Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10));
       try {
         const response = await axios.post(
           `${BASE_URL}/shortestpath/`,

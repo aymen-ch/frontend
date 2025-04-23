@@ -174,6 +174,7 @@ const useNvlVisualization = ({
         selectedRelationRef.current = null;
         setnodetoshow(null);
         setContextMenu(null);
+        SetContextMenucanvas(null);
       }
     });
 
@@ -280,9 +281,9 @@ const useNvlVisualization = ({
       })),
       rels: edges.map((edge) => ({
         ...edge,
-        selected: selectedEdges?.has(edge.id),
-        color: edge.id === hoveredEdge || selectedEdges?.has(edge.id) ? '#B771E5' : (edge.color || '#808080'),
-        width: edge.id === hoveredEdge || selectedEdges?.has(edge.id) ? 15 : (edge.width || 1),
+        selected: selectedEdges?.has(edge.id)||edge.selected,
+        color: edge.id === hoveredEdge || selectedEdges?.has(edge.id) ||edge.selected? '#B771E5' : (edge.color || '#808080'),
+        width: edge.id === hoveredEdge || selectedEdges?.has(edge.id)||edge.selected ? 15 : (edge.width || 1),
       })),
     };
 

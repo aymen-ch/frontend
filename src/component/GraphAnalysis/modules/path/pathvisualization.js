@@ -4,7 +4,7 @@ import { FaExpand, FaCompress, FaArrowLeft, FaArrowRight, FaList, FaTimes, FaPro
 import { AddNeighborhoodParser, getNodeIcon, getNodeColor, parsePath } from '../../utils/Parser';
 import './PathVisualization.css';
 import { computeLinearLayout } from '../layout/layout';
-import { d3ForceLayoutType, ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType } from '@neo4j-nvl/base';
+import { d3ForceLayoutType, ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType,GridLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../../HorizontalModules/containervisualization/function_container';
 
 const PathVisualization = React.memo(({
@@ -246,9 +246,9 @@ const PathVisualization = React.memo(({
 
       // Append edges, avoiding duplicates by checking from and to
       setEdges((prevEdges) => {
-        const existingEdgeKeys = new Set(prevEdges.map(edge => `${edge.from}-${edge.to}`));
-        const newEdges = edgesToAdd.filter(edge => !existingEdgeKeys.has(`${edge.from}-${edge.to}`));
-        const newed = newEdges.filter(edge => !existingEdgeKeys.has(`${edge.to}-${edge.from}`));
+
+        const newed = edgesToAdd
+          .map(edge => ({ ...edge, selected: true }));
         return [...prevEdges, ...newed];
       });
     }
@@ -301,7 +301,7 @@ const PathVisualization = React.memo(({
   const layouts = [
     { type: 'computeLinearLayout', icon: <FaProjectDiagram size={14} />, title: 'Linear Layout' },
     { type: ForceDirectedLayoutType, icon: <FaBezierCurve size={14} />, title: 'Force Directed' },
-    { type: FreeLayoutType, icon: <FaLayerGroup size={14} />, title: 'Free Layout' },
+    { type: GridLayoutType, icon: <FaLayerGroup size={14} />, title: 'Free Layout' },
     { type: HierarchicalLayoutType, icon: <FaSitemap size={14} />, title: 'Hierarchical Layout' },
   ];
 

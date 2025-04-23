@@ -223,7 +223,7 @@ return (
                   allPaths={allPaths}
                   currentPathIndex={currentPathIndex}
                   setCurrentPathIndex={setCurrentPathIndex}
-                  selectednodes={nvlRef.current?.getSelectedNodes()}
+                  selectednodes={selectedNodes}
                   ispath={false}
                   setAllPaths={setAllPaths}
                   setPathisempty={setPathisempty}
@@ -285,7 +285,7 @@ return (
                   setAllPaths={setAllPaths}
                   setCurrentPathIndex={setCurrentPathIndex}
                   setIsBoxPath={setIsBoxPath}
-                  selectednodes={nvlRef.current?.getSelectedNodes()}
+                  selectednodes={selectedNodes}
                 />
               )}
               

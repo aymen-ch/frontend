@@ -17,8 +17,9 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Using Dracula theme
 import { convertNeo4jToGraph, convertNeo4jToTable } from './graphconvertor';
 import ChatInput from './input';
-
+import { useTranslation } from 'react-i18next';
 const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
+  const {t} = useTranslation();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +31,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [editingQueryId, setEditingQueryId] = useState(null);
   const [editedQuery, setEditedQuery] = useState('');
   const [maxCorrections, setMaxCorrections] = useState(3); // Default max corrections
-  const [selectedModel, setSelectedModel] = useState('hf.co/DavidLanz/text2cypher-gemma-2-9b-it-finetuned-2024v1:latest'); // Default model
+  const [selectedModel, setSelectedModel] = useState('llama3.2:latest'); // Default model
   const handleEditQuery = (messageId, currentQuery) => {
     setEditingQueryId(messageId);
     setEditedQuery(currentQuery);
@@ -144,35 +145,32 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     setEditingQueryId(null);
     setEditedQuery('');
   };
+  const formatSelectedNodes = () => {
+    if (selectedNodes.size === 0) return '';
+    const selectedNodeObjects = Array.from(selectedNodes)
+      .map((nodeId) => nodes.find((node) => node.id === nodeId))
+      .filter((node) => node);
+    return selectedNodeObjects
+      .map((node) => `${node.group || 'Unknown'}:${node.id}`)
+      .join(',');
+  };
 
   useEffect(() => {
-    console.log('selectedNodes:', selectedNodes);
-    if (selectedNodes.size > 0) {
-      const selectedNodeObjects = Array.from(selectedNodes)
-        .map(nodeId => nodes.find(node => node.id === nodeId))
-        .filter(node => node);
-
-      if (selectedNodeObjects.length > 0) {
-        const formattedText = selectedNodeObjects
-          .map(node => `${node.group || 'Unknown'}: ${node.id}`)
-          .join(', ');
-
-        setInputText(`Selected: ${formattedText}`);
-      } else {
-        setInputText('No valid nodes found');
-      }
+    const formattedNodes = formatSelectedNodes();
+    if (formattedNodes) {
+      setInputText(`Selected: ${formattedNodes}`);
     } else {
       setInputText('');
     }
   }, [selectedNodes, nodes]);
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
-  
+
     const userMessage = { id: messages.length + 1, text: inputText, sender: 'user' };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInputText('');
     setIsLoading(true);
-  
+    const formattedSelectedNodes = formatSelectedNodes();
     try {
       const response = await axios.post(
         BASE_URL + '/chatbot/',
@@ -181,6 +179,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           answer_type: responseType,
           model: selectedModel,
           maxCorrections: maxCorrections,
+          selected_nodes: formattedSelectedNodes,
         },
         {
           headers: {
@@ -188,13 +187,13 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           },
         }
       );
-  
+
       // Store raw response and include the original question for resuming
       const rawResponse = {
         ...response.data,
-        question: inputText, // Store the user question in rawResponse
+        question: inputText,
       };
-  
+
       if (response.data.response === 'je ne peux pas répondre') {
         const botMessage = {
           id: messages.length + 2,
@@ -202,12 +201,13 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           sender: 'bot',
           type: responseType,
           cypherQuery: response.data.cypher || null,
-          rawResponse, // Store raw response with question
+          rawResponse,
+          isResumed: false, // Mark as non-resumed
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
         return;
       }
-  
+
       if (responseType === 'Graph') {
         const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
         const nvlGraph = await driver.executeQuery(
@@ -215,21 +215,22 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           {},
           { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
         );
-  
+
         try {
           const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
-  
+
           if (newNodes.length > 0 || newEdges.length > 0) {
             setNodes([...nodes, ...newNodes]);
             setEdges([...edges, ...newEdges]);
-  
+
             const botMessage = {
               id: messages.length + 2,
               text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
               sender: 'bot',
               type: 'Graph',
               cypherQuery: response.data.cypher,
-              rawResponse, // Store raw response with question
+              rawResponse,
+              isResumed: false, // Mark as non-resumed
             };
             setMessages((prevMessages) => [...prevMessages, botMessage]);
           } else {
@@ -239,10 +240,10 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           const botMessage = {
             id: messages.length + 2,
             text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. يرجى تصحيح استعلام Cypher لإرجاع العُقد والعلاقات.',
-            sender: 'bot',
             type: 'Graph',
             cypherQuery: response.data.cypher,
-            rawResponse, // Store raw response with question
+            rawResponse,
+            isResumed: false, // Mark as non-resumed
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
@@ -261,7 +262,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             sender: 'bot',
             cypherQuery: response.data.cypher,
             type: 'Table',
-            rawResponse, // Store raw response with question
+            rawResponse,
+            isResumed: false, // Mark as non-resumed
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         } catch (conversionError) {
@@ -270,7 +272,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             text: 'لا يمكن تحويل نتيجة الاستعلام إلى جدول. يرجى تصحيح استعلام Cypher لإرجاع بيانات صحيحة.',
             sender: 'bot',
             cypherQuery: response.data.cypher,
-            rawResponse, // Store raw response with question
+            rawResponse,
+            isResumed: false, // Mark as non-resumed
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
@@ -283,7 +286,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
               : response.data.response.replace(/\n/g, '<br>'),
           sender: 'bot',
           cypherQuery: response.data.cypher || null,
-          rawResponse, // Store raw response with question
+          rawResponse,
+          isResumed: false, // Mark as non-resumed
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
       }
@@ -299,27 +303,27 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       setIsLoading(false);
     }
   };
-  
+
   const handleResumeResponse = async (messageId) => {
     const botMessage = messages.find((msg) => msg.id === messageId);
     if (!botMessage || !botMessage.rawResponse) {
       console.error('No raw response available for resuming');
       return;
     }
-  
-    // Find the corresponding user message (the question that led to this bot message)
+
+    // Find the corresponding user message
     const userMessage = messages
       .slice(0, messages.indexOf(botMessage))
       .reverse()
       .find((msg) => msg.sender === 'user');
-  
+
     if (!userMessage) {
       console.error('No corresponding user message found for resuming');
       return;
     }
-  
+
     setIsLoading(true);
-  
+
     try {
       const resumeEndpoint = BASE_URL + '/chatbot/resume/';
       const response = await axios.post(
@@ -327,7 +331,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         {
           raw_response: botMessage.rawResponse,
           model: selectedModel,
-          question: userMessage.text, // Use the user message text as the question
+          question: userMessage.text,
           cypher_query: botMessage.cypherQuery || '',
         },
         {
@@ -336,18 +340,19 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           },
         }
       );
-  
+
       // Process the resumed response
       const resumedResponse = response.data;
       const newBotMessage = {
         id: messages.length + 1,
         text: resumedResponse.response || 'Resumed response processed.',
         sender: 'bot',
-        type: botMessage.type || 'Text', // Use the original bot message type or default to Text
+        type: botMessage.type || 'Text',
         cypherQuery: resumedResponse.cypher || null,
-        rawResponse: resumedResponse, // Store the new raw response
+        rawResponse: resumedResponse,
+        isResumed: true, // Mark as resumed
       };
-  
+
       // Optionally execute the Cypher query if provided and relevant
       if (resumedResponse.cypher && (botMessage.type === 'Graph' || botMessage.type === 'Table')) {
         const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
@@ -356,7 +361,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           {},
           { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
         );
-  
+
         if (botMessage.type === 'Graph') {
           try {
             const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
@@ -381,7 +386,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           }
         }
       }
-  
+
       setMessages((prevMessages) => [...prevMessages, newBotMessage]);
     } catch (error) {
       console.error('Error resuming response:', error);
@@ -401,6 +406,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     setEditedText(currentText);
   };
 
+
+  
   const handleSaveEdit = (messageId) => {
     setMessages((prevMessages) =>
       prevMessages.map((msg) =>
@@ -506,7 +513,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                   </button>
                 )}
                 {/* Add Resume Response Button for Bot Messages with Raw Response */}
-                {message.sender === 'bot' && message.rawResponse && (
+                {message.sender === 'bot' && message.rawResponse && !message.isResumed && (
                   <button
                     className="resume-button"
                     onClick={() => handleResumeResponse(message.id)}

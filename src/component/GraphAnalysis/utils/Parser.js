@@ -222,7 +222,8 @@ export const parseNetworkData = (networkData) => {
 
 export const parsePath = (path, selectedNodes) => {
   console.log(path);
-  const selectedNodeIds = new Set(selectedNodes.map((node) => node.id));
+  const selectedNodeIds = new Set(selectedNodes);
+  console.log(selectedNodes)
   const formattedNodes = path.nodes.map((node) => {
     const isSelected = selectedNodeIds.has(node.id.toString());
     return createNode(node.id, node.type, node.properties, isSelected);
