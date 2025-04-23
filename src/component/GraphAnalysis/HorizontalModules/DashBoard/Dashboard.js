@@ -19,10 +19,27 @@ import {
   Legend, 
   ResponsiveContainer,
   LineChart,
-  Line
+  Line,
+  Brush
 } from 'recharts';
 import './Dashboard.css';
 import { BASE_URL } from '../../utils/Urls';
+
+// import { 
+//   BarChart, 
+//   Bar, 
+//   XAxis, 
+//   YAxis, 
+//   CartesianGrid, 
+//   Tooltip, 
+//   Legend, 
+//   ResponsiveContainer,
+//   Brush,
+//   PieChart, 
+//   Pie,
+//   Sector,
+//   Cell
+// } from 'recharts';
 
 const Dashboard = () => {
   // State for all data views
@@ -248,6 +265,7 @@ const Dashboard = () => {
 
         {/* Affaire Counts by Day - Line Chart */}
     {/* Affaire Counts by Day - Line Chart */}
+
 <Col md={6}>
   <Card>
     <Card.Header>Affaire Counts by Day</Card.Header>
@@ -257,23 +275,62 @@ const Dashboard = () => {
       ) : errorDay ? (
         <Alert variant="danger">{errorDay}</Alert>
       ) : (
-        <div className="chart-scroll-container">
-          <ResponsiveContainer width={formatDayData().length * 100} height={400}>
+        <div style={{ width: '100%', height: 500 }}>
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={formatDayData()}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" angle={-45} textAnchor="end" height={70} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
+              <XAxis 
+                dataKey="date" 
+                angle={-45} 
+                textAnchor="end" 
+                height={70}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                label={{ 
+                  value: 'Count', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  fontSize: 14
+                }}
+              />
+              <Tooltip 
+                contentStyle={{
+                  fontSize: 14,
+                  padding: 10,
+                  backgroundColor: '#fff',
+                  border: '1px solid #ddd'
+                }}
+              />
+              <Legend 
+                wrapperStyle={{
+                  paddingTop: 20,
+                  fontSize: 14
+                }}
+              />
               <Line 
                 type="monotone" 
                 dataKey="count" 
                 stroke="#82ca9d" 
                 name="Affaire Count" 
+                strokeWidth={2}
                 activeDot={{ r: 8 }} 
+              />
+              <Brush 
+                dataKey="date"
+                height={30}
+                stroke="#8884d8"
+                travellerWidth={10}
+                startIndex={0}
+                endIndex={Math.min(30, formatDayData().length - 1)} // Show first 30 days by default
+                tickFormatter={(date) => {
+                  // Format date for brush ticks (show only day/month)
+                  const [day, month] = date.split('-');
+                  return `${day}/${month}`;
+                }}
               />
             </LineChart>
           </ResponsiveContainer>
