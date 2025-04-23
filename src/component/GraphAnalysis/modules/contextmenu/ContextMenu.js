@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import {
   FaExpand,
@@ -14,7 +15,7 @@ import {
   FaTimesCircle,
   FaCog,
   FaSlidersH,
-  FaPlus, // Add this
+  FaPlus,
 } from 'react-icons/fa';
 import { FaLocationDot, FaCodeFork } from 'react-icons/fa6';
 import './contextmenu.css';
@@ -25,10 +26,10 @@ import {
   handleActionSelect,
   handleAdvancedExpand,
   handleNodeExpansion_selected
- 
 } from './functions_node_click';
-import { getNodeColor,getNodeIcon } from '../../utils/Parser';
+import { getNodeColor, getNodeIcon } from '../../utils/Parser';
 import { BASE_URL } from '../../utils/Urls';
+
 const ContextMenu = ({
   contextMenu,
   setContextMenu,
@@ -43,6 +44,7 @@ const ContextMenu = ({
   setIsBoxPath,
   setActiveAggregations,
 }) => {
+  const { t } = useTranslation();
   const [possibleRelations, setPossibleRelations] = useState([]);
   const [subContextMenu, setSubContextMenu] = useState(null);
   const [actionsSubMenu, setActionsSubMenu] = useState(null);
@@ -60,10 +62,9 @@ const ContextMenu = ({
   });
   const [availableActions, setAvailableActions] = useState([]);
   const actionIcons = {
-    'Affaire dans la meme region': FaLocationDot,
-    'Show Criminal Network': FaCodeFork,
-    'Show Person Profile': FaInfoCircle,
-    // Add more action-to-icon mappings as needed
+    [t('Affaire dans la meme region')]: FaLocationDot,
+    [t('Show Criminal Network')]: FaCodeFork,
+    [t('Show Person Profile')]: FaInfoCircle,
   };
   const centralityAttributes = [
     'degree_out',
@@ -77,12 +78,9 @@ const ContextMenu = ({
 
   useEffect(() => {
     if (contextMenu?.node && contextMenu.visible) {
-      // Initialize possible relations
       let relations = [];
 
-      // Fetch standard relations from backend
       fetchPossibleRelations(contextMenu.node, (backendRelations) => {
-        // Map backend relations to include isVirtual: false
         relations = backendRelations.map((rel) => ({
           name: rel.name,
           startNode: rel.startNode,
@@ -90,12 +88,10 @@ const ContextMenu = ({
           isVirtual: false,
         }));
 
-        // Get virtual relations from local storage
         const virtualRelations = JSON.parse(localStorage.getItem('virtualRelations')) || [];
-        const nodeGroup = contextMenu.node.group; // e.g., 'Wilaya'
+        const nodeGroup = contextMenu.node.group;
         console.log("virtuel", virtualRelations);
 
-        // Filter virtual relations where node group matches the start of the path
         const matchingVirtualRelations = virtualRelations
           .filter((vr) => vr.path[0] === nodeGroup)
           .map((vr) => ({
@@ -105,8 +101,6 @@ const ContextMenu = ({
             isVirtual: true,
           }));
 
-          
-        // Combine backend and virtual relations, ensuring no duplicates by name
         const combinedRelations = [...relations, ...matchingVirtualRelations];
         const uniqueRelations = Array.from(
           new Map(combinedRelations.map((rel) => [rel.name, rel])).values()
@@ -116,7 +110,7 @@ const ContextMenu = ({
       });
 
       axios
-        .post(BASE_URL+'/get_available_actions/', { node_type: contextMenu.node.group })
+        .post(BASE_URL + '/get_available_actions/', { node_type: contextMenu.node.group })
         .then((response) => {
           setAvailableActions(response.data.actions || []);
         })
@@ -200,47 +194,44 @@ const ContextMenu = ({
   const handleContextMenuAction = (action, relationType = null) => {
     if (!contextMenu?.node) return;
 
-    if (action === 'Delete Node') {
+    if (action === t('Delete Node')) {
       const nodeIdToDelete = contextMenu.node.id;
       setNodes((prev) => prev.filter((node) => node.id !== nodeIdToDelete));
       setEdges((prev) => prev.filter((edge) => edge.from !== nodeIdToDelete && edge.to !== nodeIdToDelete));
-    } else if (action === 'Delete Selected Nodes') {
+    } else if (action === t('Delete Selected Nodes')) {
       const selectedNodeIds = new Set(selectedNodes);
       setNodes((prev) => prev.filter((node) => !selectedNodeIds.has(node.id)));
       setEdges((prev) => prev.filter((edge) => !selectedNodeIds.has(edge.from) && !selectedNodeIds.has(edge.to)));
       setSelectedNodes(new Set());
-    } else if (action === 'View Neighborhood' || action === 'Expand Specific Relation') {
+    } else if (action === t('View Neighborhood') || action === t('Expand Specific Relation')) {
       handleNodeExpansion(contextMenu.node, relationType, setNodes, setEdges);
-    } else if (action === 'Select Node') {
+    } else if (action === t('Select Node')) {
       setSelectedNodes((prev) => new Set([...prev, contextMenu.node.id]));
-    } else if (action === 'Activated') {
+    } else if (action === t('Activated')) {
       setNodes((prev) =>
         prev.map((node) =>
           node.id === contextMenu.node.id ? { ...node, activated: true } : node
         )
       );
-    } else if (action === 'Deactivated') {
-    } else if (action === 'Deactivated') {
+    } else if (action === t('Deactivated')) {
       setNodes((prev) =>
         prev.map((node) =>
           node.id === contextMenu.node.id ? { ...node, activated: false } : node
         )
       );
-    } else if (action === 'Deselect Node') {
+    } else if (action === t('Deselect Node')) {
       setSelectedNodes((prev) => {
         const newSelected = new Set(prev);
         newSelected.delete(contextMenu.node.id);
         return newSelected;
       });
-    } else if (action === 'Edit Node') {
+    } else if (action === t('Edit Node')) {
       console.log('Edit Node:', contextMenu.node);
-    } else if (action === 'all connections') {
+    } else if (action === t('all connections')) {
       handleAllConnections(selectedNodes, setAllPaths, setCurrentPathIndex, setPathNodes, setPathEdges, setIsBoxPath);
-    }
-    else if (action === 'Disable Others') {
+    } else if (action === t('Disable Others')) {
       const clickedNodeId = contextMenu.node.id;
-      // Find all direct neighbors by checking edges
-      const enabledNodeIds = new Set([clickedNodeId]); // Include clicked node
+      const enabledNodeIds = new Set([clickedNodeId]);
       setEdges((prevEdges) => {
         prevEdges.forEach((edge) => {
           if (edge.from === clickedNodeId) {
@@ -249,23 +240,20 @@ const ContextMenu = ({
             enabledNodeIds.add(edge.from);
           }
         });
-        // Update edges: enable only those where both nodes are enabled
         const updatedEdges = prevEdges.map((edge) => ({
           ...edge,
           disabled: !(enabledNodeIds.has(edge.from) && enabledNodeIds.has(edge.to)),
         }));
         return updatedEdges;
       });
-      // Update nodes: enable only clicked node and neighbors
       setNodes((prevNodes) =>
         prevNodes.map((node) => ({
           ...node,
           disabled: !enabledNodeIds.has(node.id),
         }))
       );
-    }else if (action === 'Expand All seleced nodes'){
-         //// add function 
-         handleNodeExpansion_selected(selectedNodes, setNodes, setEdges);
+    } else if (action === t('Expand All seleced nodes')) {
+      handleNodeExpansion_selected(selectedNodes, setNodes, setEdges);
     }
 
     setContextMenu(null);
@@ -282,7 +270,7 @@ const ContextMenu = ({
         className="context-menu-container"
         style={{ '--context-menu-y': `${contextMenu.y}px`, '--context-menu-x': `${contextMenu.x}px` }}
       >
-        <div className="menu-header">Node Actions</div>
+        <div className="menu-header">{t('Node Actions')}</div>
         <div className="menu-items">
           <button
             className="menu-item"
@@ -291,7 +279,7 @@ const ContextMenu = ({
             ref={expandButtonRef}
           >
             <FaExpand style={{ marginRight: '10px', color: '#4361ee' }} />
-            Expand
+            {t('Expand')}
             <FaArrowRight style={{ marginLeft: 'auto', fontSize: '12px', color: '#6c757d' }} />
           </button>
           <button
@@ -301,7 +289,7 @@ const ContextMenu = ({
             ref={actionsButtonRef}
           >
             <FaCog style={{ marginRight: '10px', color: '#4361ee' }} />
-            Actions
+            {t('Actions')}
             <FaArrowRight style={{ marginLeft: 'auto', fontSize: '12px', color: '#6c757d' }} />
           </button>
           <button
@@ -311,49 +299,49 @@ const ContextMenu = ({
             ref={advancedAggregationButtonRef}
           >
             <FaSlidersH style={{ marginRight: '10px', color: '#4361ee' }} />
-            Advanced Aggregation
+            {t('Advanced Aggregation')}
             <FaArrowRight style={{ marginLeft: 'auto', fontSize: '12px', color: '#6c757d' }} />
           </button>
           {contextMenu.node?.selected ? (
-            <button className="menu-item" onClick={() => handleContextMenuAction('Deselect Node')}>
+            <button className="menu-item" onClick={() => handleContextMenuAction(t('Deselect Node'))}>
               <FaTimes style={{ marginRight: '10px', color: '#e63946' }} />
-              Deselect Node
+              {t('Deselect Node')}
             </button>
           ) : (
-            <button className="menu-item" onClick={() => handleContextMenuAction('Select Node')}>
+            <button className="menu-item" onClick={() => handleContextMenuAction(t('Select Node'))}>
               <FaCheck style={{ marginRight: '10px', color: '#38b000' }} />
-              Select Node
+              {t('Select Node')}
             </button>
           )}
-              {contextMenu.node?.activated ? (
-                      <button className="menu-item" onClick={() => handleContextMenuAction('Deactivated')}>
-                        <FaTimes style={{ marginRight: '10px', color: '#e63946' }} />
-                        Deactivate
-                      </button>
-                    ) : (
-                      <button className="menu-item" onClick={() => handleContextMenuAction('Activated')}>
-                        <FaCheck style={{ marginRight: '10px', color: '#38b000' }} />
-                        Activate
-                      </button>
-                    )}
+          {contextMenu.node?.activated ? (
+            <button className="menu-item" onClick={() => handleContextMenuAction(t('Deactivated'))}>
+              <FaTimes style={{ marginRight: '10px', color: '#e63946' }} />
+              {t('Deactivated')}
+            </button>
+          ) : (
+            <button className="menu-item" onClick={() => handleContextMenuAction(t('Activated'))}>
+              <FaCheck style={{ marginRight: '10px', color: '#38b000' }} />
+              {t('Activated')}
+            </button>
+          )}
           <div className="menu-divider"></div>
           <button className="menu-item" onClick={() => setContextMenu(null)}>
             <FaTimesCircle style={{ marginRight: '10px', color: '#6c757d' }} />
-            Dismiss
+            {t('Dismiss')}
           </button>
           {selectedNodes.size > 0 && (
-            <button className="menu-item danger" onClick={() => handleContextMenuAction('Delete Selected Nodes')}>
+            <button className="menu-item danger" onClick={() => handleContextMenuAction(t('Delete Selected Nodes'))}>
               <FaTrash style={{ marginRight: '10px' }} />
-              Delete Selected Nodes
+              {t('Delete Selected Nodes')}
             </button>
           )}
-          <button className="menu-item danger" onClick={() => handleContextMenuAction('Delete Node')}>
+          <button className="menu-item danger" onClick={() => handleContextMenuAction(t('Delete Node'))}>
             <FaTrash style={{ marginRight: '10px' }} />
-            Delete Node
+            {t('Delete Node')}
           </button>
-          <button className="menu-item danger" onClick={() => handleContextMenuAction('Disable Others')}>
+          <button className="menu-item danger" onClick={() => handleContextMenuAction(t('Disable Others'))}>
             <FaTrash style={{ marginRight: '10px' }} />
-            Disable Other
+            {t('Disable Others')}
           </button>
         </div>
       </div>
@@ -365,13 +353,12 @@ const ContextMenu = ({
           ref={subContextRef}
           onMouseLeave={() => setSubContextMenu(null)}
         >
-          <div className="menu-header">Expand Options</div>
+          <div className="menu-header">{t('Expand Options')}</div>
           <div className="menu-items">
-            <button className="menu-item" onClick={() => handleContextMenuAction('View Neighborhood')}>
+            <button className="menu-item" onClick={() => handleContextMenuAction(t('View Neighborhood'))}>
               <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
-              Expand All
+              {t('Expand All')}
             </button>
-
             {possibleRelations.length > 0 ? (
               possibleRelations.map((relation, index) => {
                 const startIconPath = getNodeIcon(relation.startNode);
@@ -380,7 +367,7 @@ const ContextMenu = ({
                   <button
                     key={index}
                     className={`menu-item ${relation.isVirtual ? 'virtual-relation' : ''}`}
-                    onClick={() => handleContextMenuAction('Expand Specific Relation', relation.name)}
+                    onClick={() => handleContextMenuAction(t('Expand Specific Relation'), relation.name)}
                   >
                     <FaArrowRight
                       style={{ marginRight: '10px', color: relation.isVirtual ? '#38b000' : '#4361ee' }}
@@ -422,36 +409,61 @@ const ContextMenu = ({
                 );
               })
             ) : (
-              <div className="no-relations">No relations available</div>
+              <div className="no-relations">{t('No relations available')}</div>
             )}
-            <hr></hr>
-             {selectedNodes.size > 0 && (<button className="menu-item" onClick={() => handleContextMenuAction('Expand All seleced nodes')}>
-              <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
-              Expand All seleced nodes
-            </button>)}
+            <hr />
+            {selectedNodes.size > 0 && (
+              <button className="menu-item" onClick={() => handleContextMenuAction(t('Expand All seleced nodes'))}>
+                <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
+                {t('Expand All seleced nodes')}
+              </button>
+            )}
           </div>
         </div>
       )}
 
-{actionsSubMenu?.visible && (
-  <div
-    className="sub-context-menu"
-    style={{ '--sub-context-menu-y': `${actionsSubMenu.y}px`, '--sub-context-menu-x': `${actionsSubMenu.x}px` }}
-    ref={actionsSubRef}
-    onMouseLeave={() => setActionsSubMenu(null)}
-  >
-    <div className="menu-header">Action Options</div>
-    <div className="menu-items">
-      {availableActions.length > 0 ? (
-        availableActions.map((action, index) => {
-          const Icon = actionIcons[action.name] || FaCog; // Fallback to FaCog if no icon defined
-          return (
+      {actionsSubMenu?.visible && (
+        <div
+          className="sub-context-menu"
+          style={{ '--sub-context-menu-y': `${actionsSubMenu.y}px`, '--sub-context-menu-x': `${actionsSubMenu.x}px` }}
+          ref={actionsSubRef}
+          onMouseLeave={() => setActionsSubMenu(null)}
+        >
+          <div className="menu-header">{t('Action Options')}</div>
+          <div className="menu-items">
+            {availableActions.length > 0 ? (
+              availableActions.map((action, index) => {
+                const Icon = actionIcons[action.name] || FaCog;
+                return (
+                  <button
+                    key={index}
+                    className="menu-item"
+                    onClick={() =>
+                      handleActionSelect(
+                        action.name,
+                        contextMenu.node,
+                        setActionsSubMenu,
+                        setContextMenu,
+                        setNodes,
+                        setEdges,
+                        setActiveAggregations
+                      )
+                    }
+                  >
+                    <Icon style={{ marginRight: '10px', color: '#4361ee' }} />
+                    {action.name}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="no-relations">{t('No actions available')}</div>
+            )}
+            <div className="menu-divider"></div>
             <button
-              key={index}
               className="menu-item"
               onClick={() =>
                 handleActionSelect(
-                  action.name,
+                  'add_action',
                   contextMenu.node,
                   setActionsSubMenu,
                   setContextMenu,
@@ -461,35 +473,12 @@ const ContextMenu = ({
                 )
               }
             >
-              <Icon style={{ marginRight: '10px', color: '#4361ee' }} />
-              {action.name}
+              <FaPlus style={{ marginRight: '10px', color: '#38b000' }} />
+              {t('Add New Action')}
             </button>
-          );
-        })
-      ) : (
-        <div className="no-relations">No actions available</div>
+          </div>
+        </div>
       )}
-      <div className="menu-divider"></div>
-      <button
-        className="menu-item"
-        onClick={() =>
-          handleActionSelect(
-            'add_action',
-            contextMenu.node,
-            setActionsSubMenu,
-            setContextMenu,
-            setNodes,
-            setEdges,
-            setActiveAggregations
-          )
-        }
-      >
-        <FaPlus style={{ marginRight: '10px', color: '#38b000' }} />
-        Add New Action
-      </button>
-    </div>
-  </div>
-)}
 
       {advancedAggregationSubMenu?.visible && (
         <div
@@ -498,10 +487,10 @@ const ContextMenu = ({
           ref={advancedAggregationSubRef}
           onMouseLeave={() => setAdvancedAggregationSubMenu(null)}
         >
-          <div className="menu-header">Advanced Aggregation</div>
+          <div className="menu-header">{t('Advanced Aggregation')}</div>
           <div className="menu-items" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Attribute:</label>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{t('Attribute')}:</label>
               <select
                 value={advancedExpandParams.attribute}
                 onChange={(e) => setAdvancedExpandParams({ ...advancedExpandParams, attribute: e.target.value })}
@@ -515,7 +504,7 @@ const ContextMenu = ({
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Threshold:</label>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{t('Threshold')}:</label>
               <input
                 type="number"
                 step="0.001"
@@ -525,7 +514,7 @@ const ContextMenu = ({
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Max Level:</label>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{t('Max Level')}:</label>
               <input
                 type="number"
                 value={advancedExpandParams.maxLevel}
@@ -538,7 +527,7 @@ const ContextMenu = ({
               onClick={handleAdvancedExpandSubmit}
               style={{ marginTop: '10px', background: '#4361ee', color: 'white', padding: '8px', borderRadius: '4px' }}
             >
-              Apply
+              {t('Apply')}
             </button>
           </div>
         </div>

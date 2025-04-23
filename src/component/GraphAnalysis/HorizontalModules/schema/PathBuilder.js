@@ -1,9 +1,9 @@
-// src/components/PathBuilder/PathBuilder.jsx
 import React from 'react';
 import NodeDetails from './NodeDetails';
 import EdgeDetails from './EdgeDetails';
 import { createEdge } from '../../utils/Parser';
 import { constructPath } from './cunstructpath';
+import { useTranslation } from 'react-i18next';
 
 const PathBuilder = ({
   isPathBuilding,
@@ -23,13 +23,17 @@ const PathBuilder = ({
   setEdges,
   nvlRef,
 }) => {
+  const { t } = useTranslation();
+
   const handleBuildPath = () => {
     const selectedRels = nvlRef.current?.getSelectedRelationships() || [];
     const selectedNodesArray = nvlRef.current?.getSelectedNodes() || [];
     const result = constructPath(selectedNodesArray, selectedRels, nodes);
+
     const pathExists = virtualRelations.some((relation) =>
       JSON.stringify(relation.path) === JSON.stringify(result)
     );
+
     if (Array.isArray(result) && !pathExists) {
       setPathResult(result);
       setIsPathValid(true);
@@ -39,15 +43,15 @@ const PathBuilder = ({
       setPathResult(null);
       alert(
         result === 'Incomplete selection'
-          ? 'Please select at least one node and one relationship.'
-          : 'No valid path connects the selected nodes and relationships.'
+          ? t('Please select at least one node and one relationship.')
+          : t('No valid path connects the selected nodes and relationships.')
       );
     }
   };
 
   const handleCreatePath = () => {
     if (!pathName.trim()) {
-      alert('Please enter a path name.');
+      alert(t('Please enter a path name.'));
       return;
     }
 
@@ -112,12 +116,12 @@ const PathBuilder = ({
         onMouseOver={(e) => (e.target.style.backgroundColor = '#45a049')}
         onMouseOut={(e) => (e.target.style.backgroundColor = '#4CAF50')}
       >
-        Start Path Building
+        {t('Start Path Building')}
       </button>
 
       {isPathBuilding && (
         <div style={{ marginTop: '10px' }}>
-          <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Path Construction</h4>
+          <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>{t('Path Construction')}</h4>
 
           {selectedNodes.size > 0 && (
             <div style={{ background: '#f8f9fa', padding: '10px', borderRadius: '4px', marginBottom: '10px' }}>
@@ -130,7 +134,7 @@ const PathBuilder = ({
           {selectedEdges.size > 0 && (
             <div style={{ background: '#f8f9fa', padding: '10px', borderRadius: '4px', marginBottom: '10px' }}>
               <span style={{ fontWeight: 'bold', color: '#0066cc', marginRight: '5px' }}>
-                Selected Relations:
+                {t('Selected Relations')}:
               </span>
               <div>
                 {[...selectedEdges].map((edgeId) => (
@@ -157,20 +161,20 @@ const PathBuilder = ({
               onMouseOver={(e) => (e.target.style.backgroundColor = '#1e87db')}
               onMouseOut={(e) => (e.target.style.backgroundColor = '#2196F3')}
             >
-              Build Path
+              {t('Build Path')}
             </button>
           )}
 
           {isPathValid && (
             <div style={{ marginTop: '10px' }}>
               <label style={{ display: 'block', marginBottom: '5px', color: '#333' }}>
-                Path Relationship Name:
+                {t('Path Relationship Name')}:
               </label>
               <input
                 type="text"
                 value={pathName}
                 onChange={(e) => setPathName(e.target.value)}
-                placeholder="Enter path name (e.g., CONNECTED_BY)"
+                placeholder={t('Enter path name (e.g., CONNECTED_BY)')}
                 style={{
                   width: '100%',
                   padding: '8px',
@@ -194,7 +198,7 @@ const PathBuilder = ({
                 onMouseOver={(e) => (e.target.style.backgroundColor = '#e64a19')}
                 onMouseOut={(e) => (e.target.style.backgroundColor = '#FF5722')}
               >
-                Confirm Creation
+                {t('Confirm Creation')}
               </button>
             </div>
           )}

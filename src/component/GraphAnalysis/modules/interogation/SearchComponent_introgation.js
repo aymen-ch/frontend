@@ -2,6 +2,7 @@ import React, { useEffect, useState, memo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { fetchNodeProperties, submitSearch } from '../../utils/Urls';
 import { getNodeIcon, getNodeColor, LabelManager, createNode, createEdge, parsergraph } from '../../utils/Parser';
+import { useTranslation } from 'react-i18next'; // Import the translation hook
 
 const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, setNodeTypes }) => {
   const [nodeProperties, setNodeProperties] = useState([]);
@@ -9,6 +10,8 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
   const [operations, setOperations] = useState({});
   const [error, setError] = useState(null);
   const [searchResult, setSearchResult] = useState('');
+  
+  const { t } = useTranslation(); // Initialize the translation hook
 
   useEffect(() => {
     setNodeProperties([]);
@@ -21,13 +24,13 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
         console.log('Fetched properties:', properties); // Debug log
         setNodeProperties(properties);
       } catch (error) {
-        setError('Error fetching properties.');
+        setError(t('Error fetching properties.'));
       }
     };
     if (selectedNodeType) {
       getNodeProperties();
     }
-  }, [selectedNodeType]);
+  }, [selectedNodeType, t]);
 
   useEffect(() => {
     if (!searchResult) return;
@@ -37,7 +40,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
       return [...prevNodes, ...graphData.nodes];
     });
     setEdges((prevEdges) => [...prevEdges, ...graphData.edges]);
-  }, [searchResult]);
+  }, [searchResult, setNodes, setEdges]);
 
   const handleInputChange = (e, propertyName, propertyType) => {
     let value = e.target.value;
@@ -67,7 +70,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
       const result = await submitSearch(selectedNodeType, searchPayload);
       setSearchResult(result);
     } catch (error) {
-      setError('Error during submission.');
+      setError(t('Error during submission.'));
     }
   };
 
@@ -110,7 +113,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                   style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }}
                 />
               </div>
-              Properties for {selectedNodeType}
+              {t('Properties for')} {selectedNodeType}
             </h5>
           </div>
           <div className="card-body">
@@ -124,7 +127,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                   return (
                     <div key={index} className="mb-3">
                       <label className="form-label fw-bold d-flex align-items-center">
-                        {property.name} ({isDate ? 'date' : property.type}):
+                        {property.name} ({isDate ? t('date') : t(property.type)}):
                       </label>
                       <div className="input-group">
                         {showOperations && (
@@ -138,7 +141,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                             onChange={(e) => handleOperationChange(property.name, e.target.value)}
                           >
                             {getOperationOptions(property.type, property.name).map((op) => (
-                              <option key={op} value={op}>{op}</option>
+                              <option key={op} value={op}>{t(op)}</option> // Translate operations
                             ))}
                           </select>
                         )}
@@ -161,7 +164,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                   className="btn"
                   style={{ backgroundColor: '#346478', color: '#ffffff', borderRadius: '5px' }}
                 >
-                  Search
+                  {t('Search')} {/* Translated button text */}
                 </button>
               </div>
             </form>

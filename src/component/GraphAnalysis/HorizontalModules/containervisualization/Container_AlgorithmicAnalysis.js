@@ -14,11 +14,14 @@ import DetailsModule from '../../modules/Details/Details';
 import InterrogationModule from '../../modules/interogation/interrogation';
 import { useAggregation, fetchNodeProperties,drawCirclesOnPersonneNodes, ColorPersonWithClass ,fetchNoderelation} from './function_container';
 import { useGlobalContext } from '../../GlobalVariables';
+import { NODE_CONFIG } from '../../utils/Parser';
 
+import { useTranslation } from "react-i18next";
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
 
 const Container_AlgorithmicAnalysis = () => {
+  const { t } = useTranslation();
   //const { nodes, setNodes, edges, setEdges } = useGlobalContext();
   const [nodes,setNodes] = useState([])
   const [edges,setEdges] = useState([])
@@ -147,28 +150,36 @@ const Container_AlgorithmicAnalysis = () => {
 
   const combinedNodes = [...nodes].filter((node) => !node.hidden);
   const combinedEdges = [...edges].filter((edge) => !edge.hidden);
+  
   const handleNodeConfigChange = (change) => {
-    if (change.type === 'size') {
-      // Update node sizes in your visualization
-      const updatedNodes = combinedNodes.map(node => {
-        if (node.group === change.nodeType) {
-          return { ...node, size: change.value };
+  if (change.type === 'size') {
+    // Update node sizes in your visualization
+    const updatedNodes = combinedNodes.map(node => {
+      if (node.group === change.nodeType) {
+        const size = change.value[node.id] || NODE_CONFIG.nodeTypes[change.nodeType]?.size || 100;
+        if (typeof size !== 'number' || size <= 0) {
+          console.warn(`Invalid size for node ${node.id}: ${size}, using default`);
+          return { ...node, size: NODE_CONFIG.nodeTypes[change.nodeType]?.size || 100 };
         }
-        return node;
-      });
-      setNodes(updatedNodes);
-    } else if (change.type === 'color') {
-      // Update node colors in your visualization
-      const updatedNodes = combinedNodes.map(node => {
-        if (node.group === change.nodeType) {
-          return { ...node, color: change.value };
-        }
-        return node;
-      });
-      setEdges(updatedNodes);
-    }
-    // Trigger re-render of visualization if needed
-  };
+        return { ...node, size };
+      }
+      // Ensure all nodes have a valid size
+      return { ...node, size: node.size || NODE_CONFIG.nodeTypes[change.nodeType]?.size|| 100 };
+    });
+    console.log('Updated nodes with sizes:', updatedNodes);
+    setNodes(updatedNodes);
+  } else if (change.type === 'color') {
+    // Update node colors in your visualization
+    const updatedNodes = combinedNodes.map(node => {
+      if (node.group === change.nodeType) {
+        return { ...node, color: change.value };
+      }
+      return node;
+    });
+    setNodes(updatedNodes); // Fixed: Update nodes, not edges
+  }
+  // Trigger re-render of visualization if needed
+};
  
 return (
     <div className="container-fluid test">
@@ -227,7 +238,13 @@ return (
         {true && (
           <div className="side-nav">
             <div className="side-nav-inner">
-              {['Details', 'interogation', 'Contextualization', 'Detection de Chemin', 'Aggregation', 'Analysis',].map((module) => (
+              {[    t('Details'),
+    t('interogation'),
+    t('Contextualization'),
+    t('Detection de Chemin'),
+    t('Aggregation'),
+    t('Analysis')
+].map((module) => (
                 <div
                   key={module}
                   className={`side-nav-item ${activeModule === module ? 'active' : ''}`}
@@ -248,7 +265,7 @@ return (
             </div>
             
             <div className="module-content">
-              {activeModule === 'Contextualization' && (
+              {activeModule === t('Contextualization') && (
                 <Memoizedcontext
                   SubGrapgTable={SubGrapgTable}
                   setSubGrapgTable={setSubGrapgTable}
@@ -259,7 +276,7 @@ return (
                 />
               )}
               
-              {activeModule === 'Detection de Chemin' && (
+              {activeModule === t('Detection de Chemin') && (
                 <PathFinder
                   nvlRef={nvlRef}
                   setPathisempty={setPathisempty}
@@ -272,7 +289,7 @@ return (
                 />
               )}
               
-              {activeModule === 'Aggregation' && (
+              {activeModule === t('Aggregation') && (
                 <Aggregation
                   setEdges={setEdges}
                   setNodes={setNodes}
@@ -285,7 +302,7 @@ return (
                 />
               )}
               
-              {activeModule === 'Details' && (
+              {activeModule === t('Details') && (
                 <DetailsModule
                   visibleNodeTypes={visibleNodeTypes}
                   toggleNodeTypeVisibility={toggleNodeTypeVisibility}
@@ -299,7 +316,7 @@ return (
                 />
               )}
               
-              {activeModule === 'interogation' && (
+              {activeModule === t('interogation') && (
                 <InterrogationModule
                   selectedOption={selectedOption}
                   setSelectedOption={setSelectedOption}
@@ -322,7 +339,7 @@ return (
                 />
               )} */}
 
-              {activeModule === 'Analysis' && (
+              {activeModule === t('Analysis') && (
                 <div className="analysis-module">
        
                   <Analysis

@@ -1,33 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { updateNodeConfig, getNodeColor, getNodeIcon, NODE_CONFIG } from '../../utils/Parser';
 import { fetchNodeProperties } from '../../utils/Urls';
-import './nodeconfig.css'
+import './nodeconfig.css';
+import { useTranslation } from 'react-i18next';
+
 const NodeConfigForm = ({ selectedNode, onUpdate }) => {
   const [nodeType, setNodeType] = useState(selectedNode?.group || '');
   const [color, setColor] = useState('');
   const [size, setSize] = useState('');
   const [icon, setIcon] = useState('');
   const [labelKey, setLabelKey] = useState('');
-  const [properties, setProperties] = useState([]); // Store node properties
-  const [error, setError] = useState(null); // Handle fetch errors
+  const [properties, setProperties] = useState([]);
+  const [error, setError] = useState(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
-    setNodeType(selectedNode?.group || '')
+    setNodeType(selectedNode?.group || '');
+  }, [selectedNode]);
 
-  },[selectedNode])
-  // Load current config and fetch properties when nodeType changes
   useEffect(() => {
-   
     if (nodeType) {
-      // Load node config
       const config = NODE_CONFIG.nodeTypes[nodeType] || NODE_CONFIG.nodeTypes.default;
       setColor(config.color || getNodeColor(nodeType));
       setSize(config.size || NODE_CONFIG.defaultNodeSize);
       setIcon(config.icon || getNodeIcon(nodeType));
       setLabelKey(config.labelKey || '');
 
-
-      // Fetch node properties
       const fetchProperties = async () => {
         try {
           const nodeProperties = await fetchNodeProperties(nodeType);
@@ -35,14 +33,13 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
           setError(null);
         } catch (err) {
           console.error('Error fetching node properties:', err.message);
-          setError('Failed to load node properties.');
+          setError('Failed to load node properties');
           setProperties([]);
         }
       };
 
       fetchProperties();
     } else {
-      // Reset when nodeType is cleared
       setProperties([]);
       setLabelKey('');
       setColor('');
@@ -52,24 +49,15 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
     }
   }, [nodeType]);
 
-  // Handle file selection
   const handleIconSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const iconPath = `/icon/${file.name}`; // e.g., "/icon/Personne.png"
+      const iconPath = `/icon/${file.name}`;
       setIcon(iconPath);
       console.log('Selected icon:', file.name, 'Saved as:', iconPath);
     }
   };
 
-  if (!selectedNode) {
-    return (
-      <div className="sidebar-container">
-        <h3 className="sidebar-title">NodeConfig</h3>
-        <p className="sidebar-placeholder">Select a node to change his color or icon.</p>
-      </div>
-    );
-  }
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -87,29 +75,39 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
       }
     } catch (error) {
       console.error('Error updating node config:', error.message);
-      setError('Failed to update node configuration.');
+      setError('Failed to update node configuration');
     }
   };
+
+  if (!selectedNode) {
+    return (
+      <div className="sidebar-container">
+        <h3 className="sidebar-title">{t('NodeConfig')}</h3>
+        <p className="sidebar-placeholder">{t('Select a node to change its color or icon')}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="node-config-container">
-      <h3 className="sidebar-title">Node Configuration</h3>
-  
-      {error && <div className="error-alert">{error}</div>}
-  
+      <h3 className="sidebar-title">{t('Node Configuration')}</h3>
+
+      {error && <div className="error-alert">{t(error)}</div>}
+
       <form className="node-config-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Node Type</label>
+          <label>{t('Node Type')}</label>
           <input
             type="text"
             value={nodeType}
             onChange={(e) => setNodeType(e.target.value)}
-            placeholder="Enter node type"
+            placeholder={t('Enter node type')}
             className="form-control"
           />
         </div>
-  
+
         <div className="form-group">
-          <label>Color</label>
+          <label>{t('Color')}</label>
           <input
             type="color"
             value={color}
@@ -118,30 +116,30 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
             style={{ height: '40px', padding: 0 }}
           />
         </div>
-  
+
         <div className="form-group">
-          <label>Size</label>
+          <label>{t('Size')}</label>
           <input
             type="number"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            placeholder="Node size"
+            placeholder={t('Node size')}
             className="form-control"
           />
         </div>
-  
+
         <div className="form-group">
-          <label>Icon</label>
+          <label>{t('Icon')}</label>
           <div className="icon-selector">
             <input
               type="text"
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
-              placeholder="Enter icon path"
+              placeholder={t('Enter icon path')}
               className="form-control"
             />
             <label className="icon-upload-btn">
-              Browse
+              {t('Browse')}
               <input
                 type="file"
                 accept="image/*"
@@ -151,16 +149,16 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
             </label>
           </div>
         </div>
-  
+
         <div className="form-group">
-          <label>Label Property Key</label>
+          <label>{t('Label Property Key')}</label>
           <select
             value={labelKey}
             onChange={(e) => setLabelKey(e.target.value)}
             className="form-control"
             disabled={!nodeType || properties.length === 0}
           >
-            <option value="">Select a property</option>
+            <option value="">{t('Select a property')}</option>
             {properties.map((prop) => (
               <option key={prop.name} value={prop.name}>
                 {prop.name} ({prop.type})
@@ -168,12 +166,11 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
             ))}
           </select>
         </div>
-  
-        <button type="submit" className="apply-btn">Apply</button>
+
+        <button type="submit" className="apply-btn">{t('Apply')}</button>
       </form>
     </div>
   );
-  
 };
 
 export default NodeConfigForm;

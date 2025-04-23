@@ -115,7 +115,7 @@ export const createNode = (
     aggregatedproperties,
     properties,
     image: getNodeIcon(nodeType),
-    activated: true, // Set activate to true for new nodes
+    // activated: true, // Set activate to true for new nodes
   };
 
   if (properties._class) {
@@ -401,6 +401,7 @@ export const createNodeHtml = (
   captionElement.style.textAlign = "center";
   captionElement.style.transition = "all 0.3s ease";
   captionElement.style.padding = "4px 8px"; // Add padding for better appearance
+  
 
   if (isSelected) {
     captionElement.style.backgroundColor = "rgba(69, 36, 157, 0.7)";
@@ -455,12 +456,19 @@ export const LabelManager = (node_type, properties) => {
     return fallback;
   }
 
+  // Define icon mappings for specific keys
+  const iconMap = {
+    incoming_links: '⬅',
+    outgoing_links: '➡'
+  };
+
   if (labelKey.includes(',')) {
     const keys = labelKey.split(',');
     const result = keys
       .map((key) => {
         if (properties[key] !== undefined && properties[key] !== null) {
-          return `${key}: ${properties[key]}`;
+          const displayKey = iconMap[key] || key;
+          return `${displayKey}: ${properties[key]}`;
         }
         return '';
       })
@@ -470,9 +478,10 @@ export const LabelManager = (node_type, properties) => {
     return result;
   }
 
+  const displayKey = iconMap[labelKey] || labelKey;
   const result =
     properties[labelKey] !== undefined && properties[labelKey] !== null
-      ? `${labelKey}: ${properties[labelKey]}`
+      ? `${displayKey}: ${properties[labelKey]}`
       : `Unknown ${node_type}`;
   console.log("LabelManager output:", result);
   return result;

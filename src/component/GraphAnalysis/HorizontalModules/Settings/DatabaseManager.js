@@ -11,6 +11,7 @@ import {
   ListGroup,
   Alert,
 } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next'; // Importing the translation hook
 import './DatabaseManager.css'; // Optional: For custom styles
 
 const DatabaseManager = ({
@@ -21,6 +22,7 @@ const DatabaseManager = ({
   token,
   baseUrl,
 }) => {
+  const { t } = useTranslation(); // Initialize the translation hook
   const [newDbName, setNewDbName] = useState('');
   const [loadingCurrentDb, setLoadingCurrentDb] = useState(false);
   const [loadingDatabases, setLoadingDatabases] = useState(false);
@@ -50,7 +52,7 @@ const DatabaseManager = ({
       setCurrentDb(response.data.current_database);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch current database');
+      setError(err.response?.data?.error || t('Failed to fetch current database'));
     } finally {
       setLoadingCurrentDb(false);
     }
@@ -72,7 +74,7 @@ const DatabaseManager = ({
       setDatabases(response.data.databases);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch databases');
+      setError(err.response?.data?.error || t('Failed to fetch databases'));
     } finally {
       setLoadingDatabases(false);
     }
@@ -80,7 +82,7 @@ const DatabaseManager = ({
 
   const handleCreateDatabase = async () => {
     if (!newDbName) {
-      setError('Please enter a database name');
+      setError(t('Please enter a database name'));
       return;
     }
     setLoadingCreateDb(true);
@@ -106,7 +108,7 @@ const DatabaseManager = ({
         fetchAllDatabases();
       }, 1000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create database');
+      setError(err.response?.data?.error || t('Failed to create database'));
       setSuccess('');
     } finally {
       setLoadingCreateDb(false);
@@ -130,7 +132,7 @@ const DatabaseManager = ({
       setError('');
       setCurrentDb(response.data.current_database);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to switch database');
+      setError(err.response?.data?.error || t('Failed to switch database'));
       setSuccess('');
     } finally {
       setLoadingSwitchDb(false);
@@ -138,7 +140,7 @@ const DatabaseManager = ({
   };
 
   const handleDeleteDatabase = async (dbName) => {
-    if (!window.confirm(`Are you sure you want to delete the database "${dbName}"? This action cannot be undone.`)) {
+    if (!window.confirm(t('Are you sure you want to delete the database') + ` "${dbName}"? ${t('This action cannot be undone.')}`)) {
       return;
     }
     setLoadingDeleteDb(true);
@@ -160,7 +162,7 @@ const DatabaseManager = ({
         fetchAllDatabases();
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to delete database');
+      setError(err.response?.data?.error || t('Failed to delete database'));
       setSuccess('');
     } finally {
       setLoadingDeleteDb(false);
@@ -172,7 +174,7 @@ const DatabaseManager = ({
       <Card className="mb-4">
         <Card.Header as="h4">
           <FontAwesomeIcon icon={faPlus} className="me-2" />
-          Create New Database
+          {t('Create New Database')}
         </Card.Header>
         <Card.Body>
           <Form.Group controlId="newDbName" className="mb-3">
@@ -180,7 +182,7 @@ const DatabaseManager = ({
               type="text"
               value={newDbName}
               onChange={(e) => setNewDbName(e.target.value)}
-              placeholder="Enter new database name"
+              placeholder={t('Enter new database name')}
               disabled={loadingCreateDb}
             />
           </Form.Group>
@@ -197,12 +199,12 @@ const DatabaseManager = ({
                   spin
                   className="me-2"
                 />
-                Creating...
+                {t('Creating...')}
               </>
             ) : (
               <>
                 <FontAwesomeIcon icon={faPlus} className="me-2" />
-                Create Database
+                {t('Create Database')}
               </>
             )}
           </Button>
@@ -212,7 +214,7 @@ const DatabaseManager = ({
       <Card>
         <Card.Header as="h4">
           <FontAwesomeIcon icon={faDatabase} className="me-2" />
-          Databases
+          {t('Databases')}
         </Card.Header>
         <Card.Body>
           {(loadingDatabases || loadingCurrentDb) && databases.length === 0 ? (
@@ -254,7 +256,7 @@ const DatabaseManager = ({
                           ) : (
                             <>
                               <FontAwesomeIcon icon={faSync} className="me-1" />
-                              Switch
+                              {t('Switch')}
                             </>
                           )}
                         </Button>
@@ -272,7 +274,7 @@ const DatabaseManager = ({
                           ) : (
                             <>
                               <FontAwesomeIcon icon={faTrash} className="me-1" />
-                              Delete
+                              {t('Delete')}
                             </>
                           )}
                         </Button>
