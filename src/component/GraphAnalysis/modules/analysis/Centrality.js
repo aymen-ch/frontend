@@ -4,7 +4,12 @@ import { Button, Spinner, Form, Row, Col, Card, OverlayTrigger, Tooltip } from '
 import { BASE_URL } from '../../utils/Urls';
 import { CentralityByAttribute } from '../../HorizontalModules/containervisualization/function_container';
 import TopKCentrality from './TopKCentrality';
+
+
+import globalWindowState from '../../utils/globalWindowState';
+
 import { Sliders, Zap, Activity, Target, BarChart2 } from 'lucide-react';
+
 
 const Centrality = ({
   nodes,
@@ -66,8 +71,19 @@ const Centrality = ({
   };
 
   return (
+
+  
+
     <Card className="p-3 shadow-sm rounded-3">
       <div className="d-flex align-items-center gap-2 mb-3">
+      <Button
+        variant="success"
+        className="w-100"
+        onClick={() => globalWindowState.setWindow("analyse_statistique", {selectedCentralityAttribute ,selectedGroup} )}
+      >
+        Open Statistical Analysis
+      </Button>
+      
         <Sliders size={18} /> <strong className="fs-5">Centrality Tools</strong>
       </div>
 
@@ -184,8 +200,12 @@ const Centrality = ({
         setSelectedGroup={setSelectedGroup}
         selectedCentralityAttribute={selectedCentralityAttribute}
         setSelectedCentralityAttribute={setSelectedCentralityAttribute}
-      />
+      />  
+
+
+   
     </Card>
+
   );
 };
 

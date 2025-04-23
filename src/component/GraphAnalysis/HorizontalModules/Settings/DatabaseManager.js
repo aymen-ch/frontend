@@ -160,7 +160,7 @@ const DatabaseManager = ({
       setDatabases((prevDatabases) => prevDatabases.filter((db) => db.name !== dbName));
       setTimeout(() => {
         fetchAllDatabases();
-      }, 2000);
+      }, 3000);
     } catch (err) {
       setError(err.response?.data?.error || t('Failed to delete database'));
       setSuccess('');

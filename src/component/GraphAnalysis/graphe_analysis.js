@@ -8,7 +8,9 @@ import SchemaVisualizer from './HorizontalModules/schema/schema';
 import SettingsPage from './HorizontalModules/Settings/SettingsPage';
 import { GlobalProvider } from './GlobalVariables';
 
-import Dashboard from './HorizontalModules/dashboard/Dashboard'; // Add this import
+
+
+import Dashboard from './HorizontalModules/DashBoard/Dashboard'; // Add this import
 
 const Graphe_analysis = () => {
   const { t, i18n } = useTranslation();
