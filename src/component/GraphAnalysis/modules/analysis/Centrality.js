@@ -5,6 +5,8 @@ import { CentralityByAttribute } from '../../HorizontalModules/containervisualiz
 import { parsergraph } from '../../utils/Parser';
 import TopKCentrality from './TopKCentrality';
 import React, { useEffect, useState } from 'react';
+import globalWindowState from '../../utils/globalWindowState';
+
 
 const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selectedCentralityAttribute, setSelectedCentralityAttribute, isBetweennessLoading, setIsBetweennessLoading }) => {
   const centralityAttributes = [
@@ -71,6 +73,13 @@ const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selected
 
   return (
     <div className="p-3 d-flex flex-column gap-3">
+       <Button
+        variant="success"
+        className="w-100"
+        onClick={() => globalWindowState.setWindow("analyse_statistique", {selectedCentralityAttribute ,selectedGroup} )}
+      >
+        Open Statistical Analysis
+      </Button>
       <Form.Group controlId="groupSelect">
         <Form.Label>Select Node Group</Form.Label>
         <Form.Control
@@ -138,7 +147,8 @@ const Centrality = ({ nodes, setNodes, selectedGroup, setSelectedGroup, selected
         setSelectedGroup={setSelectedGroup}
         selectedCentralityAttribute={selectedCentralityAttribute}
         setSelectedCentralityAttribute={setSelectedCentralityAttribute}
-      />
+      />  
+ 
     </div>
   );
 };

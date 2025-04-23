@@ -4,6 +4,7 @@ import ContextMenu from '../../modules/contextmenu/ContextMenu';
 import GraphCanvas from '../../utils/VisualizationLibrary/GraphCanvas';
 import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWindow/PersonProfileWindow";
 import AddActionWindow from "../../modules/Windows/Actions/PersonProfileWindow/Actions";
+import Analyse_statistique from "../../modules/Windows/Actions/PersonProfileWindow/analyse_statistique";
 import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa'; // Added FaSpinner
 import { FaDiaspora } from "react-icons/fa6";
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
@@ -537,6 +538,10 @@ const GraphVisualization = React.memo(({
       )}
       {activeWindow === 'add_action' && (
         <AddActionWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
+      )}
+
+      {activeWindow === 'analyse_statistique' && (
+        <Analyse_statistique data={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
     </div>
   );
