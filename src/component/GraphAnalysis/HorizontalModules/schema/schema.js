@@ -458,7 +458,7 @@ const SchemaVisualizer = () => {
             
             <div className="module-content">
             {activeModule === 'Detail' && (
-                <Sidebar selectedNode={selectedItem}/>
+                <Sidebar selectedItem={selectedItem}/>
               )}
               {activeModule === 'NodeConfig' && (
                 <NodeConfigForm selectedNode={selectedItem} onUpdate={redrawGraph} />

@@ -35,7 +35,7 @@ export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
     combinedNodes,
     combinedEdges,
     setLayoutType,
-    library_type = 'cytoscape'
+    library_type = 'nvl'
   ) => {
     if (!graphRef.current) {
       console.error('Graph reference not found');

@@ -39,7 +39,7 @@ const GraphCanvas = ({
   }, []);
 
   // Use the NVL visualization hook
-  const { getVisualizationComponent } = useCytoVisualization({
+  const { getVisualizationComponent } = useNvlVisualization({
     nvlRef,
     nodes,
     edges,
