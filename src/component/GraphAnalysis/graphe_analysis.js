@@ -88,7 +88,7 @@ const Graphe_analysis = () => {
               </>
             }
             variant="outline-light"
-            style={{ zIndex: 2000 }}
+            style={{ zIndex: 30 }}
           >
             <Dropdown.Item onClick={() => changeLanguage('ar')}>{t('Arabic')}</Dropdown.Item>
             <Dropdown.Item onClick={() => changeLanguage('fr')}>{t('French')}</Dropdown.Item>
