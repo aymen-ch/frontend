@@ -487,7 +487,11 @@ const ContextMenu = ({
           ref={advancedAggregationSubRef}
           onMouseLeave={() => setAdvancedAggregationSubMenu(null)}
         >
+<<<<<<< HEAD
           <div className="menu-header">{t('Advanced Aggregation')}</div>
+=======
+          <div className="menu-header">Advanced Expand</div>
+>>>>>>> 6577ceea19a79b2e233e4a573b56b2e45942844b
           <div className="menu-items" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '5px' }}>{t('Attribute')}:</label>

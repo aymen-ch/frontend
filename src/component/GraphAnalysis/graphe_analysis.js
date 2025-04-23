@@ -7,7 +7,11 @@ import Container_AlgorithmicAnalysis from './HorizontalModules/containervisualiz
 import SchemaVisualizer from './HorizontalModules/schema/schema';
 import SettingsPage from './HorizontalModules/Settings/SettingsPage';
 import { GlobalProvider } from './GlobalVariables';
+<<<<<<< HEAD
 
+=======
+import Dashboard from './HorizontalModules/DashBoard/Dashboard'; // Add this import
+>>>>>>> 6577ceea19a79b2e233e4a573b56b2e45942844b
 const Graphe_analysis = () => {
   const { t, i18n } = useTranslation();
   const [activeModule, setActiveModule] = useState('Schema');
@@ -37,8 +41,9 @@ const Graphe_analysis = () => {
 
   const DashboardPage = () => (
     <div className="module-content">
-      <h2>{t('Dashboard')}</h2>
-      <p>{t('This is the Dashboard module content.')}</p>
+
+      <Dashboard/> {/* Use the Dashboard component here */}
+
     </div>
   );
 
