@@ -46,7 +46,7 @@ const ChatInput = ({
           }
         }}
         disabled={isLoading}
-        rows="1"
+        rows="3"
       />
 
       <div className="chat-toolbar">

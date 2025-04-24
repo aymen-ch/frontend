@@ -173,8 +173,14 @@ const useNvlVisualization = ({
         selectedNodeRef.current = null;
         selectedRelationRef.current = null;
         setnodetoshow(null);
-        setContextMenu(null);
-        SetContextMenucanvas(null);
+        if (typeof setContextMenu === 'function') {
+          setContextMenu(null);
+        }
+        
+        if (typeof SetContextMenucanvas === 'function') {
+          SetContextMenucanvas(null);
+        }
+        
       }
     });
 

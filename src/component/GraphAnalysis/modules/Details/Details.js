@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NodeTypeVisibilityControl } from './NodeTypeVisibilityControl';
 import { getNodeColor, getNodeIcon, NODE_CONFIG } from '../../utils/Parser';
 import './detail.css';
@@ -14,6 +15,7 @@ const DetailsModule = ({
   SelectecRelationData,
   onNodeConfigChange,
 }) => {
+  const { t } = useTranslation(); // Initialize translation hook
   const [selectedNodeType, setSelectedNodeType] = useState(null);
   const [nodeSize, setNodeSize] = useState({});
   const [nodeColors, setNodeColors] = useState(NODE_CONFIG.nodeColors);
@@ -175,13 +177,13 @@ const DetailsModule = ({
       />
 
       <div className="node-config-container" style={{ marginBottom: '20px' }}>
-        <h5>change size of node by:</h5>
+        <h5>{t('change_size_of_node_by')}</h5>
         <select 
           value={selectedNodeType || ''} 
           onChange={(e) => setSelectedNodeType(e.target.value)}
           style={{ marginBottom: '10px', width: '100%', padding: '5px' }}
         >
-          <option value="">Select Node Type</option>
+          <option value="">{t('select_node_type')}</option>
           {nodeTypes.map(type => (
             <option key={type} value={type}>{type}</option>
           ))}
@@ -190,13 +192,13 @@ const DetailsModule = ({
         {selectedNodeType && (
           <div className="config-controls">
             <div style={{ marginBottom: '10px' }}>
-              <label>Size By Property:</label>
+              <label>{t('size_by_property')}</label>
               <select
                 value={sizeProperty}
                 onChange={(e) => handleSizePropertyChange(selectedNodeType, e.target.value)}
                 style={{ width: '100%', padding: '5px', marginTop: '5px' }}
               >
-                <option value="">Manual Size</option>
+                <option value="">{t('manual_size')}</option>
                 {getPropertiesForNodeType(selectedNodeType).map(prop => (
                   <option key={prop} value={prop}>{prop}</option>
                 ))}
@@ -205,7 +207,7 @@ const DetailsModule = ({
 
             {!sizeProperty && (
               <div style={{ marginBottom: '10px' }}>
-                <label>Size: {nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}px</label>
+                <label>{t('size')}: {nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}px</label>
                 <input
                   type="range"
                   min="50"
@@ -226,7 +228,7 @@ const DetailsModule = ({
             const matchedNode = combinedEdges.find(node => 
               node.id === SelectecRelationData.identity?.toString()
             );
-            const nodeGroup = matchedNode ? matchedNode.group : SelectecRelationData.type || 'Unknown';
+            const nodeGroup = matchedNode ? matchedNode.group : SelectecRelationData.type || t('unknown');
             const nodeColor = '#B771E5';
 
             const { detail, ...mainProperties } = SelectecRelationData;
@@ -246,14 +248,14 @@ const DetailsModule = ({
                     justifyContent: 'space-between'
                   }}
                 >
-                  <span>Relation Properties ({nodeGroup})</span>
+                  <span>{t('relation_properties', { nodeGroup })}</span>
                   {detail && Object.keys(detail).length > 0 && (
                     <button
                       className="btn btn-sm btn-light"
                       onClick={() => setShowDetails(!showDetails)}
                       style={{ marginLeft: '10px' }}
                     >
-                      {showDetails ? 'Hide Details' : 'Show Details'}
+                      {showDetails ? t('hide_details') : t('show_details')}
                     </button>
                   )}
                 </div>
@@ -271,7 +273,7 @@ const DetailsModule = ({
 
                 {detail && Object.keys(detail).length > 0 && showDetails && (
                   <div className="details-section">
-                    <h6 style={{ marginBottom: '10px', color: nodeColor }}>Details</h6>
+                    <h6 style={{ marginBottom: '10px', color: nodeColor }}>{t('details')}</h6>
                     {Object.entries(detail).map(([detailKey, detailValue]) => (
                       <div key={detailKey} className="detail-item" style={{ marginBottom: '15px' }}>
                         <div 
@@ -316,7 +318,7 @@ const DetailsModule = ({
             const matchedNode = combinedNodes.find(node => 
               node.id === nodetoshow
             );
-            const nodeGroup = matchedNode ? matchedNode.group : 'Unknown';
+            const nodeGroup = matchedNode ? matchedNode.group : t('unknown');
             const nodeColor = getNodeColor(nodeGroup);
             const nodeIcon = getNodeIcon(nodeGroup);
             
@@ -348,7 +350,7 @@ const DetailsModule = ({
                   >
                     <img
                       src={nodeIcon}
-                      alt={`${nodeGroup} icon`}
+                      alt={t('node_icon_alt', { nodeGroup })}
                       style={{
                         width: '100%',
                         height: '100%',
@@ -367,7 +369,7 @@ const DetailsModule = ({
                       </span>
                     </li>
                   ))}
-                  <h4>------les attribut d'analyse :--------------</h4>
+                  <h4>{t('analysis_attributes')}</h4>
                   {matchedNode?.properties_analyse && Object.entries(matchedNode.properties_analyse).map(([key, value]) => (
                     <li key={key} className="list-group-item property-item">
                       <strong className="property-key">{key}:</strong> 

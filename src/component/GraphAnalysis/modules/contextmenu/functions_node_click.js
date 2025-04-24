@@ -120,7 +120,15 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
 
   try {
     // Check if relationType is a virtual relation
-    const virtualRelations = JSON.parse(localStorage.getItem('virtualRelations')) || [];
+    let virtualRelations = [];
+    try {
+      const stored = JSON.parse(localStorage.getItem('virtualRelations'));
+      if (Array.isArray(stored)) {
+        virtualRelations = stored;
+      }
+    } catch (err) {
+      console.warn("Invalid virtualRelations data in localStorage", err);
+    }
     const virtualRelation = virtualRelations.find((vr) => vr.name === relationType);
 
     let response;

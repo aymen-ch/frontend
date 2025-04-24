@@ -88,7 +88,15 @@ const ContextMenu = ({
           isVirtual: false,
         }));
 
-        const virtualRelations = JSON.parse(localStorage.getItem('virtualRelations')) || [];
+       let virtualRelations = [];
+        try {
+          const stored = JSON.parse(localStorage.getItem('virtualRelations'));
+          if (Array.isArray(stored)) {
+            virtualRelations = stored;
+          }
+        } catch (err) {
+          console.warn("Invalid virtualRelations data in localStorage", err);
+        }
         const nodeGroup = contextMenu.node.group;
         console.log("virtuel", virtualRelations);
 

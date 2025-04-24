@@ -30,8 +30,8 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [showQueryModal, setShowQueryModal] = useState(null);
   const [editingQueryId, setEditingQueryId] = useState(null);
   const [editedQuery, setEditedQuery] = useState('');
-  const [maxCorrections, setMaxCorrections] = useState(3); // Default max corrections
-  const [selectedModel, setSelectedModel] = useState('llama3.2:latest'); // Default model
+  const [maxCorrections, setMaxCorrections] = useState(1); // Default max corrections
+  const [selectedModel, setSelectedModel] = useState('hf.co/DavidLanz/text2cypher-gemma-2-9b-it-finetuned-2024v1:latest'); // Default model
   const handleEditQuery = (messageId, currentQuery) => {
     setEditingQueryId(messageId);
     setEditedQuery(currentQuery);

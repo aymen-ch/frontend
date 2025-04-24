@@ -15,8 +15,9 @@ import { useTranslation } from "react-i18next";
 import { BASE_URL } from '../../utils/Urls';
 import '../../../../i18n'
 import axios from 'axios';
+import { FaInfoCircle, FaCogs, FaTools, FaLink, FaPlusCircle, FaPalette } from 'react-icons/fa';
+import "./schema.css"
 // import { BASE_URL } from '../../utils/Urls';
-
 
 const URI = 'neo4j://localhost:7687';
 const USER = 'neo4j';
@@ -58,6 +59,7 @@ const SchemaVisualizer = () => {
       if (node) {
         setSelectedItem({
           id: node.id,
+          isnode:true,
           group: node.group,
           properties: node.properties || {},
         });
@@ -69,8 +71,14 @@ const SchemaVisualizer = () => {
       if (edge) {
         setSelectedItem({
           id: edge.id,
-          group: edge.group,
+          group: edge.group || edge.type, // Use edge.type for relation type
           properties: edge.properties || {},
+          isnode: false, // Add type to distinguish edges
+          from: edge.from,
+          to: edge.to,
+          virtual: edge.virtual || false,
+          path: edge.path || null,
+          finalPath: edge.finalPath || null,
         });
       }
     }else
@@ -357,16 +365,22 @@ const SchemaVisualizer = () => {
           }
         }
 
-        const virtualEdge = createEdge(
-          {
-            type: relationName,
-            identity: `virtual_${relationName}_${startNode.id}_${endNodeId}`,
-          },
-          startNode.id,
-          endNodeId,
-          'green'
-        );
-        processedEdges.push(virtualEdge);
+         const virtualEdge = {
+    ...createEdge(
+      {
+        type: relationName,
+        identity: `virtual_${relationName}_${startNode.id}_${endNodeId}`,
+      },
+      startNode.id,
+      endNodeId,
+      'green'
+    ),
+    virtual: true,
+    path: path,
+    finalPath: `${startNodeLabel} -${relationName}-> ${endNodeLabel}`,
+  };
+
+  processedEdges.push(virtualEdge);
       });
 
       setNodes(processedNodes);
@@ -451,20 +465,25 @@ const SchemaVisualizer = () => {
         >
 
 {true && (
-          <div className="side-nav">
-            <div className="side-nav-inner">
-              {[t("Detail"), t('NodeConfig'), t('Aggregation')].map((module) => (
-                <div
-                  key={module}
-                  className={`side-nav-item ${activeModule === module ? 'active' : ''}`}
-                  onClick={() => handleModuleClick(module)}
-                >
-                  {module}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+  <div className="side-nav">
+    <div className="side-nav-inner">
+      {[
+        { label: t('Detail'), icon: <FaInfoCircle /> },
+        { label: t('NodeConfig'), icon: <FaCogs /> },
+        { label: t('Aggregation'), icon: <FaPlusCircle /> }
+      ].map(({ label, icon }) => (
+        <div
+          key={label}
+          className={`side-nav-item ${activeModule === label ? 'active' : ''}`}
+          onClick={() => handleModuleClick(label)}
+        >
+          <span className="nav-icon">{icon}</span>
+          <span>{label}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
         {activeModule && (
           <div className="module-panel">
@@ -498,6 +517,7 @@ const SchemaVisualizer = () => {
                setVirtualRelations={setVirtualRelations}
                setEdges={setEdges}
                nvlRef={nvlRef}
+               setLayoutType={setLayoutType}
              />
               )}
              

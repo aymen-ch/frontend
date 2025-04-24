@@ -39,14 +39,22 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(20); // Vitesse de défilement en pixels par intervalle
   const scrollIntervalRef = useRef(null);
+  // Nouvel état pour suivre les affaires déjà couvertes
+  const coveredItemsRef = useRef(new Set());
+  // État pour forcer le rendu des affaires
+  const [forceUpdate, setForceUpdate] = useState(0);
+  // Référence pour suivre le nombre total d'affaires
+  const totalItemsRef = useRef(0);
 
   useEffect(() => {
     itemRefs.current = {};
-    console.log(data)
+    console.log(data);
+    // Mettre à jour le nombre total d'affaires
+    totalItemsRef.current = data.length;
   }, [data, selectedAttribute]);
 
   const logItemsInRange = (startX, endX) => {
-    if (!timelineRef.current) return;
+    if (!timelineRef.current) return [];
 
     const timelineRect = timelineRef.current.getBoundingClientRect();
     const scrollLeft = timelineRef.current.scrollLeft;
@@ -68,19 +76,21 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
       setItemsInRange(itemIdsInRange);
       prevItemsInRange.current = itemIdsInRange;
     }
+    
+    return itemsInRange;
   };
 
   useEffect(() => {
     if (data.length > 0 && isVisible) {
       logItemsInRange(boxPosition.x, boxPosition.x + boxPosition.width);
     }
-  }, [data, isVisible, selectedAttribute]);
+  }, [data, isVisible, selectedAttribute, forceUpdate]);
 
   useEffect(() => {
     if (!isResizingLeft && !isResizingRight && !isDragging && isVisible) {
       logItemsInRange(boxPosition.x, boxPosition.x + boxPosition.width);
     }
-  }, [boxPosition, isResizingLeft, isResizingRight, isDragging, isVisible]);
+  }, [boxPosition, isResizingLeft, isResizingRight, isDragging, isVisible, forceUpdate]);
 
   const handleResizeStart = (e, direction) => {
     e.preventDefault();
@@ -128,10 +138,18 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isResizingLeft, isResizingRight]);
+
+  // Fonction modifiée pour le défilement automatique
   const startAutoScroll = () => {
     if (isAutoScrolling) return;
   
     setIsAutoScrolling(true);
+    
+    // Réinitialiser les affaires couvertes au démarrage
+    coveredItemsRef.current = new Set();
+    
+    // Forcer un rendu initial pour s'assurer que tous les éléments sont correctement référencés
+    setForceUpdate(prev => prev + 1);
   
     scrollIntervalRef.current = setInterval(() => {
       if (!timelineRef.current) return;
@@ -139,37 +157,51 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
       const timelineWidth = timelineRef.current.scrollWidth;
   
       setBoxPosition((prev) => {
-        let newX = prev.x + scrollSpeed;
-  
-        // If the box's right edge reaches the end, reset to the start
-        if (newX + prev.width > timelineWidth) {
-          newX = 0;
+        // Au lieu de déplacer la boîte, on augmente sa largeur
+        let newWidth = prev.width + scrollSpeed;
+        
+        // Si la largeur dépasse la timeline, on réinitialise
+        if (prev.x + newWidth > timelineWidth) {
+          // Réinitialiser à la position initiale et vider les affaires couvertes
+          coveredItemsRef.current = new Set();
+          setItemsInRange([]);
+          return { x: 0, width: 100 };
         }
-  
-        // Adjust the container's scroll to keep the box in view
+        
+        // Ajuster le défilement du conteneur pour garder la boîte en vue
         const containerRect = timelineRef.current.getBoundingClientRect();
-        const boxRightEdge = newX + prev.width;
+        const boxRightEdge = prev.x + newWidth;
         const visibleRightEdge = timelineRef.current.scrollLeft + containerRect.width;
-        const visibleLeftEdge = timelineRef.current.scrollLeft;
-  
-        // Scroll right if the box's right edge is near the visible right edge
+        
+        // Faire défiler vers la droite si le bord droit de la boîte est proche du bord droit visible
         if (boxRightEdge > visibleRightEdge - 50) {
           timelineRef.current.scrollLeft += scrollSpeed;
         }
-        // Scroll left if the box's left edge is near the visible left edge
-        else if (newX < visibleLeftEdge + 50 && timelineRef.current.scrollLeft > 0) {
-          timelineRef.current.scrollLeft -= scrollSpeed;
+        
+        // Obtenir les éléments actuellement dans la plage
+        const currentItems = logItemsInRange(prev.x, prev.x + newWidth);
+        
+        // Ajouter les nouveaux éléments à l'ensemble des éléments couverts
+        currentItems.forEach(item => {
+          coveredItemsRef.current.add(item.id);
+        });
+        
+        // Mettre à jour les éléments dans la plage avec tous les éléments couverts jusqu'à présent
+        const allCoveredIds = Array.from(coveredItemsRef.current);
+        setItemsInRange(allCoveredIds);
+        
+        // Vérifier si toutes les affaires ont été couvertes
+        if (totalItemsRef.current > 0 && coveredItemsRef.current.size >= totalItemsRef.current) {
+          // Arrêter le défilement automatique si toutes les affaires sont couvertes
+          setTimeout(() => {
+            stopAutoScroll();
+          }, 500); // Petit délai pour permettre l'affichage final
         }
-  
-        // Reset scroll to 0 when the box resets to the start
-        if (newX === 0) {
-          timelineRef.current.scrollLeft = 0;
-        }
-  
-        // Update items in range
-        logItemsInRange(newX, newX + prev.width);
-  
-        return { ...prev, x: newX };
+        
+        // Forcer un rendu pour s'assurer que les affaires sont affichées
+        setForceUpdate(prev => prev + 1);
+        
+        return { ...prev, width: newWidth };
       });
     }, 100); // 100ms interval for smooth animation
   };
@@ -181,6 +213,11 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
       scrollIntervalRef.current = null;
     }
     setIsAutoScrolling(false);
+    
+    // Afficher un message dans la console pour indiquer que toutes les affaires ont été couvertes
+    if (coveredItemsRef.current.size >= totalItemsRef.current) {
+      console.log("Toutes les affaires ont été couvertes. Défilement automatique arrêté.");
+    }
   };
 
   // Nettoyer l'intervalle lors du démontage du composant
@@ -250,6 +287,19 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
   const toggleAttributeManager = () => {
     setShowAttributeManager(prev => !prev);
   };
+  
+  // Effet pour afficher les affaires couvertes
+  useEffect(() => {
+    if (isAutoScrolling) {
+      // Forcer un rendu périodique pour s'assurer que les affaires sont affichées
+      const updateInterval = setInterval(() => {
+        setForceUpdate(prev => prev + 1);
+      }, 500);
+      
+      return () => clearInterval(updateInterval);
+    }
+  }, [isAutoScrolling]);
+  
   return (
     <>
       <div
@@ -259,7 +309,7 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
           bottom: '0',
           left: '85px',
           right: '70px',
-          height: isVisible ? '200px' : '24px',
+          height: isVisible ? '200px' : '37px',
           backgroundColor: '#f8f9fa',
           border: '2px solid red',
           overflowX: 'auto',
@@ -271,6 +321,27 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
           visibility: 'visible',
         }}
       >
+        {/* Toggle button moved outside isVisible block */}
+        <div style={{ position: 'absolute', top: '5px', right: '10px' }}>
+          <button
+            onClick={toggleVisibility}
+            style={{
+              padding: '5px 10px',
+              backgroundColor: '#e0e0e0',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              zIndex: 1001,
+            }}
+            title="Masquer/Afficher la timeline"
+          >
+            {isVisible ? 'Maske' : 'Afficher'}
+          </button>
+        </div>
+  
         {isVisible && (
           <>
             <div style={{ position: 'absolute', top: '5px', left: '10px', display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -433,24 +504,20 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
                       color: '#fff',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: !newAttributeName || attributes.includes(newAttributeName) ? 'not-allowed' : 'pointer',
+                      cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '5px',
                     }}
                   >
-                    <Plus size={16} />
+                    <Plus size={14} />
                     Ajouter
                   </button>
-                </div>
-                
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                  Attributs actuels: {attributes.length}
                 </div>
               </div>
             )}
             
-            {/* Timeline content */}
+            {/* Timeline content - Préservation de l'affichage horizontal */}
             <div style={{ 
               position: 'relative', 
               height: '100px', 
@@ -519,77 +586,47 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
   
               <Draggable
                 axis="x"
-                bounds={{
-                  left: 0,
-                  right: timelineRef.current ? timelineRef.current.scrollWidth - boxPosition.width : 0,
-                }}
+                bounds="parent"
                 position={{ x: boxPosition.x, y: 0 }}
+                onStart={() => setIsDragging(true)}
                 onDrag={(e, data) => {
-                  // Arrêter le défilement automatique si l'utilisateur commence à faire glisser manuellement
-                  if (isAutoScrolling) {
-                    stopAutoScroll();
-                  }
-                  
-                  const timelineWidth = timelineRef.current.scrollWidth;
-                  const newX = Math.min(Math.max(0, data.x), timelineWidth - boxPosition.width);
-                  setBoxPosition((prev) => ({ ...prev, x: newX }));
-                  setIsDragging(true);
-  
-                  const scrollContainer = timelineRef.current;
-                  const containerRect = scrollContainer.getBoundingClientRect();
-                  const scrollSpeed = 50;
-  
-                  if (e.clientX < containerRect.left + 50) {
-                    scrollContainer.scrollLeft -= scrollSpeed;
-                  } else if (e.clientX > containerRect.right - 50) {
-                    scrollContainer.scrollLeft += scrollSpeed;
-                  }
+                  setBoxPosition((prev) => ({ ...prev, x: data.x }));
                 }}
-                onStop={() => {
-                  setIsDragging(false);
-                }}
-                disabled={isAutoScrolling} // Désactiver le glissement manuel pendant le défilement automatique
+                onStop={() => setIsDragging(false)}
+                disabled={isAutoScrolling}
               >
                 <div
                   style={{
                     position: 'absolute',
-                    top: '14px',
+                    top: '0',
+                    height: 'calc(100% - 0px)',
                     width: `${boxPosition.width}px`,
-                    height: '110px',
-                    backgroundColor: isAutoScrolling 
-                      ? 'rgba(46, 204, 113, 0.3)' // Couleur verte pendant la simulation
-                      : 'rgba(52, 141, 173, 0.3)',
-                    border: `2px solid ${isAutoScrolling ? '#2ecc71' : '#86aae3'}`,
-                    boxShadow: '0 0 5px rgba(0,0,0,0.2)',
-                    borderRadius: '4px',
-                    transition: 'background-color 0.3s ease, border-color 0.3s ease',
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                    border: '2px solid rgba(0, 123, 255, 0.5)',
+                    boxSizing: 'border-box',
+                    cursor: isAutoScrolling ? 'default' : 'move',
+                    zIndex: 10,
                   }}
                 >
                   <div
                     style={{
                       position: 'absolute',
-                      left: '-5px',
                       top: '0',
-                      bottom: '0',
+                      left: '0',
                       width: '10px',
-                      cursor: isAutoScrolling ? 'not-allowed' : 'ew-resize',
-                      backgroundColor: isAutoScrolling ? '#2ecc71' : '#86aae3',
-                      borderRadius: '2px',
-                      pointerEvents: isAutoScrolling ? 'none' : 'auto',
+                      height: '100%',
+                      cursor: isAutoScrolling ? 'default' : 'w-resize',
                     }}
                     onMouseDown={(e) => !isAutoScrolling && handleResizeStart(e, 'left')}
                   />
                   <div
                     style={{
                       position: 'absolute',
-                      right: '-5px',
                       top: '0',
-                      bottom: '0',
+                      right: '0',
                       width: '10px',
-                      cursor: isAutoScrolling ? 'not-allowed' : 'ew-resize',
-                      backgroundColor: isAutoScrolling ? '#2ecc71' : '#86aae3',
-                      borderRadius: '2px',
-                      pointerEvents: isAutoScrolling ? 'none' : 'auto',
+                      height: '100%',
+                      cursor: isAutoScrolling ? 'default' : 'e-resize',
                     }}
                     onMouseDown={(e) => !isAutoScrolling && handleResizeStart(e, 'right')}
                   />
@@ -598,26 +635,6 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
             </div>
           </>
         )}
-        <button
-          onClick={toggleVisibility}
-          style={{
-            position: 'absolute',
-            top: '0',
-            right: '10px',
-            padding: '2px 5px',
-            backgroundColor: '#86aae3',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '0 0 4px 4px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-          }}
-        >
-          {isVisible ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          {isVisible ? 'Masquer' : 'Afficher'}
-        </button>
       </div>
     </>
   );

@@ -12,15 +12,14 @@ export const convertNeo4jToGraph = (records) => {
         // Handle a path (sequence of nodes and relationships)
         console.log("true")
         const { segments } = field;
-
+        console.log(segments)
         segments.forEach(segment => {
           const { start, relationship, end } = segment;
 
           // Add start node
-          newNodes.push(createNode(start.properties, start.labels[0], start.properties, false));
-               
+          newNodes.push(createNode(start.identity, start.labels[0], start.properties, false));
           // Add end node
-          newNodes.push(createNode(end.properties, end.labels[0], end.properties, false));
+          newNodes.push(createNode(end.identity, end.labels[0], end.properties, false));
 
           // Add relationship as an edge
           newEdges.push(createEdge(relationship, start.identity, end.identity));
