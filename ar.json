@@ -15,6 +15,7 @@
   "Attribute": "",
   "Browse": "",
   "Build Path": "",
+  "Button Statistical Analysistton": "",
   "Change Language": "",
   "Chat": "",
   "Color": "",
@@ -67,7 +68,9 @@
   "File Type": "",
   "Final Node": "",
   "French": "",
+  "General": "",
   "Icon": "",
+  "Import": "",
   "Import File": "",
   "Import File to Neo4j": "",
   "Importing...": "",
@@ -77,6 +80,7 @@
   "JSON File": "",
   "Label Property Key": "",
   "Labels": "",
+  "Language": "",
   "Max Level": "",
   "Metric": "",
   "No actions available": "",
@@ -129,7 +133,7 @@
   "Switch": "",
   "Template": "",
   "This action cannot be undone.": "",
-  "This is the Dashboard module content.": "",
   "Threshold": "",
-  "View Neighborhood": ""
+  "View Neighborhood": "",
+  "Visualization": ""
 }

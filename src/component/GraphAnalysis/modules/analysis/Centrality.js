@@ -5,7 +5,7 @@ import { BASE_URL } from '../../utils/Urls';
 import { CentralityByAttribute } from '../../HorizontalModules/containervisualization/function_container';
 import TopKCentrality from './TopKCentrality';
 
-
+import { useTranslation } from 'react-i18next';
 import globalWindowState from '../../utils/globalWindowState';
 
 import { Sliders, Zap, Activity, Target, BarChart2 } from 'lucide-react';
@@ -21,6 +21,7 @@ const Centrality = ({
   isBetweennessLoading,
   setIsBetweennessLoading
 }) => {
+  const{t} = useTranslation()
   const centralityAttributes = [
     'degree_out', 'degree_in', '_betweennessCentrality',
     '_pagerank', '_articleRank', '_eigenvector', '_betweenness',
@@ -76,26 +77,36 @@ const Centrality = ({
 
     <Card className="p-3 shadow-sm rounded-3">
       <div className="d-flex align-items-center gap-2 mb-3">
-      <Button
-        variant="success"
-        className="w-100"
-        onClick={() => globalWindowState.setWindow("analyse_statistique", {selectedCentralityAttribute ,selectedGroup} )}
-      >
-        Open Statistical Analysis
-      </Button>
       
-        <Sliders size={18} /> <strong className="fs-5">Centrality Tools</strong>
+      
+        <Sliders size={18} /> <strong className="fs-5"> {t('Centrality Tools')}</strong>
       </div>
 
       {/* Node Group and Centrality Attribute Section */}
+      {/* <OverlayTrigger
+  placement="top"
+  // overlay={<Tooltip id="stat-analysis-tooltip">Open statistical analysis for selected node group and centrality</Tooltip>}
+> */}
+  <Button
+    size="sm"
+    variant="info"
+    className="w-100 d-flex align-items-center justify-content-center gap-1"
+    onClick={() => globalWindowState.setWindow("analyse_statistique", { selectedCentralityAttribute, selectedGroup })}
+    style={{ height: '50px' }} // Match height with other buttons
+  >
+    <BarChart2 size={14} className="me-1" /> {/* Adding BarChart2 icon for statistical analysis */}
+    {t('Button Statistical Analysistton')}
+  </Button>
+{/* </OverlayTrigger> */}
+
       <Row className="g-2 mb-3">
         {/* Node Type Dropdown */}
         <Col xs={12}>
-          <Form.Label>Select Node Type</Form.Label>
-          <OverlayTrigger
+          <Form.Label>{t('Select Node Type')}</Form.Label>
+          {/* <OverlayTrigger
             placement="top"
-            overlay={<Tooltip id="node-group-tooltip">Select the group of nodes for analysis</Tooltip>}
-          >
+            overlay={<Tooltip id="node-group-tooltip">{t('Select the group of nodes for analysis')}</Tooltip>}
+          > */}
             <Form.Select
               size="sm"
               value={selectedGroup}
@@ -108,16 +119,16 @@ const Centrality = ({
                 </option>
               ))}
             </Form.Select>
-          </OverlayTrigger>
+          {/* </OverlayTrigger> */}
         </Col>
 
         {/* Centrality Attribute Dropdown */}
         <Col xs={12}>
-          <Form.Label>Select Centrality Algorithm</Form.Label>
-          <OverlayTrigger
+          <Form.Label>{t('Select Centrality Algorithm')}</Form.Label>
+          {/* <OverlayTrigger
             placement="top"
-            overlay={<Tooltip id="centrality-attribute-tooltip">Choose the centrality attribute for calculation</Tooltip>}
-          >
+            overlay={<Tooltip id="centrality-attribute-tooltip">{t('Choose the centrality attribute for calculation')}</Tooltip>}
+          > */}
             <Form.Select
               size="sm"
               value={selectedCentralityAttribute}
@@ -130,17 +141,17 @@ const Centrality = ({
                 </option>
               ))}
             </Form.Select>
-          </OverlayTrigger>
+          {/* </OverlayTrigger> */}
         </Col>
       </Row>
 
       {/* Buttons to trigger actions */}
       <Row className="g-2 mb-3">
   <Col xs={12} md={6}>
-    <OverlayTrigger
+    {/* <OverlayTrigger
       placement="top"
-      overlay={<Tooltip id="frontend-tooltip">Calculate centrality  sur le graphe affiche</Tooltip>}
-    >
+      // overlay={<Tooltip id="frontend-tooltip">Calculate centrality  sur le graphe affiche</Tooltip>}
+    > */}
       <Button
         size="sm"
         variant="warning"
@@ -151,16 +162,16 @@ const Centrality = ({
         style={{ height: '50px' }} // Ensuring same height for buttons
       >
         <Zap size={14} className="me-1" />
-        Frontend
+        {t('Frontend')}
       </Button>
-    </OverlayTrigger>
+    {/* </OverlayTrigger> */}
   </Col>
 
   <Col xs={12} md={6}>
-    <OverlayTrigger
+    {/* <OverlayTrigger
       placement="top"
       overlay={<Tooltip id="backend-tooltip">Calculate centrality sur le graphe complete</Tooltip>}
-    >
+    > */}
       <Button
         size="sm"
         variant="primary"
@@ -184,11 +195,11 @@ const Centrality = ({
         ) : (
           <>
             <Activity size={14} className="me-1" />
-            Backend
+           {t('Backend')}
           </>
         )}
       </Button>
-    </OverlayTrigger>
+    {/* </OverlayTrigger> */}
   </Col>
 </Row>
 

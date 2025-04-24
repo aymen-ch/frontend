@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { 
   Container, 
   Row, 
@@ -25,22 +26,6 @@ import {
 import './Dashboard.css';
 import { BASE_URL } from '../../utils/Urls';
 
-// import { 
-//   BarChart, 
-//   Bar, 
-//   XAxis, 
-//   YAxis, 
-//   CartesianGrid, 
-//   Tooltip, 
-//   Legend, 
-//   ResponsiveContainer,
-//   Brush,
-//   PieChart, 
-//   Pie,
-//   Sector,
-//   Cell
-// } from 'recharts';
-
 const Dashboard = () => {
   // State for all data views
   const [stats, setStats] = useState({});
@@ -64,7 +49,7 @@ const Dashboard = () => {
   const [errorTopUnites, setErrorTopUnites] = useState('');
 
   const token = localStorage.getItem('authToken');
-
+  const{t} = useTranslation()
   // Format data for charts
   const formatWilayaData = () => {
     return Object.entries(affaireCountsByWilaya).map(([wilaya, count]) => ({
@@ -98,7 +83,7 @@ const Dashboard = () => {
       });
       setStats(response.data);
     } catch (err) {
-      setErrorStats(err.response?.data?.error || 'Failed to fetch database stats');
+      setErrorStats(err.response?.data?.error || t('Failed to fetch database stats'));
     } finally {
       setLoadingStats(false);
     }
@@ -112,7 +97,7 @@ const Dashboard = () => {
       });
       setNodeTypeCounts(response.data.node_type_counts);
     } catch (err) {
-      setErrorNodeTypes(err.response?.data?.error || 'Failed to fetch node type counts');
+      setErrorNodeTypes(err.response?.data?.error || t('Failed to fetch node type counts'));
     } finally {
       setLoadingNodeTypes(false);
     }
@@ -128,7 +113,7 @@ const Dashboard = () => {
       console.log('response' , response)
       setAffaireCountsByWilaya(response.data.affaire_counts_by_wilaya);
     } catch (err) {
-      setErrorWilaya(err.response?.data?.error || 'Failed to fetch affaire counts by wilaya');
+      setErrorWilaya(err.response?.data?.error || t('Failed to fetch affaire counts by wilaya'));
     } finally {
       setLoadingWilaya(false);
     }
@@ -142,7 +127,7 @@ const Dashboard = () => {
       });
       setAffaireCountsByDay(response.data.affaire_counts_by_day);
     } catch (err) {
-      setErrorDay(err.response?.data?.error || 'Failed to fetch affaire counts by day');
+      setErrorDay(err.response?.data?.error || t('Failed to fetch affaire counts by day'));
     } finally {
       setLoadingDay(false);
     }
@@ -156,7 +141,7 @@ const Dashboard = () => {
       });
       setTopUnites(response.data.top_unite_by_affaire_count);
     } catch (err) {
-      setErrorTopUnites(err.response?.data?.error || 'Failed to fetch top unite by affaire count');
+      setErrorTopUnites(err.response?.data?.error || t('Failed to fetch top unite by affaire count'));
     } finally {
       setLoadingTopUnites(false);
     }
@@ -179,14 +164,14 @@ const Dashboard = () => {
         padding: '20px'
       }}>
         <h2 className="my-4" style={{ position: 'sticky', top: 0, background: 'white', zIndex: 100, padding: '10px 0' }}>
-          Database Dashboard
+          {t('Database Dashboard')}
         </h2>
       
       {/* Database Stats Card */}
       <Row className="mb-4">
         <Col>
           <Card>
-            <Card.Header>Database Statistics</Card.Header>
+            <Card.Header>{t('Database Statistics')}</Card.Header>
             <Card.Body>
               {loadingStats ? (
                 <Spinner animation="border" />
@@ -198,15 +183,15 @@ const Dashboard = () => {
                     <Table striped bordered hover>
                       <tbody>
                         <tr>
-                          <td>Total Nodes</td>
+                          <td>{t('Total Nodes')}</td>
                           <td>{stats.nodes || 0}</td>
                         </tr>
                         <tr>
-                          <td>Total Relationships</td>
+                          <td>{t('Total Relationships')}</td>
                           <td>{stats.relationships || 0}</td>
                         </tr>
                         <tr>
-                          <td>Labels</td>
+                          <td>{t('Labels')}</td>
                           <td>{stats.labels || 0}</td>
                         </tr>
                       </tbody>
@@ -216,11 +201,11 @@ const Dashboard = () => {
                     <Table striped bordered hover>
                       <tbody>
                         <tr>
-                          <td>Relationship Types</td>
+                          <td>{t('Relationship Types')}</td>
                           <td>{stats.relationship_types || 0}</td>
                         </tr>
                         <tr>
-                          <td>Property Keys</td>
+                          <td>{t('Property Keys')}</td>
                           <td>{stats.property_keys || 0}</td>
                         </tr>
                       </tbody>
@@ -238,7 +223,7 @@ const Dashboard = () => {
         {/* Affaire Counts by Wilaya - Bar Chart */}
         <Col md={6}>
           <Card>
-            <Card.Header>Affaire Counts by Wilaya</Card.Header>
+            <Card.Header>{t('Affaire Counts by Wilaya')}</Card.Header>
             <Card.Body>
               {loadingWilaya ? (
                 <Spinner animation="border" />
@@ -255,7 +240,7 @@ const Dashboard = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="count" fill="#8884d8" name="Affaire Count" />
+                    <Bar dataKey="count" fill="#8884d8" name={t('Affaire Count')} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -268,7 +253,7 @@ const Dashboard = () => {
 
 <Col md={6}>
   <Card>
-    <Card.Header>Affaire Counts by Day</Card.Header>
+    <Card.Header>{t('Affaire Counts by Day')}</Card.Header>
     <Card.Body>
       {loadingDay ? (
         <Spinner animation="border" />
@@ -291,7 +276,7 @@ const Dashboard = () => {
               />
               <YAxis 
                 label={{ 
-                  value: 'Count', 
+                  value: t('Count'), 
                   angle: -90, 
                   position: 'insideLeft',
                   fontSize: 14
@@ -315,7 +300,7 @@ const Dashboard = () => {
                 type="monotone" 
                 dataKey="count" 
                 stroke="#82ca9d" 
-                name="Affaire Count" 
+                name={t('Affaire Count')} 
                 strokeWidth={2}
                 activeDot={{ r: 8 }} 
               />
@@ -346,7 +331,7 @@ const Dashboard = () => {
         {/* Node Type Counts */}
         <Col md={6}>
           <Card>
-            <Card.Header>Node Type Counts</Card.Header>
+            <Card.Header>{t('Node Type Counts')}</Card.Header>
             <Card.Body>
               {loadingNodeTypes ? (
                 <Spinner animation="border" />
@@ -356,8 +341,8 @@ const Dashboard = () => {
                 <Table striped bordered hover>
                   <thead>
                     <tr>
-                      <th>Node Type</th>
-                      <th>Count</th>
+                      <th>{t('Node Type')}</th>
+                      <th>{t('Count')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -377,7 +362,7 @@ const Dashboard = () => {
         {/* Top Unites by Affaire Count */}
         <Col md={6}>
           <Card>
-            <Card.Header>Top 10 Unites by Affaire Count</Card.Header>
+            <Card.Header>{t('Top 10 Unites by Affaire Count')}</Card.Header>
             <Card.Body>
               {loadingTopUnites ? (
                 <Spinner animation="border" />
@@ -387,8 +372,8 @@ const Dashboard = () => {
                 <Table striped bordered hover>
                   <thead>
                     <tr>
-                      <th>Unite</th>
-                      <th>Affaire Count</th>
+                      <th>{t('Unite')}</th>
+                      <th>{t('Affaire Count')}</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Form, Button, ListGroup, Spinner, Row, Col } from 'react-bootstrap';
 import { BASE_URL } from '../../utils/Urls';
+import { useTranslation } from 'react-i18next';
+
 
 const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCentralityAttribute, setSelectedCentralityAttribute }) => {
   const [start, setStart] = useState(0);
@@ -10,7 +12,7 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
   const [topKnodes, setTopKnodes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
+ const{t} = useTranslation()
   const handleFetchNodes = async () => {
     setIsLoading(true);
     setError(null);
@@ -52,12 +54,12 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
 
   return (
     <div className="p-3 d-flex flex-column gap-3">
-      <h5>Top K Centrality Nodes</h5>
+      <h5>{t('Top K Centrality Nodes')}</h5>
 
       <Row className="g-2 mb-3">
         <Col xs={6}>
           <Form.Group controlId="rangeStart">
-            <Form.Label>Start Index</Form.Label>
+            <Form.Label>{t('Start Index')}</Form.Label>
             <Form.Control
               type="number"
               size="sm"
@@ -69,7 +71,7 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
         </Col>
         <Col xs={6}>
           <Form.Group controlId="rangeEnd">
-            <Form.Label>End Index</Form.Label>
+            <Form.Label>{t('End Index')}</Form.Label>
             <Form.Control
               type="number"
               size="sm"

@@ -30,8 +30,10 @@ import {
   Sector,
   Cell
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 const CustomActiveShapePieChart = ({ data }) => {
+    const { t } = useTranslation();
     const [activeIndex, setActiveIndex] = useState(0);
   
     const onPieEnter = (_, index) => {
@@ -101,7 +103,7 @@ const CustomActiveShapePieChart = ({ data }) => {
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
   
     const pieData = data
-      .sort((a, b) => b.count - a.count)
+      // .sort((a, b) => b.count - a.count)
       // .slice(0, 6)
       .map(item => ({
         name: item.label,
@@ -180,6 +182,7 @@ const CustomActiveShapePieChart = ({ data }) => {
   };
 
 const Analyse_statistique = ({ data, onClose }) => {
+  const { t } = useTranslation();
   const [isMaximized, setIsMaximized] = useState(false);
   const [activeTab, setActiveTab] = useState('distribution');
   const [rawValues, setRawValues] = useState([]);
@@ -257,7 +260,7 @@ const Analyse_statistique = ({ data, onClose }) => {
         });
         setRawValues(response.data.values);
       } catch (err) {
-        setError(err.response?.data?.error || 'Failed to fetch data');
+        setError(err.response?.data?.error || t('Failed to fetch data'));
       } finally {
         setLoading(false);
       }
@@ -303,17 +306,17 @@ const Analyse_statistique = ({ data, onClose }) => {
       <Card.Header className="window-header d-flex justify-content-between align-items-center">
         <div className="d-flex align-items-center">
           <Person className="me-2" />
-          <span>Statistical Analysis: {selectedGroup} - {selectedCentralityAttribute}</span>
+          <span>{t('Statistical Analysis')}: {selectedGroup} - {selectedCentralityAttribute}</span>
         </div>
         <div className="window-controls">
-          <Button variant="link" className="control-button p-0 me-2" title="Minimize">
+          <Button variant="link" className="control-button p-0 me-2" title={t('Minimize')}>
             <Dash size={16} color="white" />
           </Button>
           <Button 
             variant="link" 
             className="control-button p-0 me-2" 
             onClick={toggleMaximize} 
-            title={isMaximized ? "Restore" : "Maximize"}
+            title={isMaximized ? t('Restore') : t('Maximize')}
           >
             {isMaximized ? <FullscreenExit size={16} color="white" /> : <Fullscreen size={16} color="white" />}
           </Button>
@@ -321,7 +324,7 @@ const Analyse_statistique = ({ data, onClose }) => {
             variant="link" 
             className="control-button p-0" 
             onClick={onClose} 
-            title="Close"
+            title={t('Close')}
           >
             <XLg size={16} color="white" />
           </Button>
@@ -330,9 +333,9 @@ const Analyse_statistique = ({ data, onClose }) => {
       
       <Card.Body>
         {loading ? (
-          <div className="text-center">
+          <div className="text aorta-center">
             <Spinner animation="border" role="status">
-              <span className="visually-hidden">Loading...</span>
+              <span className="visually-hidden">{t('Loading...')}</span>
             </Spinner>
           </div>
         ) : error ? (
@@ -344,9 +347,9 @@ const Analyse_statistique = ({ data, onClose }) => {
               onSelect={(k) => setActiveTab(k)}
               className="mb-3"
             >
-              <Tab eventKey="distribution" title="Distribution">
+              <Tab eventKey="distribution" title={t('Distribution')}>
                 <Form.Group controlId="numBins" className="mb-3">
-                  <Form.Label>Number of bins: {numBins}</Form.Label>
+                  <Form.Label>{t('Number of bins')}: {numBins}</Form.Label>
                   <Form.Range 
                     min="5" 
                     max="50" 
@@ -369,18 +372,18 @@ const Analyse_statistique = ({ data, onClose }) => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="label" 
-                        label={{ value: `${selectedCentralityAttribute} (binned)`, position: 'insideBottomRight', offset: -10 }}
+                        label={{ value: `${selectedCentralityAttribute} (${t('binned')})`, position: 'insideBottomRight', offset: -10 }}
                         angle={-45}
                         textAnchor="end"
                         height={70}
                       />
-                      <YAxis label={{ value: 'Count', angle: -90, position: 'insideLeft' }} />
+                      <YAxis label={{ value: t('Count'), angle: -90, position: 'insideLeft' }} />
                       <Tooltip 
-                        formatter={(value) => [value, 'Count']}
-                        labelFormatter={(label) => `Range: ${label}`}
+                        formatter={(value) => [value, t('Count')]}
+                        labelFormatter={(label) => `${t('Range')}: ${label}`}
                       />
                       <Legend />
-                      <Bar dataKey="count" fill="#8884d8" name="Frequency" />
+                      <Bar dataKey="count" fill="#8884d8" name={t('Frequency')} />
                     </BarChart>
                   </ResponsiveContainer>
                   <div style={{ height: 80 }}>
@@ -402,7 +405,7 @@ const Analyse_statistique = ({ data, onClose }) => {
                         <YAxis hide={true} domain={[0, 'dataMax']} />
                         <CartesianGrid strokeDasharray="3 3" />
                         <Tooltip />
-                        <Bar dataKey="count" fill="#8884d8" name="Frequency" />
+                        <Bar dataKey="count" fill="#8884d8" name={t('Frequency')} />
                         <Brush
                           dataKey="name"
                           height={30}
@@ -418,38 +421,38 @@ const Analyse_statistique = ({ data, onClose }) => {
                   </div>
                 </div>
               </Tab>
-              <Tab eventKey="statistics" title="Statistics">
+              <Tab eventKey="statistics" title={t('Statistics')}>
                 {stats && (
                   <div className="mt-3">
-                    <h5>Summary Statistics</h5>
+                    <h5>{t('Summary Statistics')}</h5>
                     <table className="table table-bordered">
                       <tbody>
                         <tr>
-                          <th>Total Values</th>
+                          <th>{t('Total Values')}</th>
                           <td>{stats.count}</td>
                         </tr>
                         <tr>
-                          <th>Unique Values</th>
+                          <th>{t('Unique Values')}</th>
                           <td>{stats.unique}</td>
                         </tr>
                         <tr>
-                          <th>Minimum</th>
+                          <th>{t('Minimum')}</th>
                           <td>{stats.min}</td>
                         </tr>
                         <tr>
-                          <th>Maximum</th>
+                          <th>{t('Maximum')}</th>
                           <td>{stats.max}</td>
                         </tr>
                         <tr>
-                          <th>Mean (Average)</th>
+                          <th>{t('Mean (Average)')}</th>
                           <td>{stats.mean}</td>
                         </tr>
                         <tr>
-                          <th>Median</th>
+                          <th>{t('Median')}</th>
                           <td>{stats.median}</td>
                         </tr>
                         <tr>
-                          <th>Standard Deviation</th>
+                          <th>{t('Standard Deviation')}</th>
                           <td>{stats.stdDev}</td>
                         </tr>
                       </tbody>
@@ -457,7 +460,7 @@ const Analyse_statistique = ({ data, onClose }) => {
                   </div>
                 )}
               </Tab>
-              <Tab eventKey="pieChart" title="Distribution Pie">
+              <Tab eventKey="pieChart" title={t('Distribution Pie')}>
                 <div style={{ height: 400 }}>
                   <CustomActiveShapePieChart data={binnedData} />
                 </div>
