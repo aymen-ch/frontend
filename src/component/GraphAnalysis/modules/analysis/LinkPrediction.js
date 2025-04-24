@@ -4,6 +4,7 @@ import { Button, Spinner } from 'react-bootstrap';
 import { BASE_URL } from '../../utils/Urls';
 import { parseAggregationResponse_advanced , parsergraph} from '../../utils/Parser';
 import NodeClasificationBackEnd from './NodeClasificationBackEnd/NodeClasificationBackEnd';
+import { useTranslation } from 'react-i18next';
 
 
 const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIsAggLoading, setNodes, setEdges, showNodeClassification, setShowNodeClassification }) => {
@@ -43,6 +44,7 @@ const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIs
     }
   };
 
+    const{t} = useTranslation()
   return (
     <div className="p-3 d-flex flex-column gap-3">
       <Button
@@ -61,10 +63,10 @@ const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIs
               aria-hidden="true"
               className="me-2"
             />
-            Loading...
+            {t('Loading...')}
           </>
         ) : (
-          'Aggregation with Algorithm'
+          t('Aggregation with Algorithm')
         )}
       </Button>
 
@@ -73,7 +75,7 @@ const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIs
         value={depth}
         onChange={(e) => setDepth(parseInt(e.target.value, 10))}
         min="1"
-        placeholder="Enter depth"
+        placeholder={t('Enter depth')}
         className="form-control"
       />
 
@@ -82,7 +84,7 @@ const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIs
         className="w-100"
         onClick={() => setShowNodeClassification(true)}
       >
-        Node Classification (Backend)
+        {t('Node Classification (Backend)')}
       </Button>
 
       {showNodeClassification && (

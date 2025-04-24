@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Button, Spinner, Form } from 'react-bootstrap';
 import { BASE_URL } from '../../utils/Urls';
+import { useTranslation } from 'react-i18next';
 import randomColor from 'randomcolor';
 
 const Community = ({ nodes, setNodes, isLoading, setIsLoading, ColorPersonWithClass }) => {
   const [selectedCommunityMeasure, setSelectedCommunityMeasure] = useState('uniform');
+const{t} = useTranslation()
+const communityMethods = [
+  { value: 'uniform', label: 'Uniform' },
+  { value: '_color_k1coloring', label: 'K1 Coloring' },
+  { value: '_labelPropagation', label: 'Label Propagation' },
+  { value: '_louvain', label: 'Louvain' }
+];
 
-  const communityMethods = [
-    { value: 'uniform', label: 'Uniform' },
-    { value: '_color_k1coloring', label: 'K1 Coloring' },
-    { value: '_labelPropagation', label: 'Label Propagation' },
-    { value: '_louvain', label: 'Louvain' }
-  ];
 
   const ColorNodeWithCommunity = (nodes, setNodes, measure) => {
     const newNodes = [...nodes];
@@ -69,7 +71,7 @@ const Community = ({ nodes, setNodes, isLoading, setIsLoading, ColorPersonWithCl
       if (response.status === 200) {
         console.log(response.data);
       } else {
-        console.error('handleSecteurActiviti failed.');
+        console.error('handle Secteur Activiti failed.');
       }
     } catch (error) {
       console.error('Error during handleSecteurActiviti:', error);
@@ -81,7 +83,7 @@ const Community = ({ nodes, setNodes, isLoading, setIsLoading, ColorPersonWithCl
   return (
     <div className="p-3 d-flex flex-column gap-3">
       <Form.Group>
-        <Form.Label>Community Detection</Form.Label>
+        <Form.Label>{t('Community Detection')}</Form.Label>
         <Form.Select
           value={selectedCommunityMeasure}
           onChange={(e) => {
@@ -102,7 +104,7 @@ const Community = ({ nodes, setNodes, isLoading, setIsLoading, ColorPersonWithCl
         className="w-100"
         onClick={() => ColorPersonWithClass(nodes, setNodes)}
       >
-        Color Node with Class
+        {t('Color Node with Class')}
       </Button>
 
       <Button
@@ -121,10 +123,10 @@ const Community = ({ nodes, setNodes, isLoading, setIsLoading, ColorPersonWithCl
               aria-hidden="true"
               className="me-2"
             />
-            Loading...
+            {t('Loading...')}
           </>
         ) : (
-          'Secteur Activiti (Backend)'
+          t('Secteur Activiti (Backend)')
         )}
       </Button>
     </div>

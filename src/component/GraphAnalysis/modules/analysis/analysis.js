@@ -8,6 +8,7 @@ import Centrality from './Centrality';
 import LinkPrediction from './LinkPrediction';
 import Community from './Community';
 import './Analysis.css';
+import { useTranslation } from 'react-i18next';
 
 const Analysis = ({
   drawCirclesOnPersonneNodes,
@@ -29,6 +30,7 @@ const Analysis = ({
   const [selectedCentralityAttribute, setSelectedCentralityAttribute] = useState('_betweenness');
   const [selectedGroup, setSelectedGroup] = useState('');
   const [activeTab, setActiveTab] = useState('attribute');
+  const{t} = useTranslation()
 
   useEffect(() => {
     const types = [...new Set(nodes.map((node) => node.group))];
@@ -93,28 +95,28 @@ const Analysis = ({
           onClick={() => setActiveTab('attribute')}
         >
           <FontAwesomeIcon icon={faChartBar} className="tab-icon" />
-          <span>Attribute Analysis</span>
+          <span>{t('Attribute Analysis')}</span>
         </div>
         <div
           className={`tab-card ${activeTab === 'centrality' ? 'active' : ''}`}
           onClick={() => setActiveTab('centrality')}
         >
           <FontAwesomeIcon icon={faProjectDiagram} className="tab-icon" />
-          <span>Centrality</span>
+          <span>{t('Centrality')}</span>
         </div>
         <div
           className={`tab-card ${activeTab === 'linkPrediction' ? 'active' : ''}`}
           onClick={() => setActiveTab('linkPrediction')}
         >
           <FontAwesomeIcon icon={faLink} className="tab-icon" />
-          <span>Link Prediction</span>
+          <span>{t('Link Prediction')}</span>
         </div>
         <div
           className={`tab-card ${activeTab === 'community' ? 'active' : ''}`}
           onClick={() => setActiveTab('community')}
         >
           <FontAwesomeIcon icon={faUsers} className="tab-icon" />
-          <span>Community</span>
+          <span>{t('Community')}</span>
         </div>
       </div>
       <div className="tab-content">{renderContent()}</div>

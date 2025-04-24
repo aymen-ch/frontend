@@ -257,8 +257,8 @@ const DetailsModule = ({
                     </button>
                   )}
                 </div>
-
-                <ul className="list-group properties-list" style={{ marginBottom: '15px' }}>
+                  
+                {/* <ul className="list-group properties-list" style={{ marginBottom: '15px' }}>
                   {Object.entries(mainProperties).map(([key, value]) => (
                     <li key={key} className="list-group-item property-item">
                       <strong className="property-key">{key}:</strong> 
@@ -267,7 +267,29 @@ const DetailsModule = ({
                       </span>
                     </li>
                   ))}
-                </ul>
+                </ul> */}
+
+                <ul className="list-group properties-list" style={{ marginBottom: '15px' }}>
+  {/* Render identity */}
+  <li className="list-group-item property-item">
+    <strong className="property-key">identity:</strong>
+    <span className="property-value">{mainProperties.identity}</span>
+  </li>
+  {/* Render type */}
+  <li className="list-group-item property-item">
+    <strong className="property-key">type:</strong>
+    <span className="property-value">{mainProperties.type}</span>
+  </li>
+  {/* Render properties */}
+  {Object.entries(mainProperties.properties).map(([key, value]) => (
+    <li key={key} className="list-group-item property-item">
+      <strong className="property-key">{key}:</strong>
+      <span className="property-value">
+        {typeof value === 'object' ? JSON.stringify(value) : value}
+      </span>
+    </li>
+  ))}
+</ul>
 
                 {detail && Object.keys(detail).length > 0 && showDetails && (
                   <div className="details-section">
@@ -359,14 +381,18 @@ const DetailsModule = ({
                   <span>{nodeGroup}</span>
                 </div>
                 <ul className="list-group properties-list">
-                  {Object.entries(selectedNodeData).map(([key, value]) => (
-                    <li key={key} className="list-group-item property-item">
-                      <strong className="property-key">{key}:</strong> 
-                      <span className="property-value">
-                        {typeof value === 'object' ? JSON.stringify(value) : value}
-                      </span>
-                    </li>
-                  ))}
+  {selectedNodeData && typeof selectedNodeData === 'object' && Object.keys(selectedNodeData).length > 0 ? (
+    Object.entries(selectedNodeData).map(([key, value]) => (
+      <li key={key} className="list-group-item property-item">
+        <strong className="property-key">{key}:</strong>
+        <span className="property-value">
+          {typeof value === 'object' ? JSON.stringify(value) : value}
+        </span>
+      </li>
+    ))
+  ) : (
+    <li className="list-group-item">No properties available</li>
+  )}
                   <h4>------les attribut d'analyse :--------------</h4>
                   {matchedNode?.properties_analyse && Object.entries(matchedNode.properties_analyse).map(([key, value]) => (
                     <li key={key} className="list-group-item property-item">

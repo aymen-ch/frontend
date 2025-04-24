@@ -15,6 +15,7 @@
   "Attribute": "",
   "Browse": "Parcourir",
   "Build Path": "Construire un chemin",
+  "Button Statistical Analysistton": "",
   "Change Language": "Changer de langue",
   "Chat": "Discussion",
   "Color": "Couleur",
@@ -67,7 +68,9 @@
   "File Type": "Type de fichier",
   "Final Node": "Nœud final",
   "French": "Français",
+  "General": "",
   "Icon": "Icône",
+  "Import": "",
   "Import File": "Importer un fichier",
   "Import File to Neo4j": "Importer un fichier dans Neo4j",
   "Importing...": "Importation en cours...",
@@ -77,6 +80,7 @@
   "JSON File": "Fichier JSON",
   "Label Property Key": "Clé de propriété d'étiquette",
   "Labels": "Étiquettes",
+  "Language": "",
   "Max Level": "",
   "Metric": "Métrique",
   "No actions available": "",
@@ -129,7 +133,7 @@
   "Switch": "Changer",
   "Template": "Modèle",
   "This action cannot be undone.": "Cette action ne peut pas être annulée.",
-  "This is the Dashboard module content.": "",
   "Threshold": "",
-  "View Neighborhood": ""
+  "View Neighborhood": "",
+  "Visualization": ""
 }
