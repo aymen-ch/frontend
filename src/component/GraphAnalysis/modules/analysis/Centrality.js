@@ -24,7 +24,7 @@ const Centrality = ({
   const{t} = useTranslation()
   const centralityAttributes = [
     'degree_out', 'degree_in', '_betweennessCentrality',
-    '_pagerank', '_articleRank', '_eigenvector', '_betweenness',
+    '_pagerank', '_articleRank', '_eigenvector', '_betweenness','degree_total'
   ];
 
   const [nodeData, setNodeData] = useState([]);
