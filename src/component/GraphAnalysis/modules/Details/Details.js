@@ -271,7 +271,7 @@ const DetailsModule = ({
                   ))}
                 </ul> */}
 
-                <ul className="list-group properties-list" style={{ marginBottom: '15px' }}>
+<ul className="list-group properties-list" style={{ marginBottom: '15px' }}>
   {/* Render identity */}
   <li className="list-group-item property-item">
     <strong className="property-key">identity:</strong>
@@ -283,7 +283,7 @@ const DetailsModule = ({
     <span className="property-value">{mainProperties.type}</span>
   </li>
   {/* Render properties */}
-  {Object.entries(mainProperties.properties).map(([key, value]) => (
+  {mainProperties.properties && typeof mainProperties.properties === 'object' && Object.entries(mainProperties.properties).map(([key, value]) => (
     <li key={key} className="list-group-item property-item">
       <strong className="property-key">{key}:</strong>
       <span className="property-value">
@@ -383,17 +383,17 @@ const DetailsModule = ({
                   <span>{nodeGroup}</span>
                 </div>
                 <ul className="list-group properties-list">
-                                    {Object.entries(selectedNodeData).map(([key, value]) => (
-                    <li key={key} className="list-group-item property-item">
-                      <strong className="property-key">{key}:</strong> 
-                      <span className="property-value">
-                        {typeof value === 'object' ? JSON.stringify(value) : value}
-                      </span>
-                    </li>
-                  ))}
+                {selectedNodeData && Object.entries(selectedNodeData).map(([key, value]) => (
+                  <li key={key} className="list-group-item property-item">
+                    <strong className="property-key">{key}:</strong> 
+                    <span className="property-value">
+                      {typeof value === 'object' ? JSON.stringify(value) : value}
+                    </span>
+                  </li>
+                ))}
                   <h4>{t('analysis_attributes')}</h4>
 
-           
+{/*            
                   {matchedNode?.properties_analyse && Object.entries(matchedNode.properties_analyse).map(([key, value]) => (
                     <li key={key} className="list-group-item property-item">
                       <strong className="property-key">{key}:</strong> 
@@ -401,7 +401,7 @@ const DetailsModule = ({
                         {typeof value === 'object' ? JSON.stringify(value) : value}
                       </span>
                     </li>
-                  ))}
+                  ))} */}
                 </ul>
               </>
             );

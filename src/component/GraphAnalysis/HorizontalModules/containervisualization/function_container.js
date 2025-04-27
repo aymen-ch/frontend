@@ -495,7 +495,7 @@ export const CentralityByAttribute = async (combinedNodes, setNodes, attribute, 
   try {
     // Define constants
     const BASE_SIZE = 90;  // Default base size for nodes
-    const FACTOR = 100;    // Scaling factor for centrality visualization
+    const FACTOR = 150;    // Scaling factor for centrality visualization
    
     const updatedNodes = combinedNodes.map((node) => {
       

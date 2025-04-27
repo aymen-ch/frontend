@@ -12,7 +12,10 @@ const communityMethods = [
   { value: 'uniform', label: 'Uniform' },
   { value: '_color_k1coloring', label: 'K1 Coloring' },
   { value: '_labelPropagation', label: 'Label Propagation' },
-  { value: '_louvain', label: 'Louvain' }
+  { value: '_louvain', label: 'Louvain' },
+  {value :'_modularityOptimization',label :'modularityOptimization' },
+  // {value :'_scc',label :'scc' },
+  // {value :'_wcc',label :'wcc' },
 ];
 
 
