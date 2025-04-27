@@ -166,15 +166,15 @@ export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
           nodesWithPositions = computeGeospatialLayout(combinedNodes, 800, 800);
         } else {
           graphRef.current.setLayout(newLayoutType);
-          setLayoutType(newLayoutType);
+          setLayoutType(newLayoutType,true);
           return;
         }
   
         graphRef.current.setNodePositions(nodesWithPositions);
-        nodesWithPositions.forEach((node) => {
-          console.log(`Pinning node ${node.id} at position x:${node.x}, y:${node.y}`);
-          graphRef.current.pinNode(node.id);
-        });
+        // nodesWithPositions.forEach((node) => {
+        //   console.log(`Pinning node ${node.id} at position x:${node.x}, y:${node.y}`);
+        //   graphRef.current.pinNode(node.id);
+        // });
       }
       console.log("ne layout",newLayoutType)
       setLayoutType(newLayoutType); // Update the layout type state
