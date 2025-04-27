@@ -165,8 +165,9 @@ export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
           graphRef.current.setLayout(FreeLayoutType);
           nodesWithPositions = computeGeospatialLayout(combinedNodes, 800, 800);
         } else {
-          graphRef.current.setLayout(newLayoutType);
-          setLayoutType(newLayoutType,true);
+          graphRef.current.setLayout(newLayoutType,true);
+          setLayoutType(newLayoutType);
+
           return;
         }
   
@@ -176,7 +177,7 @@ export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
         //   graphRef.current.pinNode(node.id);
         // });
       }
-      console.log("ne layout",newLayoutType)
+      // console.log("ne layout",newLayoutType)
       setLayoutType(newLayoutType); // Update the layout type state
     } catch (error) {
       console.error('Error in handleLayoutChange:', error);
@@ -264,8 +265,27 @@ const virtualRelations = [
 
 // Helper to get aggregation path by name
 const getAggregationPath = (relationName) => {
+  // Retrieve virtualRelations from local storage
+  const virtualRelationsString = localStorage.getItem('virtualRelations');
+  
+  // Parse the stored data or return null if not found/invalid
+  let virtualRelations = [];
+  try {
+    if (virtualRelationsString) {
+      virtualRelations = JSON.parse(virtualRelationsString);
+    }
+  } catch (error) {
+    console.error('Error parsing virtualRelations from local storage:', error);
+    return null;
+  }
+  
+  // Find the relation by name
   const relation = virtualRelations.find((rel) => rel.name === relationName);
+  
+  // Log the result for debugging
   console.log(`getAggregationPath for ${relationName}:`, relation ? relation.path : null);
+  
+  // Return the path or null if not found
   return relation ? relation.path : null;
 };
 

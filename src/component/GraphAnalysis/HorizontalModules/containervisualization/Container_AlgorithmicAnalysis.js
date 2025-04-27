@@ -224,6 +224,7 @@ return (
                   currentPathIndex={currentPathIndex}
                   setCurrentPathIndex={setCurrentPathIndex}
                   selectednodes={selectedNodes}
+                  setSelectedNodes={setSelectedNodes}
                   ispath={false}
                   setAllPaths={setAllPaths}
                   setPathisempty={setPathisempty}

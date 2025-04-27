@@ -20,6 +20,7 @@ const PathVisualization = React.memo(({
   currentPathIndex,
   setCurrentPathIndex,
   selectednodes,
+  setSelectedNodes,
   ispath,
   setrelationtoshow,
   pathisempty,
@@ -29,7 +30,6 @@ const PathVisualization = React.memo(({
   setEdges
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
-  const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showPathList, setShowPathList] = useState(false);
   const [layoutType, setLayoutType] = useState(FreeLayoutType); // Default layout type
@@ -133,6 +133,7 @@ const PathVisualization = React.memo(({
   };
 
   const updatePathNodesAndEdges = (path) => {
+    console.log(selectednodes)
     const { nodes: formattedNodes, edges: formattedEdges } = parsePath(path, selectednodes);
     setPathNodes([]);
     setPathEdges([]);
@@ -181,9 +182,13 @@ const PathVisualization = React.memo(({
         allEdges = [...allEdges, ...pathEdges];
       });
 
-      // Remove duplicates
+      // Remove duplicate nodes based on id
       const uniqueNodes = Array.from(new Map(allNodes.map(node => [node.id, node])).values());
-      const uniqueEdges = Array.from(new Map(allEdges.map(edge => [`${edge.from}-${edge.to}`, edge])).values());
+
+      // Remove duplicate edges based on id (or another unique identifier)
+      const uniqueEdges = Array.from(
+        new Map(allEdges.map(edge => [edge.id, edge])).values()
+      );
 
       // Update the visualization
       setPathNodes([]);
@@ -193,10 +198,9 @@ const PathVisualization = React.memo(({
         setPathEdges(uniqueEdges);
         applyLayout(layoutType);
         setCurrentPathIndex(-1); // Indicate no single path is selected
-        //setShowPathList(false);
       }, 50);
 
-      console.log('Displayed all paths as a single subgraph');
+      console.log('Displayed all paths as a single subgraph with unique edges:', uniqueEdges);
     }
   };
 
@@ -465,7 +469,7 @@ const PathVisualization = React.memo(({
             nvlRef={nvlRef}
             nodes={nodes}
             edges={edges}
-            selectedNodes={selectedNodes}
+            selectedNodes={selectednodes}
             setSelectedNodes={setSelectedNodes}
             setContextMenu={setContextMenu}
             nodetoshow={nodetoshow}

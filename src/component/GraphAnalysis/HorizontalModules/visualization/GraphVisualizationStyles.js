@@ -36,7 +36,7 @@ export const buttonStyle = {
   export const searchStyle = {
     position: 'absolute',
     zIndex: 100, // Increased from 50 to ensure it’s above other elements (e.g., graph nodes)
-    top: '20px', // Slightly increased for better spacing from the top edge
+    top: '5px', // Slightly increased for better spacing from the top edge
     left: '50%',
     transform: 'translateX(-50%)',
     display: 'flex',
@@ -154,3 +154,16 @@ export const buttonStyle = {
 
 
   
+  // In GraphVisualizationStyles.js or inline
+export const controlBoxStyle = {
+  position: 'absolute',
+  top: '10px',
+  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  borderRadius: '8px',
+  padding: '8px',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px', // Space between buttons
+  zIndex: 1000,
+};

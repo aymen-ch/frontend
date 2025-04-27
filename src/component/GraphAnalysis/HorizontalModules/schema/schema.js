@@ -69,6 +69,7 @@ const SchemaVisualizer = () => {
       const edgeid = [...selectedEdges][0];
       const edge = edges.find((e) => e.id === edgeid);
       if (edge) {
+        console.log(edge.properties)
         setSelectedItem({
           id: edge.id,
           group: edge.group || edge.type, // Use edge.type for relation type
