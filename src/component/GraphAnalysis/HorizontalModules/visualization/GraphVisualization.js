@@ -6,6 +6,7 @@ import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWind
 import AddActionWindow from "../../modules/Windows/Actions/PersonProfileWindow/Actions";
 import Analyse_statistique from "../../modules/Windows/Actions/PersonProfileWindow/analyse_statistique";
 import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa'; // Added FaSpinner
+import { MdOutlineTabUnselected } from "react-icons/md";
 import { FaDiaspora } from "react-icons/fa6";
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../containervisualization/function_container';
@@ -68,6 +69,7 @@ const GraphVisualization = React.memo(({
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false); // New loading state
+  const [multiselecte, setmultiselecte] = useState(false); // New loading state
 
   const searchRef = useRef(null);
   const resultsRef = useRef(null);
@@ -120,7 +122,7 @@ const GraphVisualization = React.memo(({
     };
     
     // Fetch analysis and update nodes
-     fetchNodeAnalysis();
+    // fetchNodeAnalysis();
 
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
     
@@ -283,6 +285,11 @@ const GraphVisualization = React.memo(({
     }
   };
 
+  const hanldemultiselecte = () => {
+    setmultiselecte(!multiselecte)
+  };
+
+
   const toggleSettingsPanel = () => {
     setShowSettings(!showSettings);
   };
@@ -412,18 +419,10 @@ const GraphVisualization = React.memo(({
         setLayoutType={setLayoutType} 
       />
 
-      <button
-        style={{ ...buttonStyle, position: 'absolute', top: '200px', left: '10px' }}
-        onClick={toggleFullscreen}
-        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-      >
-        {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
-      </button>
 
-      <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '10px' }}
+ 
+<button
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '380px' }}
         onClick={handleSave}
         title="Save"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -433,7 +432,19 @@ const GraphVisualization = React.memo(({
       </button>
 
       <button
-        style={{ ...buttonStyle, position: 'absolute', top: '55px', left: '10px' }}
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '420px' }}
+        onClick={toggleFullscreen}
+        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
+        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
+      >
+        {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
+      </button>
+
+      
+
+      <button
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '460px' }}
         onClick={handleBack}
         title="Back"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -443,7 +454,7 @@ const GraphVisualization = React.memo(({
       </button>
 
       <button
-        style={{ ...buttonStyle, position: 'absolute', top: '100px', left: '10px' }}
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '500px' }}
         onClick={handleDelete}
         title="Global View"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -453,24 +464,33 @@ const GraphVisualization = React.memo(({
       </button>
 
       <button
-        style={{ ...buttonStyle, position: 'absolute', top: '150px', left: '10px' }}
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '540px' }}
         onClick={handlewebgl}
         title="Toggle Renderer"
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
       >
         <FaAdn size={16} />
-      </button>
 
-      <button
-        style={{ ...buttonStyle, position: 'absolute', top: '250px', left: '10px' }}
-        onClick={toggleSettingsPanel}
-        title="Layout Settings"
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-      >
-        <FaCog size={16} />
+        
       </button>
+      <button
+  style={{
+    ...buttonStyle,
+    position: 'absolute',
+    top: '10px',
+    left: '580px',
+    backgroundColor: multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)', // Blue when multiselecte is true
+    cursor: multiselecte ? 'crosshair' : 'pointer', // Crosshair when multiselecte is true
+  }}
+  onClick={hanldemultiselecte}
+  title="multi selecte"
+  onMouseOver={(e) => e.currentTarget.style.backgroundColor = multiselecte ? 'darkblue' : 'rgba(255, 255, 255, 0.9)'}
+  onMouseOut={(e) => e.currentTarget.style.backgroundColor = multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)'}
+>
+  <MdOutlineTabUnselected size={16} />
+</button>
+
 
       <GraphCanvas
         nvlRef={nvlRef}
@@ -489,6 +509,8 @@ const GraphVisualization = React.memo(({
         selectedEdges={selectedEdges}
         setselectedEdges={setselectedEdges}
         layoutType={layoutType}
+        multiselecte={multiselecte}
+        setmultiselecte={setmultiselecte}
       /> 
 
       {contextMenu && contextMenu.visible && (

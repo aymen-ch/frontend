@@ -4,7 +4,7 @@ import axios from 'axios';
 import { AddNeighborhoodParser,parsePath } from '../../utils/Parser';
 import { BASE_URL } from '../../utils/Urls';
 
-const PathFinder = ({ nvlRef,setPathEdges,
+const PathFinder = ({setPathEdges,
     setPathNodes,
     setAllPaths,    
     setCurrentPathIndex,
@@ -16,6 +16,7 @@ const PathFinder = ({ nvlRef,setPathEdges,
 const [depth, setDepth] = useState(1);
 const [isPathFindingStarted, setIsPathFindingStarted] = useState(true);
 const updatePathNodesAndEdges = (path) => {
+  console.log(selectednodes)
 const { nodes: formattedNodes, edges: formattedEdges } = parsePath(path,selectednodes);
 setPathNodes(formattedNodes);
 setPathEdges(formattedEdges);
@@ -28,8 +29,8 @@ setPathEdges(formattedEdges);
 
   const startPathFinding = async () => {
     setIsPathFindingStarted(true);
-    
-    if (nvlRef.current.getSelectedNodes().length>0) {
+    console.log(selectednodes)
+    if (selectednodes.size>0) {
         setIsBoxPath(true)
         const nodeIds = Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10));
       try {
@@ -53,7 +54,7 @@ setPathEdges(formattedEdges);
           
           setAllPaths(paths);
           setCurrentPathIndex(0);
-          updatePathNodesAndEdges(paths[0],nvlRef.current.getSelectedNodes());
+          updatePathNodesAndEdges(paths[0],selectednodes);
         } else {
           console.error('Failed to fetch all connections.');
         }
@@ -92,7 +93,7 @@ setPathEdges(formattedEdges);
           
           setAllPaths(paths);
           setCurrentPathIndex(0);
-          updatePathNodesAndEdges(paths[0],nvlRef.current.getSelectedNodes());
+          updatePathNodesAndEdges(paths[0],selectednodes);
         } else {
           console.error('Failed to fetch all connections.');
         }

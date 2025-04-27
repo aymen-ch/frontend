@@ -13,7 +13,6 @@ const loadConfig = async () => {
   try {
     const response = await axios.get('http://127.0.0.1:8000/api/node-config/');
     NODE_CONFIG = response.data;
-    console.log(NODE_CONFIG)
   } catch (error) {
     console.error('Error loading nodeConfig:', error.message);
     throw error;
@@ -61,7 +60,7 @@ export const fetchNodeProperties = async (nodeId) => {
 
 // Parse graph data
 export const parsergraph = (searchResult) => {
-  console.log("searchResult2",searchResult)
+ 
   const nodes = searchResult.nodes.map((node) =>
     createNode(
       node.id,
@@ -93,7 +92,7 @@ export const createNode = (
   aggregatedproperties = null,
   ischema = false
 ) => {
-  console.log("create");
+
   const nodeSize = NODE_CONFIG.nodeTypes[nodeType]?.size || NODE_CONFIG.defaultNodeSize;
   const node = {
     id: id.toString(),
@@ -198,7 +197,7 @@ const parseNeighborhood = (neighborhoodData, contextNode) => {
 };
 
 export const parseNetworkData = (networkData) => {
-  console.log('hi from parser1 ', networkData);
+ 
   if (!networkData || !Array.isArray(networkData.nodes) || !Array.isArray(networkData.edges)) {
     return { nodes: [], edges: [] };
   }
@@ -206,7 +205,7 @@ export const parseNetworkData = (networkData) => {
   const nodes = [];
   const edges = [];
 
-  console.log('hi from parser 2');
+
 
   networkData.nodes.forEach((node) => {
     nodes.push(createNode(node.properties, node.labels[0], node.properties));
@@ -216,14 +215,13 @@ export const parseNetworkData = (networkData) => {
     edges.push(createEdge(edge.type, edge.startNode, edge.endNode));
   });
 
-  console.log('hi from parser3 ');
   return { nodes, edges };
 };
 
 export const parsePath = (path, selectedNodes) => {
-  console.log(path);
-  const selectedNodeIds = new Set(selectedNodes);
-  console.log(selectedNodes)
+ 
+  const selectedNodeIds = selectedNodes;
+
   const formattedNodes = path.nodes.map((node) => {
     const isSelected = selectedNodeIds.has(node.id.toString());
     return createNode(node.id, node.type, node.properties, isSelected);
@@ -268,7 +266,7 @@ export const SubGraphParser = (subGraphs) => {
     console.error('Invalid subGraphs data:', subGraphs);
     return { nodes, edges };
   }
-  console.log(subGraphs);
+
   subGraphs.forEach((subGraph) => {
     const { nodes: parsedNodes, edges: parsedEdges } = parseSubGraph(subGraph);
     nodes.push(...parsedNodes);
@@ -318,7 +316,7 @@ export const createNodeHtml = (
   Icon = "",
   node_size = 90
 ) => {
-  console.log(node_size);
+ 
   const nodeconfig = calculateNodeConfig(node_size);
   const container = document.createElement("div");
   container.style.position = "relative";
@@ -427,7 +425,7 @@ export const createNodeHtml = (
     crownIcon.style.transform = "translateX(-50%)";
     crownIcon.style.fontSize = "32px";
     crownIcon.style.zIndex = "35";
-    console.log("this is crown");
+   
     container.appendChild(crownIcon);
   }
 
@@ -448,11 +446,9 @@ export const getNodeIcon = (nodeType) =>
 
 // Label manager
 export const LabelManager = (node_type, properties) => {
-  console.log("LabelManager input:", { node_type, properties });
   const labelKey = NODE_CONFIG.nodeTypes[node_type]?.labelKey || NODE_CONFIG.nodeTypes.default.labelKey;
   if (!labelKey) {
     const fallback = `Unknown Type\nID: ${properties.identity || 'N/A'}`;
-    console.log("LabelManager output:", fallback);
     return fallback;
   }
 
@@ -474,7 +470,6 @@ export const LabelManager = (node_type, properties) => {
       })
       .filter((item) => item !== '')
       .join('\n'); // Use newline to separate pairs
-    console.log("LabelManager output:", result);
     return result;
   }
 
@@ -483,7 +478,6 @@ export const LabelManager = (node_type, properties) => {
     properties[labelKey] !== undefined && properties[labelKey] !== null
       ? `${displayKey}: ${properties[labelKey]}`
       : `Unknown ${node_type}`;
-  console.log("LabelManager output:", result);
   return result;
 };
 

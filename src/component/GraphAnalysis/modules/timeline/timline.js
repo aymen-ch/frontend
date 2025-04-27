@@ -361,8 +361,7 @@ const TimelineBar = ({ data, attributes: initialAttributes, setItemsInRange }) =
                 }}
                 title="Gérer les attributs"
               >
-                <Settings size={16} />
-                Attributs
+                <Plus size={16} />
               </button>
               
               {/* Boutons d'attributs */}

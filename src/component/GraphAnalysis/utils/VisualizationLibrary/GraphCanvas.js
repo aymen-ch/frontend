@@ -16,7 +16,9 @@ const GraphCanvas = ({
   ispath,
   setselectedEdges,
   selectedEdges,
-  layoutType
+  layoutType,
+  multiselecte,
+  setmultiselecte
 }) => {
   const [shiftPressed, setShiftPressed] = useState(false);
   const [hoveredEdge, sethoverEdge] = useState(null);
@@ -55,7 +57,9 @@ const GraphCanvas = ({
     setselectedEdges,
     sethoverEdge,
     ispath,
-    layoutType
+    layoutType,
+    multiselecte,
+    setmultiselecte
   });
 
   const VisualizationComponent = getVisualizationComponent(hoveredEdge);

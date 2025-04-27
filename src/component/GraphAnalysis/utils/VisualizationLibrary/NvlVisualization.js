@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
 import {
@@ -49,12 +48,14 @@ const useNvlVisualization = ({
   SetContextMenucanvas,
   setnodetoshow,
   setrelationtoshow,
-  shiftPressed,
+  shiftPressed, // Note: This is no longer used for multi-selection
   selectedEdges,
   setselectedEdges,
   sethoverEdge,
   ispath,
   layoutType,
+  multiselecte,
+  setmultiselecte,
 }) => {
   const previouslyHoveredNodeRef = useRef(null);
   const selectedNodeRef = useRef(null);
@@ -62,7 +63,7 @@ const useNvlVisualization = ({
   const minimapContainerRef = useRef(null);
   const [isMinimapReady, setIsMinimapReady] = useState(false);
   const [hoverdnode, sethovernode] = useState(null);
-  const {setNodes}  =useGlobalContext()
+  const { setNodes } = useGlobalContext();
   const layoutoptions = {
     direction: 'up',
     packing: 'bin',
@@ -87,8 +88,8 @@ const useNvlVisualization = ({
 
     dragNodeInteraction.mouseDownNode = null;
 
-    // Configure interactions based on shift key and layout type
-    if (shiftPressed) {
+    // Configure interactions based on multiselecte and layout type
+    if (multiselecte) {
       boxSelectInteraction.updateCallback('onBoxSelect', ({ nodes, rels }) => {
         setSelectedNodes((prevSelected) => {
           const newSelected = new Set(prevSelected);
@@ -98,13 +99,16 @@ const useNvlVisualization = ({
           return newSelected;
         });
 
-        setselectedEdges((prevSelected) => {
+        setselectedEdges?.((prevSelected) => {
           const newSelected = new Set(prevSelected);
           rels.forEach((rel) => {
             newSelected.has(rel.id) ? newSelected.delete(rel.id) : newSelected.add(rel.id);
           });
           return newSelected;
         });
+
+        // Reset multiselecte to false after selection
+        setmultiselecte(false);
       });
       panInteraction.destroy();
       zoomInteraction.destroy();
@@ -146,7 +150,7 @@ const useNvlVisualization = ({
     // Relationship click
     clickInteraction.updateCallback('onRelationshipClick', (edge, hitElements, event) => {
       if (edge && edge.id) {
-        setselectedEdges((prevSelected) => {
+        setselectedEdges?.((prevSelected) => {
           const newSelected = new Set(prevSelected);
           newSelected.add(edge.id);
           return newSelected;
@@ -168,8 +172,8 @@ const useNvlVisualization = ({
     // Canvas click (deselect)
     clickInteraction.updateCallback('onCanvasClick', (event) => {
       if (!event.hitElements || event.hitElements.length === 0) {
-        setSelectedNodes(new Set());
-        setselectedEdges(new Set());
+        setSelectedNodes?.(new Set());
+        setselectedEdges?.(new Set());
         selectedNodeRef.current = null;
         selectedRelationRef.current = null;
         setnodetoshow(null);
@@ -180,19 +184,21 @@ const useNvlVisualization = ({
         if (typeof SetContextMenucanvas === 'function') {
           SetContextMenucanvas(null);
         }
-        
       }
     });
 
-
     clickInteraction.updateCallback('onCanvasRightClick', (event) => {
       event.preventDefault();
-      SetContextMenucanvas({
-        visible: true,
-        x: event.clientX - 230,
-        y: event.clientY - 200,
-      });
+      if (typeof SetContextMenucanvas === 'function') {
+        SetContextMenucanvas({
+          visible: true,
+          x: event.clientX - 230,
+          y: event.clientY - 200,
+        });
+      }
+    
     });
+
     // Hover interaction
     hoverInteraction.updateCallback('onHover', (element, hitElements, event) => {
       if (!hitElements || ((!hitElements.nodes || hitElements.nodes.length === 0) && 
@@ -250,7 +256,19 @@ const useNvlVisualization = ({
       dragNodeInteraction.destroy();
       hoverInteraction.destroy();
     };
-  }, [nvlRef, shiftPressed, setSelectedNodes, setContextMenu, setnodetoshow, setrelationtoshow, setselectedEdges, sethoverEdge, isMinimapReady, layoutType]);
+  }, [
+    nvlRef,
+    multiselecte, // Replaced shiftPressed with multiselecte
+    setSelectedNodes,
+    setContextMenu,
+    setnodetoshow,
+    setrelationtoshow,
+    setselectedEdges,
+    sethoverEdge,
+    isMinimapReady,
+    layoutType,
+    setmultiselecte, // Added to dependencies
+  ]);
 
   const nvlOptions = {
     minimapContainer: minimapContainerRef.current,
@@ -270,7 +288,7 @@ const useNvlVisualization = ({
       nodes: nodes.map((node) => ({
         ...node,
         hovered: node.id === hoverdnode,
-        selected: selectedNodes?.has(node.id),
+        selected: selectedNodes?.has(node.id) && !node.isSelected,
         html: createNodeHtml(
           node.ischema
             ? LabelManagerSchema(node.group, node.properties)
@@ -287,14 +305,14 @@ const useNvlVisualization = ({
       })),
       rels: edges.map((edge) => ({
         ...edge,
-        selected: selectedEdges?.has(edge.id)||edge.selected,
-        color: edge.id === hoveredEdge || selectedEdges?.has(edge.id) ||edge.selected? '#B771E5' : (edge.color || '#808080'),
-        width: edge.id === hoveredEdge || selectedEdges?.has(edge.id)||edge.selected ? 15 : (edge.width || 1),
+        selected: selectedEdges?.has(edge.id) || edge.selected,
+        color: edge.id === hoveredEdge || selectedEdges?.has(edge.id) || edge.selected ? '#B771E5' : (edge.color || '#808080'),
+        width: edge.id === hoveredEdge || selectedEdges?.has(edge.id) || edge.selected ? 15 : (edge.width || 1),
       })),
     };
 
     // Calculate map center based on nodes with lat/lng
-    const validNodes = nodes.filter(node => {
+    const validNodes = nodes.filter((node) => {
       const lat = node.properties?.latitude || node.properties?.lat;
       const lng = node.properties?.longitude || node.properties?.lng;
       return lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng);
@@ -315,9 +333,6 @@ const useNvlVisualization = ({
             center={mapCenter}
             zoom={2}
             style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'auto' }}
-            // dragging={true}
-            // scrollWheelZoom={true}
-            // doubleClickZoom={true}
             boxZoom={true}
             keyboard={true}
             touchZoom={true}
@@ -345,7 +360,7 @@ const useNvlVisualization = ({
               top: 0,
               left: 0,
               zIndex: 2,
-             
+              cursor: multiselecte ? 'crosshair' : 'pointer', // Crosshair when multiselecte is true
               pointerEvents: layoutType === 'geospatial' ? 'none' : 'auto', // Disable canvas events in geospatial mode
             }}
           />
