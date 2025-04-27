@@ -169,7 +169,11 @@ const useNvlVisualization = ({
     clickInteraction.updateCallback('onCanvasClick', (event) => {
       if (!event.hitElements || event.hitElements.length === 0) {
         setSelectedNodes(new Set());
-        setselectedEdges(new Set());
+        if (typeof setselectedEdges === 'function') {
+          setselectedEdges(new Set());
+        } else {
+          console.warn('setSelectedEdges is not a function');
+        }
         selectedNodeRef.current = null;
         selectedRelationRef.current = null;
         setnodetoshow(null);
