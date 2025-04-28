@@ -1,0 +1,78 @@
+.action-window-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    backdrop-filter: blur(4px);
+  }
+  
+  .action-window {
+    width: 500px;
+    height: auto;
+    max-height: 80vh;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    user-select: none;
+    background: white;
+  }
+  
+  .action-window.maximized {
+    width: 95vw;
+    height: 90vh;
+    max-height: none;
+  }
+  
+  .window-header {
+    background: linear-gradient(135deg, #3a66db, #1e45b9);
+    color: white;
+    padding: 10px 15px;
+    cursor: move;
+    user-select: none;
+  }
+  
+  .window-header.maximized {
+    cursor: default;
+  }
+  
+  .window-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+  
+  .window-controls {
+    display: flex;
+    align-items: center;
+  }
+  
+  .control-button {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white !important;
+    text-decoration: none !important;
+  }
+  
+  .control-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .window-content {
+    padding: 15px;
+    background-color: #f8f9fa;
+    overflow-y: auto;
+  }
+  
+  .action-title {
+    color: #3a66db;
+    font-weight: 500;
+  }

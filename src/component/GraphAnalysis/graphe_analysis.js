@@ -1,44 +1,55 @@
 import React, { useState } from 'react';
-import './graphe_anaylsis.css'
-import Container_AlgorithmicAnalysis from './Container_AlgorithmicAnalysis';
+import { useTranslation } from 'react-i18next';
+import { DropdownButton, Dropdown } from 'react-bootstrap';
+import { FaLanguage, FaProjectDiagram, FaCogs, FaTachometerAlt, FaChartLine } from 'react-icons/fa';
+import './graphe_anaylsis.css';
+import Container_AlgorithmicAnalysis from './HorizontalModules/containervisualization/Container_AlgorithmicAnalysis';
+import SchemaVisualizer from './HorizontalModules/schema/schema';
+import SettingsPage from './HorizontalModules/Settings/SettingsPage';
+import Dashboard from './HorizontalModules/DashBoard/Dashboard';
+import { GlobalProvider } from './GlobalVariables';
+
 const Graphe_analysis = () => {
-  const [activeModule, setActiveModule] = useState('Schema'); // Default active module
+  const { t, i18n } = useTranslation();
+  const [activeModule, setActiveModule] = useState('Schema');
 
+  const changeLanguage = (lng) => {
+    console.log(`Changing language to: ${lng}`);
+    i18n.changeLanguage(lng);
+  };
 
-  // Handler for module navigation clicks
   const handleModuleClick = (module) => {
     setActiveModule(module);
   };
 
-  // Components for each module (you can customize these)
   const SchemaPage = () => (
     <div className="module-content">
-      <h2>Schema Page</h2>
-      <p>This is the Schema module content.</p>
+      <GlobalProvider>
+        <SchemaVisualizer />
+      </GlobalProvider>
     </div>
   );
 
   const SettingPage = () => (
     <div className="module-content">
-      <h2>Settings Page</h2>
-      <p>This is the Settings module content.</p>
+      <SettingsPage />
     </div>
   );
 
   const DashboardPage = () => (
     <div className="module-content">
-      <h2>Dashboard Page</h2>
-      <p>This is the Dashboard module content.</p>
+      <Dashboard />
     </div>
   );
 
   const VisualizationPage = () => (
     <div className="module-content">
-      <Container_AlgorithmicAnalysis/>
+      <GlobalProvider>
+        <Container_AlgorithmicAnalysis />
+      </GlobalProvider>
     </div>
   );
 
-  // Map of module names to their components
   const moduleComponents = {
     Schema: SchemaPage,
     Setting: SettingPage,
@@ -46,33 +57,48 @@ const Graphe_analysis = () => {
     Visualization: VisualizationPage,
   };
 
-  // Get the current module component
   const ActiveModuleComponent = moduleComponents[activeModule];
 
   return (
     <div className="app-container">
-      {/* Navigation Bar at the Top */}
       <nav className="navbar-horizontal">
         <ul className="navbar-nav">
-          {['Schema', 'Setting', 'Dashboard', 'Visualization'].map((module) => (
+          {[
+            { key: 'Schema', label: t('Schema visualization'), icon: <FaProjectDiagram /> },
+            { key: 'Setting', label: t('Settings'), icon: <FaCogs /> },
+            { key: 'Dashboard', label: t('Dashboard'), icon: <FaTachometerAlt /> },
+            { key: 'Visualization', label: t('Visualization'), icon: <FaChartLine /> },
+          ].map(({ key, label, icon }) => (
             <li
-              key={module}
-              className={`nav-item ${activeModule === module ? 'active' : ''}`}
-              onClick={() => handleModuleClick(module)}
+              key={key}
+              className={`nav-item ${activeModule === key ? 'active' : ''}`}
+              onClick={() => handleModuleClick(key)}
             >
-              {module}
+              {icon} <span>{label}</span>
             </li>
           ))}
         </ul>
+
+        <div className="language-dropdown-container">
+          <DropdownButton
+            id="language-dropdown"
+            title={
+              <>
+                <FaLanguage className="language-icon" /> {t('Language')}: {i18n.language.toUpperCase()}
+              </>
+            }
+            variant="outline-light"
+            style={{ zIndex: 30 }}
+          >
+            <Dropdown.Item onClick={() => changeLanguage('ar')}>{t('Arabic')}</Dropdown.Item>
+            <Dropdown.Item onClick={() => changeLanguage('fr')}>{t('French')}</Dropdown.Item>
+          </DropdownButton>
+        </div>
       </nav>
 
-      {/* Main Content Area */}
       <div className="container-fluid test">
         <ActiveModuleComponent />
       </div>
-
-      {/* TimelineBar at the Bottom */}
-     
     </div>
   );
 };

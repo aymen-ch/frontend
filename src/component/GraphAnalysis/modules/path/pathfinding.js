@@ -2,18 +2,21 @@
 import React, { useState,useEffect } from 'react';
 import axios from 'axios';
 import { AddNeighborhoodParser,parsePath } from '../../utils/Parser';
-
 import { BASE_URL } from '../../utils/Urls';
 
-const PathFinder = ({ nvlRef,setPathEdges,
+const PathFinder = ({setPathEdges,
     setPathNodes,
     setAllPaths,    
-    setCurrentPathIndex,setIsBoxPath,
-    selectednodes}) => {
+    setCurrentPathIndex,
+    setIsBoxPath,
+    selectednodes,
+    setPathisempty
+    }) => {
 
 const [depth, setDepth] = useState(1);
 const [isPathFindingStarted, setIsPathFindingStarted] = useState(true);
 const updatePathNodesAndEdges = (path) => {
+  console.log(selectednodes)
 const { nodes: formattedNodes, edges: formattedEdges } = parsePath(path,selectednodes);
 setPathNodes(formattedNodes);
 setPathEdges(formattedEdges);
@@ -26,11 +29,10 @@ setPathEdges(formattedEdges);
 
   const startPathFinding = async () => {
     setIsPathFindingStarted(true);
-    console.log("selected nodes  ", nvlRef.current.getSelectedNodes());
-    
-    if (nvlRef.current.getSelectedNodes().length>0) {
+    console.log(selectednodes)
+    if (selectednodes.size>0) {
         setIsBoxPath(true)
-        const nodeIds = nvlRef.current.getSelectedNodes().map((node) => parseInt(node.id, 10));
+        const nodeIds = Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10));
       try {
         const response = await axios.post(
           `${BASE_URL}/get_all_connections/`,
@@ -44,10 +46,54 @@ setPathEdges(formattedEdges);
 
         if (response.status === 200) {
           const paths = response.data.paths;
-          console.log(response)
+          if(response.data.paths.length == 0 ){
+            setPathisempty(true) ;
+            console.log("path is videdd ");
+          }
+          console.log("response path :" , response);
+          
           setAllPaths(paths);
           setCurrentPathIndex(0);
-          updatePathNodesAndEdges(paths[0],nvlRef.current.getSelectedNodes());
+          updatePathNodesAndEdges(paths[0],selectednodes);
+        } else {
+          console.error('Failed to fetch all connections.');
+        }
+      } catch (error) {
+        console.error('Error fetching all connections:', error);
+      }
+    }
+  };
+
+
+  const startPathFinding_shortest = async () => {
+    setIsPathFindingStarted(true);
+
+    console.log(selectednodes)
+    if (selectednodes.size>0) {
+        setIsBoxPath(true)
+        const nodeIds = Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10));
+      try {
+        const response = await axios.post(
+          `${BASE_URL}/shortestpath/`,
+          {ids: nodeIds},
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          const paths = response.data.paths;
+          if(response.data.paths.length == 0 ){
+            setPathisempty(true) ;
+            console.log("path is videdd ");
+          }
+          console.log("response path :" , response);
+          
+          setAllPaths(paths);
+          setCurrentPathIndex(0);
+          updatePathNodesAndEdges(paths[0],selectednodes);
         } else {
           console.error('Failed to fetch all connections.');
         }
@@ -58,6 +104,7 @@ setPathEdges(formattedEdges);
   };
 
   return (
+    <>
     <div
       style={{
         padding: '10px',
@@ -85,7 +132,7 @@ setPathEdges(formattedEdges);
       <button
         onClick={startPathFinding}
         style={{
-          background: '#28a745',
+          background: 'rgb(95 124 87)',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
@@ -97,6 +144,21 @@ setPathEdges(formattedEdges);
       </button>
 
     </div>
+    <button
+onClick={startPathFinding_shortest}
+style={{
+  background: 'rgb(95 124 87)',
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  padding: '5px 10px',
+  cursor: 'pointer',
+}}
+>
+shortest path
+</button>
+
+  </>
   );
 };
 

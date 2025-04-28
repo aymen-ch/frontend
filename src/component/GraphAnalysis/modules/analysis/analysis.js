@@ -1,23 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getNodeIcon, getNodeColor, parseAggregationResponse, parseAggregationResponse_advanced } from '../../utils/Parser';
-import { BASE_URL } from '../../utils/Urls';
-import NodeClasificationBackEnd from './NodeClasificationBackEnd/NodeClasificationBackEnd'; // Import the new component
+import { Container } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartBar, faProjectDiagram, faLink, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { useGlobalContext } from '../../GlobalVariables';
+import AttributeAnalysis from './AttributeAnalysis';
+import Centrality from './Centrality';
+import LinkPrediction from './LinkPrediction';
+import Community from './Community';
+import './Analysis.css';
+import { useTranslation } from 'react-i18next';
 
 const Analysis = ({
-  setEdges,
-  setNodes,
-  nodes,
-  edges,
   drawCirclesOnPersonneNodes,
   ColorPersonWithClass,
   activeAggregations,
   setActiveAggregations,
+  setEdges,
+  setNodes,
+  nodes,
+  edges,
 }) => {
   const [depth, setDepth] = useState(1);
   const [nodeTypes, setNodeTypes] = useState([]);
   const [selectedAffaires, setSelectedAffaires] = useState([]);
-  const [showNodeClassification, setShowNodeClassification] = useState(false); // State to control visibility of the pop-up
+  const [showNodeClassification, setShowNodeClassification] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAggLoading, setIsAggLoading] = useState(false);
+  const [isBetweennessLoading, setIsBetweennessLoading] = useState(false);
+  const [selectedCentralityAttribute, setSelectedCentralityAttribute] = useState('_betweenness');
+  const [selectedGroup, setSelectedGroup] = useState('');
+  const [activeTab, setActiveTab] = useState('attribute');
+  const{t} = useTranslation()
 
   useEffect(() => {
     const types = [...new Set(nodes.map((node) => node.group))];
@@ -28,80 +41,86 @@ const Analysis = ({
     setSelectedAffaires(affids);
   }, [nodes]);
 
-  const handleAggregationWithAlgorithm = async (depth) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post(BASE_URL + '/aggregate_with_algo/', {
-        id_affaires: selectedAffaires,
-        depth: depth,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.status === 200) {
-        const { nodes: parsedNodes, edges: parsedEdges } = await parseAggregationResponse_advanced(response.data[0].Result);
-        setNodes(parsedNodes);
-        setEdges(parsedEdges);
-      } else {
-        console.error('Advanced aggregation failed.');
-      }
-    } catch (error) {
-      console.error('Error during advanced aggregation:', error);
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'attribute':
+        return <AttributeAnalysis />;
+      case 'centrality':
+        return (
+          <Centrality
+            nodes={nodes}
+            setNodes={setNodes}
+            selectedGroup={selectedGroup}
+            setSelectedGroup={setSelectedGroup}
+            selectedCentralityAttribute={selectedCentralityAttribute}
+            setSelectedCentralityAttribute={setSelectedCentralityAttribute}
+            isBetweennessLoading={isBetweennessLoading}
+            setIsBetweennessLoading={setIsBetweennessLoading}
+          />
+        );
+      case 'linkPrediction':
+        return (
+          <LinkPrediction
+            selectedAffaires={selectedAffaires}
+            depth={depth}
+            setDepth={setDepth}
+            isAggLoading={isAggLoading}
+            setIsAggLoading={setIsAggLoading}
+            setNodes={setNodes}
+            setEdges={setEdges}
+            showNodeClassification={showNodeClassification}
+            setShowNodeClassification={setShowNodeClassification}
+          />
+        );
+      case 'community':
+        return (
+          <Community
+            nodes={nodes}
+            setNodes={setNodes}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            ColorPersonWithClass={ColorPersonWithClass}
+          />
+        );
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="container-fluid p-3 bg-white shadow-sm rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Aggregation</h3>
-
-      <div className="d-flex flex-column gap-3">
-        <button
-          className="btn btn-info w-100"
-          onClick={() => handleAggregationWithAlgorithm(depth)}
+    <Container fluid className="analysis-container">
+      <div className="analysis-tabs">
+        <div
+          className={`tab-card ${activeTab === 'attribute' ? 'active' : ''}`}
+          onClick={() => setActiveTab('attribute')}
         >
-          Aggregation with Algorithme
-        </button>
-
-        <button
-          className="btn btn-warning w-100"
-          onClick={() => ColorPersonWithClass(nodes, setNodes)}
+          <FontAwesomeIcon icon={faChartBar} className="tab-icon" />
+          <span>{t('Attribute Analysis')}</span>
+        </div>
+        <div
+          className={`tab-card ${activeTab === 'centrality' ? 'active' : ''}`}
+          onClick={() => setActiveTab('centrality')}
         >
-          Color node with class
-        </button>
-
-        <input
-          type="number"
-          value={depth}
-          onChange={(e) => setDepth(parseInt(e.target.value, 10))}
-          min="1"
-          placeholder="Enter depth"
-          className="form-control"
-        />
-
-        {/* <button
-          className="btn btn-danger w-100"
-          onClick={() => drawCirclesOnPersonneNodes(nodes, setNodes)}
+          <FontAwesomeIcon icon={faProjectDiagram} className="tab-icon" />
+          <span>{t('Centrality')}</span>
+        </div>
+        <div
+          className={`tab-card ${activeTab === 'linkPrediction' ? 'active' : ''}`}
+          onClick={() => setActiveTab('linkPrediction')}
         >
-          Highlight Personnes with Crimes
-        </button> */}
-
-        <button
-          className="btn btn-danger w-100"
-          onClick={() => setShowNodeClassification(true)}
+          <FontAwesomeIcon icon={faLink} className="tab-icon" />
+          <span>{t('Link Prediction')}</span>
+        </div>
+        <div
+          className={`tab-card ${activeTab === 'community' ? 'active' : ''}`}
+          onClick={() => setActiveTab('community')}
         >
-          NodeClasificationBackEnd
-        </button>
+          <FontAwesomeIcon icon={faUsers} className="tab-icon" />
+          <span>{t('Community')}</span>
+        </div>
       </div>
-
-      {showNodeClassification && (
-        <NodeClasificationBackEnd
-          onClose={() => setShowNodeClassification(false)}
-        />
-      )}
-    </div>
+      <div className="tab-content">{renderContent()}</div>
+    </Container>
   );
 };
 

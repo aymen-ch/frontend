@@ -1,0 +1,30 @@
+.leaflet-container {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .leaflet-container.leaflet-pan-mode {
+    cursor: grab;
+  }
+  
+  .leaflet-container.leaflet-pan-mode:active {
+    cursor: grabbing;
+  }
+  
+  .leaflet-container.leaflet-edit-mode {
+    cursor: default;
+  }
+  
+  .leaflet-viewport {
+    opacity: 0.5;
+    transition: opacity 0.25s ease-in-out;
+  }
+  
+  .leaflet-viewport.leaflet-viewport-hidden {
+    opacity: 0;
+  }
+  
+  .leaflet-viewport.leaflet-viewport-visible {
+    opacity: 1;
+  }
+  

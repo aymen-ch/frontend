@@ -101,3 +101,102 @@
   font-size: 14px;
   font-style: italic;
 }
+
+
+/* contextmenu.css */
+.context-menu-container {
+  position: absolute;
+  top: var(--context-menu-y);
+  left: var(--context-menu-x);
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.sub-context-menu {
+  position: absolute;
+  top: var(--sub-context-menu-y);
+  left: var(--sub-context-menu-x);
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1001; /* Higher than main menu */
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 5px 0;
+}
+
+.no-relations {
+  padding: 8px 12px;
+  color: #888;
+}
+
+/* Existing virtual-relation style */
+.virtual-relation {
+  color: #38b000; /* Green color for virtual relations */
+  font-weight: bold; /* Make virtual relations stand out */
+}
+
+/* Style for relation display container */
+.relation-display {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between node and relation parts */
+  font-size: 14px;
+}
+
+/* Style for start and end node spans */
+.node-start,
+.node-end {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Space between icon and text */
+  font-weight: 500;
+}
+
+/* Style for relation name */
+.relation-name {
+  color: inherit; /* Inherit color from parent (green for virtual, default for normal) */
+  font-style: italic; /* Make relation name distinct */
+}
+
+/* Style for icon container */
+.icon-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px; /* Space around the icon */
+  border-radius: 4px; /* Rounded corners for background */
+}
+
+/* Style for node icons */
+.node-icon {
+  width: 16px; /* Fixed size for image icons */
+  height: 16px;
+  vertical-align: middle;
+  object-fit: contain; /* Ensure image fits without distortion */
+}

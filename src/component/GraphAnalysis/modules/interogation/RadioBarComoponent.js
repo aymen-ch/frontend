@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { getNodeIcon, getNodeColor,LabelManager } from '../../utils/Parser'; // Ensure getNodeColor is imported
+import { getNodeIcon, getNodeColor } from '../../utils/Parser'; // Ensure getNodeColor is imported
 import { BASE_URL } from '../../utils/Urls';
+import { useTranslation } from 'react-i18next'; // Import the translation hook
 
 const RadioBarComponent = ({ onResult }) => {
     const [nodeData, setNodeData] = useState([]);
     const [selectedNodeType, setSelectedNodeType] = useState('');
     const [error, setError] = useState(null);
 
+    const { t } = useTranslation(); // Initialize the translation hook
+
     useEffect(() => {
         const fetchNodeTypes = async () => {
             try {
                 const token = localStorage.getItem('authToken');
-                const response = await axios.get(BASE_URL+'/node-types/', {
+                const response = await axios.get(BASE_URL + '/node-types/', {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -36,15 +39,13 @@ const RadioBarComponent = ({ onResult }) => {
         onResult(selectedType);
     };
 
-   
-
     return (
         <div className="w-100"> {/* Full width container */}
             <div className="card border-0 shadow-sm" style={{ borderRadius: '15px', backgroundColor: '#ffffff' }}>
-                <div className="card-header  text-white" style={{ border: 'none',backgroundColor:'#346478', borderRadius: '15px 15px 0 0' }}>
+                <div className="card-header text-white" style={{ border: 'none', backgroundColor: '#346478', borderRadius: '15px 15px 0 0' }}>
                     <h5 className="card-title mb-0 d-flex align-items-center">
                         <i className="bi bi-diagram-3-fill me-2"></i>
-                        Select Node Type
+                        {t('Select Node Type')} {/* Translated text */}
                     </h5>
                 </div>
                 <div className="card-body">

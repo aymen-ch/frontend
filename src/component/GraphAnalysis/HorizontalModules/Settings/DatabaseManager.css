@@ -1,0 +1,17 @@
+/* DatabaseManager.css */
+.active-indicator {
+    color: green;
+    font-size: 1.2rem;
+  }
+  
+  .btn .fa-icon {
+    margin-right: 0.5rem;
+  }
+  
+  .card-header .fa-icon {
+    margin-right: 0.5rem;
+  }
+  
+  .list-group-item .fa-icon {
+    margin-right: 0.5rem;
+  }

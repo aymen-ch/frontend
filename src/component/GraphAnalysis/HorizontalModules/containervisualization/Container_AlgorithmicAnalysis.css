@@ -1,0 +1,246 @@
+/* Main container styles */
+.container-fluid.test {
+  height: calc(100vh - 50px);
+    overflow: hidden;
+    padding: 0px;
+    background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  }
+  
+  /* Row styling */
+  .row.flex-grow-1 {
+    min-height: 100vh;
+    padding: 0px;
+  }
+  
+  /* Main content area */
+  .col.flex-grow-1 {
+    position: relative;
+    padding: 0px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Fullscreen mode */
+  .col.p-0.flex-grow-1 {
+    height: 100vh;
+  }
+  
+  /* Standard mode */
+  .col.col-lg-12.col-md-12.col-12.flex-grow-1 {
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  
+  /* Path visualization overlay */
+  
+  
+  /* Side navigation */
+  /* Side navigation - Positioned along the entire right side */
+.side-nav {
+  width: 60px;
+  position: absolute; /* Using absolute within the container */
+  right: 0;
+  top: 0;
+  bottom: 0; /* Extends to the bottom of the container */
+  z-index: 50;
+  padding: 0;
+}
+
+.side-nav-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Takes full height of the side-nav */
+  background: #E4EFE7;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+/* Adjust module panel to align properly with side-nav */
+.module-panel {
+  position: absolute;
+  right: 60px; /* Positions next to the side nav */
+  top: 0;
+  bottom: 0;
+  width: 400px;
+  background-color: #fff;
+  box-shadow: -3px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  overflow-y: auto;
+  padding: 20px;
+  border-left: 1px solid #dee2e6;
+}
+
+/* Adjust main content area to account for side navigation */
+.col.flex-grow-1 {
+  position: relative;
+  padding: 0;
+  margin-right: 60px; /* Make space for the side navigation */
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Ensure proper spacing for the container */
+.container-fluid.test {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 50px);
+  overflow: hidden;
+  padding: 0;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  position: relative;
+}
+
+/* Make sure the side-nav-item text is readable */
+.side-nav-item {
+  padding: 15px 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  writing-mode: vertical-rl;
+  cursor: pointer;
+  color: rgb(59, 55, 55);
+  transition: all 0.2s ease;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+  /* Make sure the active state is visible */
+  .side-nav-item.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left: 3px solid #17a2b8;
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  /* Module panel */
+  .module-panel {
+    position: absolute;
+    right: 40px;
+    top: 0;
+    bottom: 0;
+    width: 500px;
+    background-color: #fff;
+    box-shadow: -3px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+    overflow-y: auto;
+    padding: 20px;
+    border-left: 1px solid #dee2e6;
+  }
+  
+  .module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #3a4a66;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    padding-top: 5px;
+  }
+  
+  .module-title {
+    color: #2c3e50;
+    margin: 0;
+    font-weight: 600;
+  }
+  
+  .module-close-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 20px;
+    line-height: 1;
+    padding: 0 5px;
+  }
+  
+  .module-content {
+    background-color: #f8f9fa;
+  
+    border-radius: 8px;
+ 
+  }
+  
+  .option-tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1rem;
+  }
+  
+  .option-tab {
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+  
+  .option-tab.active {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  .option-content {
+    background-color: #fff;
+    border-radius: 8px;
+  
+  }
+
+  .btn-check:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    color: #fff;
+    background-color: #5f7c57;
+}
+  
+  /* Timeline bar */
+  .timeline-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-top: 1px solid #dee2e6;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+  }
+  
+  /* Node properties list */
+  .properties-container {
+    margin-top: 1rem;
+  }
+  
+  .properties-close-btn {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 4px;
+    padding: 5px 10px;
+    border: none;
+    margin-bottom: 1rem;
+  }
+  
+  .properties-list {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .property-item {
+    border: 1px solid #dee2e6;
+    padding: 10px 15px;
+  }
+  
+  .property-item:nth-child(even) {
+    background-color: #f8f9fa;
+  }
+  
+  .property-item:nth-child(odd) {
+    background-color: #fff;
+  }
+  
+  .property-key {
+    color: #2c3e50;
+    font-weight: bold;
+  }
+  
+  .property-value {
+    word-break: break-word;
+  }
+
+
+  

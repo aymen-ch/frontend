@@ -1,0 +1,54 @@
+.settings-page {
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.settings-page h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.database-section {
+  padding-right: 15px;
+}
+
+.tabs-section {
+  padding-left: 15px;
+}
+
+.active-indicator {
+  color: #28a745;
+}
+
+.nav-tabs .nav-link {
+  color: #555;
+}
+
+.nav-tabs .nav-link.active {
+  color: #007bff;
+  font-weight: bold;
+}
+
+.card {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.list-group-item {
+  border-left: none;
+  border-right: none;
+}
+
+.list-group-item:first-child {
+  border-top: none;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}

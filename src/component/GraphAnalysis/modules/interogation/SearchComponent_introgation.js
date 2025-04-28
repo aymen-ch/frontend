@@ -1,7 +1,8 @@
 import React, { useEffect, useState, memo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { fetchNodeProperties, submitSearch } from '../../utils/Urls';
-import { getNodeIcon, getNodeColor, LabelManager, createNode } from '../../utils/Parser';
+import { getNodeIcon, getNodeColor, LabelManager, createNode, createEdge, parsergraph } from '../../utils/Parser';
+import { useTranslation } from 'react-i18next'; // Import the translation hook
 
 const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, setNodeTypes }) => {
   const [nodeProperties, setNodeProperties] = useState([]);
@@ -9,6 +10,8 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
   const [operations, setOperations] = useState({});
   const [error, setError] = useState(null);
   const [searchResult, setSearchResult] = useState('');
+  
+  const { t } = useTranslation(); // Initialize the translation hook
 
   useEffect(() => {
     setNodeProperties([]);
@@ -21,28 +24,34 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
         console.log('Fetched properties:', properties); // Debug log
         setNodeProperties(properties);
       } catch (error) {
-        setError('Error fetching properties.');
+        setError(t('Error fetching properties.'));
       }
     };
     if (selectedNodeType) {
       getNodeProperties();
     }
-  }, [selectedNodeType]);
+  }, [selectedNodeType, t]);
 
   useEffect(() => {
-    if (!searchResult || typeof searchResult !== 'object' || !searchResult.results) return;
-    const nodes1 = [];
+    if (!searchResult) return;
     console.log(searchResult);
-    searchResult.results.forEach((object) => {
-      nodes1.push(createNode(object, selectedNodeType, object, false));
+    const graphData = parsergraph(searchResult);
+    setNodes((prevNodes) => {
+      return [...prevNodes, ...graphData.nodes];
     });
-    setNodes([...nodes, ...nodes1]);
-  }, [searchResult]);
+    setEdges((prevEdges) => [...prevEdges, ...graphData.edges]);
+  }, [searchResult, setNodes, setEdges]);
 
   const handleInputChange = (e, propertyName, propertyType) => {
     let value = e.target.value;
     if (propertyType === 'int') {
       value = value ? parseInt(value, 10) : '';
+    } else if (propertyName.toLowerCase() === 'date') {
+      // Convert YYYY-MM-DD to MM-DD-YYYY
+      if (value) {
+        const [year, month, day] = value.split('-');
+        value = `${month}-${day}-${year}`;
+      }
     }
     setFormValues({ ...formValues, [propertyName]: value });
   };
@@ -56,19 +65,21 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
     try {
       const searchPayload = {
         values: formValues,
-        operations: operations
+        operations: operations,
       };
       const result = await submitSearch(selectedNodeType, searchPayload);
       setSearchResult(result);
     } catch (error) {
-      setError('Error during submission.');
+      setError(t('Error during submission.'));
     }
   };
 
   const intOperationOptions = ['=', '!=', '>', '<', '>=', '<='];
-  const stringOperationOptions = [ '=', 'contains','startswith', 'endswith'];
+  const stringOperationOptions = ['=', 'contains', 'startswith', 'endswith'];
+  const dateOperationOptions = ['=', '!=', '>', '<', '>=', '<='];
 
-  const getOperationOptions = (propertyType) => {
+  const getOperationOptions = (propertyType, propertyName) => {
+    if (propertyName.toLowerCase() === 'date') return dateOperationOptions;
     if (propertyType === 'int') return intOperationOptions;
     if (propertyType === 'str') return stringOperationOptions;
     return [];
@@ -77,7 +88,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
   return (
     <div className="container mt-4">
       {error && <div className="alert alert-danger">{error}</div>}
-  
+
       {nodeProperties
         .filter((property) => !property.name.startsWith('_'))
         .length > 0 && (
@@ -102,7 +113,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                   style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }}
                 />
               </div>
-              Properties for {selectedNodeType}
+              {t('Properties for')} {selectedNodeType}
             </h5>
           </div>
           <div className="card-body">
@@ -111,36 +122,37 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                 .filter((property) => !property.name.startsWith('_'))
                 .map((property, index) => {
                   console.log(`Property: ${property.name}, Type: ${property.type}`); // Debug log
-                  const showOperations = property.type === 'int' || property.type === 'str';
+                  const isDate = property.name.toLowerCase() === 'date';
+                  const showOperations = property.type === 'int' || property.type === 'str' || isDate;
                   return (
                     <div key={index} className="mb-3">
                       <label className="form-label fw-bold d-flex align-items-center">
-                        {property.name} ({property.type}):
+                        {property.name} ({isDate ? t('date') : t(property.type)}):
                       </label>
                       <div className="input-group">
                         {showOperations && (
                           <select
                             className="form-select"
-                            style={{ 
-                              maxWidth: property.type === 'int' ? '90px' : '120px', 
-                              borderRadius: '5px 0 0 5px' 
+                            style={{
+                              maxWidth: isDate || property.type === 'int' ? '90px' : '120px',
+                              borderRadius: '5px 0 0 5px',
                             }}
-                            value={operations[property.name] || (property.type === 'int' ? '=' : 'contains')}
+                            value={operations[property.name] || (isDate ? '=' : property.type === 'int' ? '=' : 'contains')}
                             onChange={(e) => handleOperationChange(property.name, e.target.value)}
                           >
-                            {getOperationOptions(property.type).map((op) => (
-                              <option key={op} value={op}>{op}</option>
+                            {getOperationOptions(property.type, property.name).map((op) => (
+                              <option key={op} value={op}>{t(op)}</option> // Translate operations
                             ))}
                           </select>
                         )}
                         <input
-                          type={property.type === 'int' ? 'number' : 'text'}
+                          type={isDate ? 'date' : property.type === 'int' ? 'number' : 'text'}
                           className="form-control"
                           style={{
                             borderRadius: showOperations ? '0 5px 5px 0' : '5px',
-                            border: '1px solid #ced4da'
+                            border: '1px solid #ced4da',
                           }}
-                          onChange={(e) => handleInputChange(e, property.name, property.type)}
+                          onChange={(e) => handleInputChange(e, property.name, isDate ? 'date' : property.type)}
                         />
                       </div>
                     </div>
@@ -152,7 +164,7 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
                   className="btn"
                   style={{ backgroundColor: '#346478', color: '#ffffff', borderRadius: '5px' }}
                 >
-                  Search
+                  {t('Search')} {/* Translated button text */}
                 </button>
               </div>
             </form>

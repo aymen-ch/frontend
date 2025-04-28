@@ -20,3 +20,18 @@ img, a {
   -webkit-user-drag: none;
   user-drag: none;
 }
+
+/* Add to your global CSS file (e.g., index.css or App.css) */
+/* html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure no parent elements override our z-index */
