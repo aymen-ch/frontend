@@ -75,7 +75,8 @@ const ContextMenu = ({
     '_eigenvector',
     '_betweenness',
   ];
-
+  const [expandLimit, setExpandLimit] = useState(10);
+  const [expandDirection, setExpandDirection] = useState('both'); // 'in', 'out', 'both'
   useEffect(() => {
     if (contextMenu?.node && contextMenu.visible) {
       let relations = [];
@@ -211,8 +212,8 @@ const ContextMenu = ({
       setNodes((prev) => prev.filter((node) => !selectedNodeIds.has(node.id)));
       setEdges((prev) => prev.filter((edge) => !selectedNodeIds.has(edge.from) && !selectedNodeIds.has(edge.to)));
       setSelectedNodes(new Set());
-    } else if (action === t('View Neighborhood') || action === t('Expand Specific Relation')) {
-      handleNodeExpansion(contextMenu.node, relationType, setNodes, setEdges);
+    } else if (action ==='View Neighborhood' || action === t('Expand Specific Relation')) {
+      handleNodeExpansion(contextMenu.node, relationType, setNodes, setEdges,expandLimit,expandDirection);
     } else if (action === t('Select Node')) {
       setSelectedNodes((prev) => new Set([...prev, contextMenu.node.id]));
     } else if (action === t('Activated')) {
@@ -363,7 +364,37 @@ const ContextMenu = ({
         >
           <div className="menu-header">{t('Expand Options')}</div>
           <div className="menu-items">
-            <button className="menu-item" onClick={() => handleContextMenuAction(t('View Neighborhood'))}>
+          <div className="expand-options">
+              <label>
+                {t('Limit')}:
+                <input
+                  type="number"
+                  min="1"
+                  value={expandLimit}
+                  onChange={(e) => setExpandLimit(Number(e.target.value))}
+                  style={{ width: '60px', marginLeft: '8px', marginRight: '16px' }}
+                />
+              </label>
+              <label>
+                {t('Direction')}:
+                <select
+                  value={expandDirection}
+                  onChange={(e) => setExpandDirection(e.target.value)}
+                  style={{ marginLeft: '8px' }}
+                >
+                  <option value="in">{t('In')}</option>
+                  <option value="out">{t('Out')}</option>
+                  <option value="both">{t('Both')}</option>
+                </select>
+              </label>
+            </div>
+
+            <button
+              className="menu-item"
+              onClick={() =>
+                handleContextMenuAction('View Neighborhood')
+              }
+            >
               <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
               {t('Expand All')}
             </button>

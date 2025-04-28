@@ -113,7 +113,7 @@ export const handleNodeExpansion_selected = async (selectedNodes, setNodes, setE
   }
 };
 
-export const handleNodeExpansion = async (node, relationType, setNodes, setEdges) => {
+export const handleNodeExpansion = async (node, relationType, setNodes, setEdges, expandLimit = 100, expandDirection = 'In') => {
   const token = localStorage.getItem('authToken');
   const node_type = node.group;
   const id = parseInt(node.id, 10);
@@ -133,14 +133,16 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
 
     let response;
     if (virtualRelation) {
-      // Handle virtual relation, include path in payload
+      // Handle virtual relation, include path, sense, and limit in payload
       response = await axios.post(
         BASE_URL + '/get_virtual_relationships/',
         { 
           node_type, 
           id, 
           virtual_relation: relationType,
-          path: virtualRelation.path 
+          path: virtualRelation.path,
+          expandLimit, // Include sense
+          expandDirection  // Include limit
         },
         {
           headers: {
@@ -150,10 +152,16 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
         }
       );
     } else {
-      // Handle standard relation
+      // Handle standard relation, include sense and limit
       response = await axios.post(
         BASE_URL + '/get_node_relationships/',
-        { node_type, id, relation_type: relationType },
+        { 
+          node_type, 
+          id, 
+          relation_type: relationType,
+          expandLimit, // Include sense
+          expandDirection  // Include limit
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -177,7 +185,6 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
     console.error('Error during submission:', error);
   }
 };
-
 export const handleAllConnections = async (
   selectedNodes,
   setAllPaths,
