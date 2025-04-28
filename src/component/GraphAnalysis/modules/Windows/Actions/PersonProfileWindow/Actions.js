@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button, Card, Container, Form, Alert } from 'react-bootstrap';
 import { XLg, Dash, Fullscreen, FullscreenExit, PlusCircle } from 'react-bootstrap-icons';
@@ -7,13 +6,15 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './AddActionWindow.css';
 import { BASE_URL } from '../../../../utils/Urls';
+
 const AddActionWindow = ({ node, onClose }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    node_type: node?.group || 'Personne', // Set to node.group
+    node_type: node?.group || 'Personne',
     id_field: 'id',
     query: '',
+    node_id: node?.id || '', // Include node_id
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -38,7 +39,7 @@ const AddActionWindow = ({ node, onClose }) => {
     try {
       const response = await axios.post(
         `${BASE_URL}/add_action/`,
-        formData,
+        formData, // Send all formData including node_id
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -46,6 +47,7 @@ const AddActionWindow = ({ node, onClose }) => {
           },
         }
       );
+
       if (response.status === 201) {
         setSuccess('Action added successfully!');
         setFormData({
@@ -53,6 +55,7 @@ const AddActionWindow = ({ node, onClose }) => {
           node_type: node.group || 'Personne',
           id_field: 'id',
           query: '',
+          node_id: node.id || '',
         });
         setTimeout(() => onClose(), 1500); // Close after 1.5s
       }
@@ -93,6 +96,11 @@ const AddActionWindow = ({ node, onClose }) => {
               type="hidden"
               name="node_type"
               value={formData.node_type}
+            />
+            <Form.Control
+              type="hidden"
+              name="node_id"
+              value={formData.node_id}
             />
             {error && (
               <Alert variant="danger" onClose={() => setError(null)} dismissible>

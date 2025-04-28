@@ -69,7 +69,7 @@ const SchemaVisualizer = () => {
       const edgeid = [...selectedEdges][0];
       const edge = edges.find((e) => e.id === edgeid);
       if (edge) {
-        console.log(edge.properties)
+      
         setSelectedItem({
           id: edge.id,
           group: edge.group || edge.type, // Use edge.type for relation type
@@ -334,43 +334,51 @@ const SchemaVisualizer = () => {
         }
       });
 
-      virtualRelations.forEach((relation) => {
-        const path = relation.path;
-        const relationName = relation.name;
-        const startNodeLabel = path[0];
-        const endNodeLabel = path[path.length - 1];
+      // In the virtualRelations.forEach() section in fetchSchema function
+// Replace the current code with this:
 
-        const startNode = processedNodes.find((n) => n.group === startNodeLabel);
-        const endNode = processedNodes.find((n) => n.group === endNodeLabel);
+virtualRelations.forEach((relation) => {
+  const path = relation.path;
+  const relationName = relation.name;
+  const startNodeLabel = path[0];
+  const endNodeLabel = path[path.length - 1];
 
-        if (!startNode || !endNode) {
-          console.warn(
-            `Could not find nodes for virtual relation ${relationName}: ${startNodeLabel} -> ${endNodeLabel}`
-          );
-          return;
-        }
+  const startNode = processedNodes.find((n) => n.group === startNodeLabel);
+  const endNode = processedNodes.find((n) => n.group === endNodeLabel);
 
-        let endNodeId = endNode.id;
+  if (!startNode || !endNode) {
+    console.warn(
+      `Could not find nodes for virtual relation ${relationName}: ${startNodeLabel} -> ${endNodeLabel}`
+    );
+    return;
+  }
 
-        if (startNodeLabel === endNodeLabel && startNode.id === endNode.id) {
-          if (duplicatedNodesMap.has(startNode.id)) {
-            endNodeId = duplicatedNodesMap.get(startNode.id);
-          } else {
-            const duplicatedNode = {
-              ...startNode,
-              id: `${startNode.id}_dup`,
-            };
-            processedNodes.push(duplicatedNode);
-            duplicatedNodesMap.set(startNode.id, duplicatedNode.id);
-            endNodeId = duplicatedNode.id;
-          }
-        }
+  let endNodeId = endNode.id;
 
-         const virtualEdge = {
+  if (startNodeLabel === endNodeLabel && startNode.id === endNode.id) {
+    if (duplicatedNodesMap.has(startNode.id)) {
+      endNodeId = duplicatedNodesMap.get(startNode.id);
+    } else {
+      const duplicatedNode = {
+        ...startNode,
+        id: `${startNode.id}_dup`,
+      };
+      processedNodes.push(duplicatedNode);
+      duplicatedNodesMap.set(startNode.id, duplicatedNode.id);
+      endNodeId = duplicatedNode.id;
+    }
+  }
+
+  // Create a unique ID for the virtual edge
+  const virtualEdgeId = `virtual_${relationName}_${startNode.id}_${endNodeId}`;
+  
+  // Check if this edge already exists with a different type (real relation)
+  // Note that we're not replacing any existing edges - just adding a new one
+  const virtualEdge = {
     ...createEdge(
       {
         type: relationName,
-        identity: `virtual_${relationName}_${startNode.id}_${endNodeId}`,
+        identity: virtualEdgeId,
       },
       startNode.id,
       endNodeId,
@@ -382,7 +390,7 @@ const SchemaVisualizer = () => {
   };
 
   processedEdges.push(virtualEdge);
-      });
+});
 
       setNodes(processedNodes);
       setEdges(processedEdges);

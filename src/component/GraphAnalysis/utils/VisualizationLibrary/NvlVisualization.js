@@ -359,7 +359,7 @@ const useNvlVisualization = ({
               position: 'absolute',
               top: 0,
               left: 0,
-              zIndex: 2,
+              zIndex: 0,
               cursor: multiselecte ? 'crosshair' : 'pointer', // Crosshair when multiselecte is true
               pointerEvents: layoutType === 'geospatial' ? 'none' : 'auto', // Disable canvas events in geospatial mode
             }}
