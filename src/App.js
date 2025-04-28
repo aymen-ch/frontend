@@ -10,6 +10,7 @@ import UserInterface from './component/user/UserInterface';
 import Home from './component/user/pages/Home';
 import Upload from './component/user/pages/Upload';
 import Search from './component/user/pages/Search';
+import Permission from './component/user/pages/Permission';
 // import GraphAnalysisComponent from './component/GraphAnalysis/GraphAnalysisComponent';
 import Register from './component/Register';
 import Graphe_analysis from './component/GraphAnalysis/graphe_analysis';
@@ -28,6 +29,7 @@ function App() {
               <Route index element={<Home />} />
               <Route path="upload" element={<Upload />} />
               <Route path="search" element={<Search />} />
+              <Route path="permission" element={<Permission />} />
               <Route path="analytics/AlgorithmicAnalysis" element={<Graphe_analysis />} /> 
           </Route>
         </Routes>

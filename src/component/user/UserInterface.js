@@ -1,8 +1,16 @@
 import { Outlet } from "react-router";
 import Sidebar from "./pages/Sidebar";
 import Navbars from "./pages/bar";
-
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 export default function UserInterface() {
+    const navigate = useNavigate();
+    useEffect(() => {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            navigate("/"); // Redirection vers la page login s'il n'y a pas de token
+        }
+    }, [navigate]);
     return (
         <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         {/* Navbar */}
@@ -16,13 +24,7 @@ export default function UserInterface() {
                             </div>
 
                             {/* Outlet */}
-                            <div
-                                className="container-fluid flex-grow-1 overflow-auto"
-                                style={{
-                                    maxHeight: "100%",
-                                    padding:"0px"
-                                }}
-                                >
+                            <div className="container-fluid flex-grow-1 overflow-auto" style={{ maxHeight: "100%", padding:"0px"}}>
                                 <Outlet />
                             </div>
                     </div>
