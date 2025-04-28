@@ -14,7 +14,7 @@ import {
 import Draggable from 'react-draggable';
 import axios from 'axios';
 import { BASE_URL } from '../../../../utils/Urls';
-import './PersonProfileWindow.css';
+import './personProfileWindow.css';
 import { 
   BarChart, 
   Bar, 

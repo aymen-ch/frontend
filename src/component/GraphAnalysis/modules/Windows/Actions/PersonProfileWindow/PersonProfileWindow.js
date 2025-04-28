@@ -13,7 +13,7 @@ import {
 } from 'react-bootstrap-icons';
 import Draggable from 'react-draggable';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './PersonProfileWindow.css';
+import './personProfileWindow.css';
 
 const PersonProfileWindow = ({ node, onClose }) => {
   const [isMaximized, setIsMaximized] = useState(false);
