@@ -40,7 +40,7 @@
     "d3-force": "^3.0.0",
     "dagre": "^0.8.5",
     "elkjs": "^0.9.3",
-    "framer-motion": "^12.5.0",
+    "framer-motion": "^12.9.2",
     "graphology": "^0.25.4",
     "graphology-layout-forceatlas2": "^0.10.1",
     "graphology-types": "^0.24.8",
