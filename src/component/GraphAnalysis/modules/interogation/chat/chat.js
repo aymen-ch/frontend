@@ -31,7 +31,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [editingQueryId, setEditingQueryId] = useState(null);
   const [editedQuery, setEditedQuery] = useState('');
   const [maxCorrections, setMaxCorrections] = useState(1); // Default max corrections
-  const [selectedModel, setSelectedModel] = useState('hf.co/DavidLanz/text2cypher-gemma-2-9b-it-finetuned-2024v1:latest'); // Default model
+  const [selectedModel, setSelectedModel] = useState('tomasonjo/codestral-text2cypher:latest'); // Default model
   const handleEditQuery = (messageId, currentQuery) => {
     setEditingQueryId(messageId);
     setEditedQuery(currentQuery);

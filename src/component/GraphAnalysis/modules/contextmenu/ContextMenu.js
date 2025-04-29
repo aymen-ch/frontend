@@ -76,7 +76,7 @@ const ContextMenu = ({
     '_betweenness',
   ];
   const [expandLimit, setExpandLimit] = useState(10);
-  const [expandDirection, setExpandDirection] = useState('both'); // 'in', 'out', 'both'
+  const [expandDirection, setExpandDirection] = useState('Both'); // 'in', 'out', 'both'
   useEffect(() => {
     if (contextMenu?.node && contextMenu.visible) {
       let relations = [];
@@ -382,9 +382,9 @@ const ContextMenu = ({
                   onChange={(e) => setExpandDirection(e.target.value)}
                   style={{ marginLeft: '8px' }}
                 >
-                  <option value="in">{t('In')}</option>
-                  <option value="out">{t('Out')}</option>
-                  <option value="both">{t('Both')}</option>
+                  <option value="In">{t('In')}</option>
+                  <option value="Out">{t('Out')}</option>
+                  <option value="Both">{t('Both')}</option>
                 </select>
               </label>
             </div>

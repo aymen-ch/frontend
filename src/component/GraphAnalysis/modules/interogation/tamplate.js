@@ -9,7 +9,7 @@ import { convertNeo4jToGraph } from './chat/graphconvertor';
 import neo4j from 'neo4j-driver';
 import { useGlobalContext } from '../../GlobalVariables';
 
-const Template = () => {
+const Template = ({ nodes, setNodes, edges, setEdges } ) => {
   const [selectedQuestion, setSelectedQuestion] = useState('');
   const [queryParameters, setQueryParameters] = useState({});
   const [queryResult, setQueryResult] = useState('');
@@ -30,7 +30,6 @@ const Template = () => {
   const [newParam, setNewParam] = useState({ name: '', description: '', type: 'string' });
   const [detectedParams, setDetectedParams] = useState([]); // Store detected parameters
   const [successMessage, setSuccessMessage] = useState('');
-  const { nodes, setNodes, edges, setEdges } = useGlobalContext();
 
   // Effect to clear success message after 3 seconds
   useEffect(() => {
@@ -78,9 +77,10 @@ const Template = () => {
       );
       try {
         const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
+        console.log(newNodes,newEdges)
         if (newNodes.length > 0 || newEdges.length > 0) {
-          setNodes([...nodes.filter((n) => !newNodes.some((nn) => nn.id === n.id)), ...newNodes]);
-          setEdges([...edges.filter((e) => !newEdges.some((ne) => ne.id === e.id)), ...newEdges]);
+          setNodes([...nodes, ...newNodes]);
+          setEdges([...edges, ...newEdges]);
           setQueryResult('تم تحديث الرسم البياني بالعقد والحواف الجديدة.');
         } else {
           setQueryResult('النتيجة فارغة.');

@@ -1,180 +1,319 @@
+/* Sidebar Base Container */
 .sidebar-container {
-    padding: 20px;
-    background-color: #fff;
-    border-left: 4px solid var(--primary);
-    box-shadow: var(--shadow-md);
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-  }
-  
-  .sidebar-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: var(--text-dark);
-  }
-  
-  .sidebar-placeholder {
-    font-size: 14px;
-    color: var(--text-light);
-    padding-top: 10px;
-  }
-  
-  .details-section {
-    margin-top: 10px;
-  }
-  
-  .toggle-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-  
-  .icon-badge {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-  }
-  
-  .details-card {
-    background: var(--bg-light);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-top: 10px;
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .detail-item {
-    margin-bottom: 10px;
-  }
-  
-  .detail-label {
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-right: 6px;
-  }
-  
-  .detail-value {
-    font-weight: 400;
-    color: var(--text-light);
-  }
-  
-  /* Properties formatting */
-  .properties-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
-  }
-  
-  .property-tag {
-    background-color: var(--primary-light);
-    color: var(--text-dark);
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .property-key {
-    font-weight: 600;
-    margin-right: 4px;
-  }
-  .node-icon-img {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-  }
-  
-  .properties-list {
-    padding-left: 16px;
-    list-style: none;
-  }
-  
-  .property-item {
-    font-size: 14px;
-    color: var(--text-dark);
-    margin-bottom: 4px;
-    line-height: 1.4;
-  }
-  
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-left: 4px solid var(--primary);
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  height: 100%;
+  overflow-y: auto;
+}
 
-  .virtual-path-container {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-top: 4px;
-  }
-  
-  .node-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-radius: 20px;
-    color: #fff;
-    font-size: 0.85rem;
-  }
-  
-  .node-icon-img {
-    width: 16px;
-    height: 16px;
-  }
-  
-  .relation-label {
-    font-size: 0.85rem;
-    color: #555;
-    font-weight: bold;
-  }
-  .virtual-path-container {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-top: 6px;
-    overflow-x: auto;
-    padding: 4px 0;
-  }
-  
-  .node-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background-color: #888;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 12px;
-    font-size: 12px;
-    max-width: 140px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .node-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  
-  .node-icon-img {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-  }
-  
-  .relation-label {
-    font-weight: 600;
-    color: #444;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-    
+/* Title */
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 700;
+
+  color: var(--text-dark);
+}
+
+/* Placeholder Text */
+.sidebar-placeholder {
+  font-size: 13px;
+  color: var(--text-light);
+  padding-top: 10px;
+}
+
+/* Sections */
+.details-section {
+
+}
+
+/* Toggle Header (Collapsibles) */
+.toggle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+
+}
+
+/* Icon Badge */
+.icon-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+/* Card for Details */
+.details-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Detail Items */
+.detail-item {
+  display: flex;
+  flex-wrap: wrap;
+ 
+  font-size: 13px;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-right: 4px;
+}
+
+.detail-value {
+  color: var(--text-light);
+}
+
+/* Properties */
+.properties-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+}
+
+.property-tag {
+  background-color: var(--primary-light);
+  color: var(--text-dark);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  box-shadow: var(--shadow-xs);
+}
+
+.property-key {
+  font-weight: 600;
+}
+
+/* Virtual Paths */
+.virtual-path-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.node-badge {
+  display: flex;
+  align-items: center;
+  background-color: #888;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.node-icon-img {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.node-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Relations */
+.relation-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Attribute Form */
+.attribute-form-container {
+  margin-top: 10px;
+}
+
+.attribute-form {
+  background: #fdfdfd;
+  border: 1px dashed #ccc;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.form-field label {
+  font-size: 12px;
+  margin-bottom: 2px;
+  color: #444;
+}
+
+.form-field input,
+.form-field select {
+  width: 100%;
+  padding: 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Button */
+.insert-attributes-btn {
+  margin-top: 10px;
+  width: 100%;
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.insert-attributes-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Message */
+.analysis-message {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.analysis-message.error {
+  color: #dc3545;
+}
+
+.analysis-message.success {
+  color: #28a745;
+}
+
+/* Animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+.properties-content {
+  margin-top: 8px;
+  padding-left: 16px;
+}
+
+.toggle-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.toggle-header .detail-label {
+  flex-grow: 1;
+}
+
+.toggle-header svg {
+  margin-left: 8px;
+}
+
+
+.properties-section {
+  margin-top: 12px;
+}
+
+.properties-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 4px 0;
+  font-weight: 500;
+  color: #333;
+}
+
+.properties-header .properties-title {
+  flex-grow: 1;
+}
+
+.properties-header svg {
+  margin-left: 8px;
+}
+
+.properties-content {
+  margin-top: 4px; /* Reduced spacing between title and list */
+  padding-left: 16px;
+}
+
+.properties-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.property-item {
+  margin: 4px 0;
+}
+
+.detail-item {
+  margin: 12px 0;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.detail-value {
+  color: #333;
+  margin-left: 8px;
+}
+
+.toggle-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.toggle-header .toggle-title {
+  flex-grow: 1;
+}
+
+.toggle-header svg {
+  margin-left: 8px;
+}

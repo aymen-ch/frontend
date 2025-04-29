@@ -17,7 +17,7 @@ const ChatInput = ({
 }) => {
   const modelOptions = [
     { value: 'hf.co/DavidLanz/text2cypher-gemma-2-9b-it-finetuned-2024v1:latest', label: 'text2cypher9b' },
-    { value: 'codestral text2cypher 12b', label: 'text2cypher12b' },
+    { value: 'tomasonjo/codestral-text2cypher:latest', label: 'text2cypher12b' },
     { value: 'llama3.2:latest', label: 'llama 3b' },
   ];
 
