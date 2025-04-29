@@ -26,7 +26,7 @@ export const updateNodeConfig = async (nodeType, { color, size, icon, labelKey }
     if (color) config.color = color;
     if (size) config.size = size;
     if (icon) config.icon = icon;
-    if (labelKey) config.labelKey = labelKey;
+    if (labelKey) config.labelKey = labelKey; // labelKey is a comma-separated string
 
     await axios.post('http://127.0.0.1:8000/api/update-node-config/', {
       nodeType,
@@ -40,7 +40,6 @@ export const updateNodeConfig = async (nodeType, { color, size, icon, labelKey }
     throw error;
   }
 };
-
 // Initialize config on module load
 loadConfig();
 

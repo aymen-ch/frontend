@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button, Card, Container, Form, Alert } from 'react-bootstrap';
 import { XLg, Dash, Fullscreen, FullscreenExit, PlusCircle } from 'react-bootstrap-icons';
@@ -7,13 +6,16 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './AddActionWindow.css';
 import { BASE_URL } from '../../../../utils/Urls';
+
 const AddActionWindow = ({ node, onClose }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    node_type: node?.group || 'Personne', // Set to node.group
-    id_field: 'id',
+    description: '', // Added description field
+    node_type: node?.group || 'Personne',
+    id_field: 'id', // Set id as default
     query: '',
+    node_id: node?.id || '',
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -46,15 +48,18 @@ const AddActionWindow = ({ node, onClose }) => {
           },
         }
       );
+
       if (response.status === 201) {
         setSuccess('Action added successfully!');
         setFormData({
           name: '',
+          description: '', // Reset description
           node_type: node.group || 'Personne',
           id_field: 'id',
           query: '',
+          node_id: node.id || '',
         });
-        setTimeout(() => onClose(), 1500); // Close after 1.5s
+        setTimeout(() => onClose(), 1500);
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add action');
@@ -94,6 +99,16 @@ const AddActionWindow = ({ node, onClose }) => {
               name="node_type"
               value={formData.node_type}
             />
+            <Form.Control
+              type="hidden"
+              name="node_id"
+              value={formData.node_id}
+            />
+            <Form.Control
+              type="hidden"
+              name="id_field"
+              value={formData.id_field}
+            />
             {error && (
               <Alert variant="danger" onClose={() => setError(null)} dismissible>
                 {error}
@@ -115,18 +130,16 @@ const AddActionWindow = ({ node, onClose }) => {
                 required
               />
             </Form.Group>
-            <Form.Group className="mb-3" controlId="idField">
-              <Form.Label>ID Field</Form.Label>
+            <Form.Group className="mb-3" controlId="actionDescription">
+              <Form.Label>Action Description</Form.Label>
               <Form.Control
-                as="select"
-                name="id_field"
-                value={formData.id_field}
+                as="textarea"
+                rows={3}
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
-                required
-              >
-                <option value="id">Neo4j ID (id)</option>
-                <option value="identity">Identity</option>
-              </Form.Control>
+                placeholder="e.g., Retrieves related documents for the selected node"
+              />
             </Form.Group>
             <Form.Group className="mb-3" controlId="query">
               <Form.Label>Cypher Query</Form.Label>

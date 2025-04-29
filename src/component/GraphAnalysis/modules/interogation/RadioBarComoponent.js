@@ -65,7 +65,15 @@ const RadioBarComponent = ({ onResult }) => {
                                         value={node.type}
                                         checked={selectedNodeType === node.type}
                                         onChange={handleSelectionChange}
-                                        style={{ cursor: 'pointer' }}
+                                        style={{
+                                            cursor: 'pointer',
+                                            width: '16px',       
+                                            height: '16px',     
+                                            borderRadius: '50%', 
+                                            border: '1px solid #ccc',
+                                            display: 'inline-block'   
+                                          }}
+                                          
                                     />
                                     <label className="form-check-label d-flex align-items-center" htmlFor={`nodeType${index}`}>
                                         <div
