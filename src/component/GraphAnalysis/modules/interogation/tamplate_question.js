@@ -79,28 +79,7 @@ export const arabicQuestions = [
       },
       parameterTypes: { nationalId1: 'string', nationalId2: 'string' }, // Specify types as string
     },
-    {
-      id: 18,
-      question: "ما هي  القضايا التي تعاملت معها وحدة معينة؟",
-      query: `
-        MATCH path=(a:Affaire)-[:Traiter]-(u:Unite)
-        WHERE u.nom_arabe = $nom_arabe
-        RETURN path
-      `,
-      parameters: { nom_arabe: "معرف الوحدة (رقم)" },
-      parameterTypes: { nom_arabe: 'string' }, // Specify type as integer
-    },
-    {
-      id: 19,
-      question: "ما هي الأشخاص المتورطين في قضية معينة؟",
-      query: `
-        MATCH path=(p:Personne)-[:Impliquer]-(a:Affaire)
-        WHERE a.Number = $affaireId
-        RETURN path
-      `,
-      parameters: { affaireId: "رقم القضية" },
-      parameterTypes: { affaireId: 'string' }, // Specify type as string
-    },
+ 
     // {
     //   id: 20,
     //   question: "ما هي عدد المكالمات الهاتفية التي أجراها شخص معين؟",

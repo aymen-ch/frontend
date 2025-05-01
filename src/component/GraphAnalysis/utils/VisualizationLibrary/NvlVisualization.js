@@ -128,7 +128,7 @@ const useNvlVisualization = ({
       event.preventDefault();
       setContextMenu({
         visible: true,
-        x: event.clientX - 230,
+        x: event.clientX - 100,
         y: event.clientY - 200,
         node,
       });

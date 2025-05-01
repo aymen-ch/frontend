@@ -117,57 +117,53 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges, s
             </h5>
           </div>
           <div className="card-body">
-            <form onSubmit={handleSubmit}>
-              {nodeProperties
-                .filter((property) => !property.name.startsWith('_'))
-                .map((property, index) => {
-                  console.log(`Property: ${property.name}, Type: ${property.type}`); // Debug log
-                  const isDate = property.name.toLowerCase() === 'date';
-                  const showOperations = property.type === 'int' || property.type === 'str' || isDate;
-                  return (
-                    <div key={index} className="mb-3">
-                      <label className="form-label fw-bold d-flex align-items-center">
-                        {property.name} ({isDate ? t('date') : t(property.type)}):
-                      </label>
-                      <div className="input-group">
-                        {showOperations && (
-                          <select
-                            className="form-select"
-                            style={{
-                              maxWidth: isDate || property.type === 'int' ? '90px' : '120px',
-                              borderRadius: '5px 0 0 5px',
-                            }}
-                            value={operations[property.name] || (isDate ? '=' : property.type === 'int' ? '=' : 'contains')}
-                            onChange={(e) => handleOperationChange(property.name, e.target.value)}
-                          >
-                            {getOperationOptions(property.type, property.name).map((op) => (
-                              <option key={op} value={op}>{t(op)}</option> // Translate operations
-                            ))}
-                          </select>
-                        )}
-                        <input
-                          type={isDate ? 'date' : property.type === 'int' ? 'number' : 'text'}
-                          className="form-control"
-                          style={{
-                            borderRadius: showOperations ? '0 5px 5px 0' : '5px',
-                            border: '1px solid #ced4da',
-                          }}
-                          onChange={(e) => handleInputChange(e, property.name, isDate ? 'date' : property.type)}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              <div className="d-grid">
-                <button
-                  type="submit"
-                  className="btn"
-                  style={{ backgroundColor: '#346478', color: '#ffffff', borderRadius: '5px' }}
-                >
-                  {t('Search')} {/* Translated button text */}
-                </button>
-              </div>
-            </form>
+          <form onSubmit={handleSubmit}>
+  {nodeProperties
+    .filter((property) => !property.name.startsWith('_'))
+    .map((property, index) => {
+      const isDate = property.name.toLowerCase() === 'date';
+      const showOp = property.type === 'int' || property.type === 'str' || isDate;
+
+      return (
+        <div className="d-flex align-items-center mb-2" key={index} style={{ gap: '8px' }}>
+          <label className="form-label mb-0 fw-semibold small" style={{ minWidth: '140px' }}>
+            {property.name} ({isDate ? t('date') : t(property.type)}):
+          </label>
+
+          {showOp && (
+            <select
+              className="form-select form-select-sm"
+              style={{ width: '90px' }}
+              value={operations[property.name] || (isDate || property.type === 'int' ? '=' : 'contains')}
+              onChange={(e) => handleOperationChange(property.name, e.target.value)}
+            >
+              {getOperationOptions(property.type, property.name).map((op) => (
+                <option key={op} value={op}>{t(op)}</option>
+              ))}
+            </select>
+          )}
+
+          <input
+            type={isDate ? 'date' : property.type === 'int' ? 'number' : 'text'}
+            className="form-control form-control-sm"
+            style={{ flex: 1 }}
+            onChange={(e) => handleInputChange(e, property.name, isDate ? 'date' : property.type)}
+          />
+        </div>
+      );
+    })}
+
+  <div className="d-grid mt-3">
+    <button
+      type="submit"
+      className="btn btn-sm text-white"
+      style={{ backgroundColor: '#346478', borderRadius: '5px' }}
+    >
+      {t('Search')}
+    </button>
+  </div>
+</form>
+
           </div>
         </div>
       )}

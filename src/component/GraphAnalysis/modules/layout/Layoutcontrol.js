@@ -11,10 +11,10 @@ const LayoutControl = ({ nvlRef, nodes, edges,layoutType,setLayoutType}) => {
   const layouts = [
     { type: d3ForceLayoutType, icon: <FaProjectDiagram size={16} />, title: 'd3ForceLayoutType' },
     { type: ForceDirectedLayoutType, icon: <FaDiaspora size={16} />, title: 'ForceDirectedLayoutType' },
-    { type: 'Operationnelle_Soutien_Leader', icon: <FaLayerGroup size={16} />, title: 'Free Layout' },
     { type: GridLayoutType, icon: <FaLayerGroup size={16} />, title: 'GridLayoutType' },
-    { type: 'dagre', icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
-    { type: HierarchicalLayoutType, icon: <FaSitemap size={16} />, title: 'Hierarchical' },
+    // { type: 'dagre', icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
+    { type: 'Operationnelle_Soutien_Leader', icon: <FaSitemap size={16} />, title: 'Free Layout' },
+    // { type: HierarchicalLayoutType, icon: <FaSitemap size={16} />, title: 'Hierarchical' },
     { type: 'geospatial', icon: <FaMapMarkedAlt size={16} />, title: 'Geospatial Layout' },
   ];
 

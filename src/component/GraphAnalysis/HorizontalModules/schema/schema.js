@@ -12,11 +12,12 @@ import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import NodeConfigForm from './NodeConfigForm';
 import { useTranslation } from 'react-i18next';
+import AnalysisAttributeForm from './AnalysisAttribut';
 import { BASE_URL } from '../../utils/Urls';
 import '../../../../i18n';
 import axios from 'axios';
 import Actions from './Actions'
-import { FaInfoCircle, FaCogs, FaTools, FaLink, FaPlusCircle, FaPalette } from 'react-icons/fa';
+import { FaInfoCircle, FaCogs, FaTools, FaLink, FaPlusCircle, FaPalette ,FaSpinner} from 'react-icons/fa';
 import './schema.css';
 
 const URI = 'neo4j://localhost:7687';
@@ -342,13 +343,13 @@ const SchemaVisualizer = () => {
             
             // Check if this virtual relation already exists
             const relationExists = virtualRelations.some(vr => 
-              vr.name === `grouped${relType}` && 
+              vr.name === `${relType}_groupé` && 
               JSON.stringify(vr.path) === JSON.stringify([startNodeLabel, relType, startNodeLabel])
             );
             
             if (!relationExists) {
               selfReferentialVirtualRelations.push({
-                name: `grouped${relType}`,
+                name: `${relType}_groupé`,
                 path: [startNodeLabel, relType, startNodeLabel],
               });
             }
@@ -539,9 +540,11 @@ const SchemaVisualizer = () => {
               <div className="side-nav-inner">
                 {[
                   { label: t('Detail'), icon: <FaInfoCircle /> },
+                  { label: t('Attribue danalyse') , icon: <FaSpinner /> },
                   { label: t('NodeConfig'), icon: <FaCogs /> },
                   { label: t('Aggregation'), icon: <FaPlusCircle /> },
                   { label: t('Actions'), icon: <FaPlusCircle /> },
+              
                 ].map(({ label, icon }) => (
                   <div
                     key={label}
@@ -596,6 +599,10 @@ const SchemaVisualizer = () => {
                 )}
                 {activeModule === t('Actions') && (
                   <Actions selectedItem={selectedItem} />
+                )}
+
+               {activeModule === t('Attribue danalyse') && (
+                  <AnalysisAttributeForm selectedItem={selectedItem}   />
                 )}
               </div>
             </div>

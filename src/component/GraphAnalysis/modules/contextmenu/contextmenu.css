@@ -200,3 +200,13 @@
   vertical-align: middle;
   object-fit: contain; /* Ensure image fits without distortion */
 }
+
+
+.menu-item-wrapper {
+  margin-bottom: 6px;
+}
+
+.action-description {
+  font-size: 0.85rem;
+  color: #6c757d;
+}

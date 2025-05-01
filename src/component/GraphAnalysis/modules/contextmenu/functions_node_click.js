@@ -282,7 +282,7 @@ export const handleActionSelect = async (
       });
 
       // Apply aggregation for "Show Criminal Network"
-      if (action === 'Show Criminal Network') {
+      if (action === 'Afficher le reseau criminel') {
         await handleAggregation(
           'apple_telephone',
           ['Personne', 'Proprietaire', 'Phone', 'Appel_telephone', 'Phone', 'Proprietaire', 'Personne'],

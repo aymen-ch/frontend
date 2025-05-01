@@ -333,8 +333,8 @@ const GraphVisualization = React.memo(({
           onChange={handleSearchTypeChange}
           style={searchSelectStyle}
         >
-          <option value="current_graph">Current Graph</option>
-          <option value="database">Database</option>
+          <option value="current_graph">Graphe Actuel</option>
+          <option value="database">Base de données</option>
         </select>
       </div>
 
