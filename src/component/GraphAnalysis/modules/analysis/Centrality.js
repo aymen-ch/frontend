@@ -172,7 +172,7 @@ const Centrality = ({
       placement="top"
       overlay={<Tooltip id="backend-tooltip">Calculate centrality sur le graphe complete</Tooltip>}
     > */}
-      <Button
+      {/* <Button
         size="sm"
         variant="primary"
         className="w-100 d-flex align-items-center justify-content-center"
@@ -198,7 +198,18 @@ const Centrality = ({
            {t('Backend')}
           </>
         )}
-      </Button>
+      </Button> */}
+
+<Button
+    size="sm"
+    variant="info"
+    className="w-100 d-flex align-items-center justify-content-center gap-1"
+    onClick={() => globalWindowState.setWindow("Analyse_BackEnd",  selectedGroup )}
+    style={{ height: '50px' }} // Match height with other buttons
+  >
+    <BarChart2 size={14} className="me-1" /> {/* Adding BarChart2 icon for statistical analysis */}
+    {t('Backend')}
+  </Button>
     {/* </OverlayTrigger> */}
   </Col>
 </Row>
