@@ -195,17 +195,18 @@ const ImportTab = () => {
         );
       case 'json':
         return (
-          <Form.Group controlId="config" className="mb-3">
-            <Form.Label>{t('APOC Configuration (JSON)')}</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={config}
-              onChange={(e) => setConfig(e.target.value)}
-              placeholder={t('e.g. {"write": true}')}
-              disabled={loading}
-            />
-          </Form.Group>
+          <></>
+          // <Form.Group controlId="config" className="mb-3">
+          //   <Form.Label>{t('APOC Configuration (JSON)')}</Form.Label>
+          //   <Form.Control
+          //     as="textarea"
+          //     rows={3}
+          //     value={config}
+          //     onChange={(e) => setConfig(e.target.value)}
+          //     placeholder={t('e.g. {"write": true}')}
+          //     disabled={loading}
+          //   />
+          // </Form.Group>
         );
       case 'cypher':
         return null;
@@ -214,6 +215,7 @@ const ImportTab = () => {
     }
   };
 
+  
   return (
     <Card className="import-card">
       <Card.Header as="h4">{t('Import File to Neo4j')}</Card.Header>
