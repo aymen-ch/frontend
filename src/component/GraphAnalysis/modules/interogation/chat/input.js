@@ -63,34 +63,7 @@ const ChatInput = ({
           </select>
         </div>
 
-        <div className="toolbar-group">
-          <label className="toolbar-label">Corrections:</label>
-          <div className="correction-input">
-            <button
-              className="icon-button"
-              onClick={handleDecrement}
-              disabled={isLoading || maxCorrections <= 0}
-            >
-              <FontAwesomeIcon icon={faMinus} />
-            </button>
-            <input
-              type="number"
-              className="corrections-number"
-              value={maxCorrections}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              disabled={isLoading}
-              min="0"
-            />
-            <button
-              className="icon-button"
-              onClick={handleIncrement}
-              disabled={isLoading}
-            >
-              <FontAwesomeIcon icon={faPlus} />
-            </button>
-          </div>
-        </div>
+
 
         <div className="toolbar-group">
           <label className="toolbar-label">Model:</label>

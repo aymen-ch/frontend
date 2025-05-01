@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { getNodeIcon, getNodeColor } from '../../utils/Parser'; // Ensure getNodeColor is imported
+import { getNodeIcon, getNodeColor } from '../../utils/Parser';
 import { BASE_URL } from '../../utils/Urls';
-import { useTranslation } from 'react-i18next'; // Import the translation hook
+import { useTranslation } from 'react-i18next';
 
 const RadioBarComponent = ({ onResult }) => {
     const [nodeData, setNodeData] = useState([]);
     const [selectedNodeType, setSelectedNodeType] = useState('');
     const [error, setError] = useState(null);
 
-    const { t } = useTranslation(); // Initialize the translation hook
+    const { t } = useTranslation();
 
     useEffect(() => {
         const fetchNodeTypes = async () => {
@@ -40,12 +40,12 @@ const RadioBarComponent = ({ onResult }) => {
     };
 
     return (
-        <div className="w-100"> {/* Full width container */}
+        <div className="w-100">
             <div className="card border-0 shadow-sm" style={{ borderRadius: '15px', backgroundColor: '#ffffff' }}>
                 <div className="card-header text-white" style={{ border: 'none', backgroundColor: '#346478', borderRadius: '15px 15px 0 0' }}>
                     <h5 className="card-title mb-0 d-flex align-items-center">
                         <i className="bi bi-diagram-3-fill me-2"></i>
-                        {t('Select Node Type')} {/* Translated text */}
+                        {t('Select Node Type')}
                     </h5>
                 </div>
                 <div className="card-body">
@@ -55,49 +55,50 @@ const RadioBarComponent = ({ onResult }) => {
                         </div>
                     ) : (
                         <div className="form-group">
-                            {nodeData.map((node, index) => (
-                                <div key={index} className="form-check mb-3">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        name="nodeType"
-                                        id={`nodeType${index}`}
-                                        value={node.type}
-                                        checked={selectedNodeType === node.type}
-                                        onChange={handleSelectionChange}
-                                        style={{
-                                            cursor: 'pointer',
-                                            width: '16px',       
-                                            height: '16px',     
-                                            borderRadius: '50%', 
-                                            border: '1px solid #ccc',
-                                            display: 'inline-block'   
-                                          }}
-                                          
-                                    />
-                                    <label className="form-check-label d-flex align-items-center" htmlFor={`nodeType${index}`}>
-                                        <div
+                            {nodeData
+                                .filter((node) => node.type !== 'Chunk') // Filter out nodes with type "chunk"
+                                .map((node, index) => (
+                                    <div key={index} className="form-check mb-3">
+                                        <input
+                                            className="form-check-input"
+                                            type="radio"
+                                            name="nodeType"
+                                            id={`nodeType${index}`}
+                                            value={node.type}
+                                            checked={selectedNodeType === node.type}
+                                            onChange={handleSelectionChange}
                                             style={{
-                                                width: '24px',
-                                                height: '24px',
-                                                marginRight: '10px',
-                                                backgroundColor: getNodeColor(node.type), // Apply color here
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                borderRadius: '50%', // Make it circular
+                                                cursor: 'pointer',
+                                                width: '16px',
+                                                height: '16px',
+                                                borderRadius: '50%',
+                                                border: '1px solid #ccc',
+                                                display: 'inline-block',
                                             }}
-                                        >
-                                            <img
-                                                src={getNodeIcon(node.type)}
-                                                alt={`${node.type} icon`}
-                                                style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} // Ensure icon is visible on colored background
-                                            />
-                                        </div>
-                                        <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>{node.type}</span>
-                                    </label>
-                                </div>
-                            ))}
+                                        />
+                                        <label className="form-check-label d-flex align-items-center" htmlFor={`nodeType${index}`}>
+                                            <div
+                                                style={{
+                                                    width: '24px',
+                                                    height: '24px',
+                                                    marginRight: '10px',
+                                                    backgroundColor: getNodeColor(node.type),
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    borderRadius: '50%',
+                                                }}
+                                            >
+                                                <img
+                                                    src={getNodeIcon(node.type)}
+                                                    alt={`${node.type} icon`}
+                                                    style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }}
+                                                />
+                                            </div>
+                                            <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>{node.type}</span>
+                                        </label>
+                                    </div>
+                                ))}
                         </div>
                     )}
                 </div>

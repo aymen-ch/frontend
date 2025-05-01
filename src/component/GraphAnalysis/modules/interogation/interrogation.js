@@ -32,7 +32,7 @@ const InterrogationModule = ({
           onClick={() => setSelectedOption('option2')}
         >
           <FontAwesomeIcon icon={faListAlt} className="me-2" />
-          {t('Template')} {/* Translated text */}
+          {t('Questions')} {/* Translated text */}
         </button>
         <button
           className={`btn option-tab ${selectedOption === 'option3' ? 'btn-info active' : 'btn-light'}`}

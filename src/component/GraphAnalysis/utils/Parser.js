@@ -479,8 +479,37 @@ export const LabelManager = (node_type, properties) => {
       : `Unknown ${node_type}`;
   return result;
 };
+export const LabelManagerSchema = (node_type, properties = null) => {
+  const labelKey = NODE_CONFIG.nodeTypes[node_type]?.labelKey || NODE_CONFIG.nodeTypes.default.labelKey;
+  if (!labelKey) {
+    const fallback = `${node_type}\nUnknown Type`;
+    return fallback;
+  }
 
-export const LabelManagerSchema = (node_type, properties) => node_type;
+  // Define icon mappings for specific keys
+  const iconMap = {
+    incoming_links: '⬅NB entrant',
+    outgoing_links: '➡NB sortant'
+  };
+
+  if (labelKey.includes(',')) {
+    const keys = labelKey.split(',');
+    const result = [
+      node_type, // Add node_type as the first label
+      ...keys
+        .map((key) => {
+          const displayKey = iconMap[key] || key;
+          return displayKey;
+        })
+        .filter((item) => item !== '')
+    ].join('\n'); // Use newline to separate labels
+    return result;
+  }
+
+  const displayKey = iconMap[labelKey] || labelKey;
+  const result = `${node_type}\n${displayKey}`;
+  return result;
+};
 
 // Edge caption HTML
 const createEdgeCaptionHtml = () => {

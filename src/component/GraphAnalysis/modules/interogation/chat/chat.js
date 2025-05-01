@@ -10,16 +10,19 @@ import {
   faCheck,
   faTimes,
   faEye,
-  faRedo, // Added for resume icon
+  faRedo,
+  faChevronDown, // Added for collapse icon
+  faChevronUp,   // Added for expand icon
 } from '@fortawesome/free-solid-svg-icons';
-import "@fontsource/fira-code"; // Fira Code font
+import "@fontsource/fira-code";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Using Dracula theme
+import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { convertNeo4jToGraph, convertNeo4jToTable } from './graphconvertor';
 import ChatInput from './input';
 import { useTranslation } from 'react-i18next';
+
 const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,8 +33,18 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [showQueryModal, setShowQueryModal] = useState(null);
   const [editingQueryId, setEditingQueryId] = useState(null);
   const [editedQuery, setEditedQuery] = useState('');
-  const [maxCorrections, setMaxCorrections] = useState(1); // Default max corrections
-  const [selectedModel, setSelectedModel] = useState('tomasonjo/codestral-text2cypher:latest'); // Default model
+  const [maxCorrections, setMaxCorrections] = useState(1);
+  const [selectedModel, setSelectedModel] = useState('llama3.2:latest');
+  const [collapsedTables, setCollapsedTables] = useState({}); // New state for tracking collapsed tables
+
+  // Toggle collapse state for a specific table
+  const toggleTableCollapse = (messageId) => {
+    setCollapsedTables((prev) => ({
+      ...prev,
+      [messageId]: !prev[messageId], // Toggle between true (collapsed) and false (expanded)
+    }));
+  };
+
   const handleEditQuery = (messageId, currentQuery) => {
     setEditingQueryId(messageId);
     setEditedQuery(currentQuery);
@@ -40,39 +53,37 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const handleSaveQueryEdit = async (messageId) => {
     try {
       setIsLoading(true);
-      const originalMessage = messages.find(msg => msg.id === messageId);
-      console.log(originalMessage)
+      const originalMessage = messages.find((msg) => msg.id === messageId);
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.id === messageId ? { ...msg, cypherQuery: editedQuery } : msg
         )
       );
-  
+
       const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
       const nvlResult = await driver.executeQuery(
         editedQuery,
         {},
         { resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
       );
-  
+
       const originalResponseType = originalMessage.type === 'Table' ? 'Table' : 'Graph';
-      console.log(originalResponseType)
       if (originalResponseType === 'Graph') {
         try {
           const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
-          
+
           if (newNodes.length > 0 || newEdges.length > 0) {
-            setNodes([...nodes.filter(n => !newNodes.some(nn => nn.id === n.id)), ...newNodes]);
-            setEdges([...edges.filter(e => !newEdges.some(ne => ne.id === e.id)), ...newEdges]);
-            
+            setNodes([...nodes.filter((n) => !newNodes.some((nn) => nn.id === n.id)), ...newNodes]);
+            setEdges([...edges.filter((e) => !newEdges.some((ne) => ne.id === e.id)), ...newEdges]);
+
             setMessages((prevMessages) =>
               prevMessages.map((msg) =>
                 msg.id === messageId
-                  ? { 
-                      ...msg, 
+                  ? {
+                      ...msg,
                       text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
                       cypherQuery: editedQuery,
-                      sender: 'bot'
+                      sender: 'bot',
                     }
                   : msg
               )
@@ -84,11 +95,11 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           setMessages((prevMessages) =>
             prevMessages.map((msg) =>
               msg.id === messageId
-                ? { 
-                    ...msg, 
+                ? {
+                    ...msg,
                     text: 'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. يرجى تصحيح استعلام Cypher لإرجاع العُقد والعلاقات.',
                     cypherQuery: editedQuery,
-                    sender: 'bot'
+                    sender: 'bot',
                   }
                 : msg
             )
@@ -96,16 +107,15 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         }
       } else if (originalResponseType === 'Table') {
         const { columns, rows } = convertNeo4jToTable(nvlResult.records);
-        console.log("him")
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg.id === messageId
-              ? { 
-                  ...msg, 
+              ? {
+                  ...msg,
                   text: JSON.stringify({ columns, rows }, null, 2),
                   cypherQuery: editedQuery,
                   sender: 'bot',
-                  type: 'Table'
+                  type: 'Table',
                 }
               : msg
           )
@@ -128,9 +138,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     }
   };
 
-
-
-
   const handleCancelQueryEdit = () => {
     setEditingQueryId(null);
     setEditedQuery('');
@@ -145,6 +152,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     setEditingQueryId(null);
     setEditedQuery('');
   };
+
   const formatSelectedNodes = () => {
     if (selectedNodes.size === 0) return '';
     const selectedNodeObjects = Array.from(selectedNodes)
@@ -163,6 +171,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       setInputText('');
     }
   }, [selectedNodes, nodes]);
+
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
@@ -188,7 +197,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         }
       );
 
-      // Store raw response and include the original question for resuming
       const rawResponse = {
         ...response.data,
         question: inputText,
@@ -202,7 +210,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           type: responseType,
           cypherQuery: response.data.cypher || null,
           rawResponse,
-          isResumed: false, // Mark as non-resumed
+          isResumed: false,
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
         return;
@@ -220,19 +228,31 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
 
           if (newNodes.length > 0 || newEdges.length > 0) {
-            setNodes([...nodes, ...newNodes]);
-            setEdges([...edges, ...newEdges]);
+            const uniqueNewNodes = newNodes.filter(
+              (newNode) => !nodes.some((existingNode) => existingNode.id === newNode.id)
+            );
 
-            const botMessage = {
-              id: messages.length + 2,
-              text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
-              sender: 'bot',
-              type: 'Graph',
-              cypherQuery: response.data.cypher,
-              rawResponse,
-              isResumed: false, // Mark as non-resumed
-            };
-            setMessages((prevMessages) => [...prevMessages, botMessage]);
+            const uniqueNewEdges = newEdges.filter(
+              (newEdge) => !edges.some((existingEdge) => existingEdge.id === newEdge.id)
+            );
+
+            if (uniqueNewNodes.length > 0 || uniqueNewEdges.length > 0) {
+              setNodes([...nodes, ...uniqueNewNodes]);
+              setEdges([...edges, ...uniqueNewEdges]);
+
+              const botMessage = {
+                id: messages.length + 2,
+                text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
+                sender: 'bot',
+                type: 'Graph',
+                cypherQuery: response.data.cypher,
+                rawResponse,
+                isResumed: false,
+              };
+              setMessages((prevMessages) => [...prevMessages, botMessage]);
+            } else {
+              throw new Error('No new unique nodes or edges to add');
+            }
           } else {
             throw new Error('No valid graph data returned');
           }
@@ -243,7 +263,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             type: 'Graph',
             cypherQuery: response.data.cypher,
             rawResponse,
-            isResumed: false, // Mark as non-resumed
+            isResumed: false,
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
@@ -263,7 +283,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             cypherQuery: response.data.cypher,
             type: 'Table',
             rawResponse,
-            isResumed: false, // Mark as non-resumed
+            isResumed: false,
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         } catch (conversionError) {
@@ -273,7 +293,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             sender: 'bot',
             cypherQuery: response.data.cypher,
             rawResponse,
-            isResumed: false, // Mark as non-resumed
+            isResumed: false,
           };
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
@@ -287,7 +307,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           sender: 'bot',
           cypherQuery: response.data.cypher || null,
           rawResponse,
-          isResumed: false, // Mark as non-resumed
+          isResumed: false,
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
       }
@@ -311,7 +331,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       return;
     }
 
-    // Find the corresponding user message
     const userMessage = messages
       .slice(0, messages.indexOf(botMessage))
       .reverse()
@@ -341,19 +360,17 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         }
       );
 
-      // Process the resumed response
       const resumedResponse = response.data;
       const newBotMessage = {
         id: messages.length + 1,
         text: resumedResponse.response || 'Resumed response processed.',
         sender: 'bot',
-        type: botMessage.type || 'Text',
+        type: 'Text',
         cypherQuery: resumedResponse.cypher || null,
         rawResponse: resumedResponse,
-        isResumed: true, // Mark as resumed
+        isResumed: true,
       };
 
-      // Optionally execute the Cypher query if provided and relevant
       if (resumedResponse.cypher && (botMessage.type === 'Graph' || botMessage.type === 'Table')) {
         const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
         const nvlResult = await driver.executeQuery(
@@ -406,8 +423,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
     setEditedText(currentText);
   };
 
-
-  
   const handleSaveEdit = (messageId) => {
     setMessages((prevMessages) =>
       prevMessages.map((msg) =>
@@ -462,48 +477,83 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
               </div>
             ) : (
               <>
-                <strong>{message.sender === 'user' ? 'You:' : 'Bot:'}</strong>{' '}
+                <strong>{message.sender === 'user' ? 'You:' : ' الأشخاص المشاركين في القضية ذات الرقم همDrog_24 '}</strong>{' '}
                 {message.type === 'Table' ? (
-                  (() => {
-                    try {
-                      const { columns, rows } = JSON.parse(message.text);
-                      return (
-                        <div className="table-wrapper">
-                          <table className="styled-table">
-                            <thead>
-                              <tr>
-                                {columns.map((col) => (
-                                  <th key={col.key}>{col.label}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {rows.map((row, rowIndex) => (
-                                <tr key={rowIndex}>
-                                  {columns.map((col) => (
-                                    <td key={col.key}>{row[col.key]}</td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-                    } catch (error) {
-                      return (
-                        <span
-                          className="message-text"
-                          dangerouslySetInnerHTML={{ __html: message.text }}
-                        />
-                      );
-                    }
-                  })()
-                ) : (
-                  <span
-                    className="message-text"
-                    dangerouslySetInnerHTML={{ __html: message.text }}
-                  />
-                )}
+  <div className="table-container">
+    <div className="table-header">
+      <span>Table Result</span>
+      <button
+        className="toggle-table-button"
+        onClick={() => toggleTableCollapse(message.id)}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          color: '#4a90e2',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+        }}
+      >
+        <FontAwesomeIcon
+          icon={collapsedTables[message.id] ? faChevronDown : faChevronUp}
+        />
+        {collapsedTables[message.id] ? 'Expand' : 'Collapse'}
+      </button>
+    </div>
+    {!collapsedTables[message.id] && (
+      (() => {
+        try {
+          const { columns, rows } = JSON.parse(message.text);
+          return (
+            <div className="table-wrapper">
+              <table className="styled-table">
+                <thead>
+                  <tr>
+                    {columns.map((col) => (
+                      <th key={col.key}>{col.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {columns.map((col) => (
+                        <td key={col.key}>{row[col.key]}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        } catch (error) {
+          return (
+            <span
+              className="message-text"
+              dangerouslySetInnerHTML={{ __html: message.text }}
+            />
+          );
+        }
+      })()
+    )}
+  </div>
+) : message.type === 'Text' ? (
+  <div className="resumed-container">
+    <div className="resumed-header">
+      <span>Resumed</span>
+    </div>
+    <span
+      className="message-text"
+      dangerouslySetInnerHTML={{ __html: message.text }}
+    />
+  </div>
+) : (
+  <span
+    className="message-text"
+    dangerouslySetInnerHTML={{ __html: message.text }}
+  />
+)}
                 {message.cypherQuery && (
                   <button
                     className="toggle-query-button"
@@ -512,7 +562,6 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                     <FontAwesomeIcon icon={faEye} /> Show Query
                   </button>
                 )}
-                {/* Add Resume Response Button for Bot Messages with Raw Response */}
                 {message.sender === 'bot' && message.rawResponse && !message.isResumed && (
                   <button
                     className="resume-button"
@@ -564,20 +613,20 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
 
       {showQueryModal && (
         <div className="query-modal-overlay" onClick={handleCloseQueryModal}>
-          <div 
-            className="query-modal" 
-            onClick={e => e.stopPropagation()}
+          <div
+            className="query-modal"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="query-modal-header">
               <h4>Cypher Query</h4>
-              <button 
-                className="close-modal-button" 
+              <button
+                className="close-modal-button"
                 onClick={handleCloseQueryModal}
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
-            
+
             {editingQueryId === showQueryModal ? (
               <div className="query-edit-container">
                 <textarea
@@ -596,7 +645,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                     fontSize: '14px',
                     resize: 'vertical',
                     marginBottom: '15px',
-                    border: '1px solid #3e3e3e'
+                    border: '1px solid #3e3e3e',
                   }}
                 />
                 <div className="query-edit-actions">
@@ -612,7 +661,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '5px'
+                      gap: '5px',
                     }}
                   >
                     <FontAwesomeIcon icon={faCheck} /> Save & Execute
@@ -629,7 +678,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '5px'
+                      gap: '5px',
                     }}
                   >
                     <FontAwesomeIcon icon={faTimes} /> Cancel
@@ -649,18 +698,20 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                     padding: '15px',
                     fontFamily: "'Fira Code', Consolas, Monaco, monospace",
                     fontSize: '14px',
-                    border: '1px solid #3e3e3e'
+                    border: '1px solid #3e3e3e',
                   }}
                   showLineNumbers
                 >
-                  {messages.find(msg => msg.id === showQueryModal)?.cypherQuery || ''}
+                  {messages.find((msg) => msg.id === showQueryModal)?.cypherQuery || ''}
                 </SyntaxHighlighter>
                 <button
                   className="edit-query-button"
-                  onClick={() => handleEditQuery(
-                    showQueryModal,
-                    messages.find(msg => msg.id === showQueryModal)?.cypherQuery
-                  )}
+                  onClick={() =>
+                    handleEditQuery(
+                      showQueryModal,
+                      messages.find((msg) => msg.id === showQueryModal)?.cypherQuery
+                    )
+                  }
                   style={{
                     background: '#4a90e2',
                     color: 'white',
@@ -670,7 +721,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '5px'
+                    gap: '5px',
                   }}
                 >
                   <FontAwesomeIcon icon={faEdit} /> Edit Query
@@ -681,7 +732,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         </div>
       )}
 
-<ChatInput
+      <ChatInput
         inputText={inputText}
         setInputText={setInputText}
         responseType={responseType}

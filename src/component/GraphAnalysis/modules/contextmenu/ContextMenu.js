@@ -66,6 +66,14 @@ const ContextMenu = ({
     [t('Show Criminal Network')]: FaCodeFork,
     [t('Show Person Profile')]: FaInfoCircle,
   };
+  const [visibleDescriptions, setVisibleDescriptions] = useState({});
+
+const toggleDescription = (index) => {
+  setVisibleDescriptions((prev) => ({
+    ...prev,
+    [index]: !prev[index],
+  }));
+};
   const centralityAttributes = [
     'degree_out',
     'degree_in',
@@ -80,16 +88,17 @@ const ContextMenu = ({
   useEffect(() => {
     if (contextMenu?.node && contextMenu.visible) {
       let relations = [];
-
+  
       fetchPossibleRelations(contextMenu.node, (backendRelations) => {
         relations = backendRelations.map((rel) => ({
           name: rel.name,
           startNode: rel.startNode,
           endNode: rel.endNode,
           isVirtual: false,
+          count: rel.count,
         }));
-
-       let virtualRelations = [];
+  
+        let virtualRelations = [];
         try {
           const stored = JSON.parse(localStorage.getItem('virtualRelations'));
           if (Array.isArray(stored)) {
@@ -98,34 +107,60 @@ const ContextMenu = ({
         } catch (err) {
           console.warn("Invalid virtualRelations data in localStorage", err);
         }
+  
         const nodeGroup = contextMenu.node.group;
-        console.log("virtuel", virtualRelations);
-
-        const matchingVirtualRelations = virtualRelations
-          .filter((vr) => vr.path[0] === nodeGroup)
-          .map((vr) => ({
-            name: vr.name,
-            startNode: vr.path[0],
-            endNode: vr.path[vr.path.length - 1],
-            isVirtual: true,
-          }));
-
-        const combinedRelations = [...relations, ...matchingVirtualRelations];
-        const uniqueRelations = Array.from(
-          new Map(combinedRelations.map((rel) => [rel.name, rel])).values()
-        );
-
-        setPossibleRelations(uniqueRelations);
+  
+        // Fetch counts for virtual relations
+        const fetchVirtualRelationCounts = async () => {
+          const matchingVirtualRelations = await Promise.all(
+            virtualRelations
+              .filter((vr) => vr.path[0] === nodeGroup)
+              .map(async (vr) => {
+                try {
+                  const response = await axios.post(BASE_URL + '/get_virtual_relation_count/', {
+                    node_type: nodeGroup,
+                    node_id: contextMenu.node.id, // Assuming contextMenu.node has an id property
+                    path: vr.path,
+                  });
+                  return {
+                    name: vr.name,
+                    startNode: vr.path[0],
+                    endNode: vr.path[vr.path.length - 1],
+                    isVirtual: true,
+                    count: response.data.count,
+                  };
+                } catch (error) {
+                  console.error(`Error fetching count for virtual relation ${vr.name}:`, error);
+                  return {
+                    name: vr.name,
+                    startNode: vr.path[0],
+                    endNode: vr.path[vr.path.length - 1],
+                    isVirtual: true,
+                    count: 0, // Fallback count in case of error
+                  };
+                }
+              })
+          );
+  
+          const combinedRelations = [...relations, ...matchingVirtualRelations];
+          const uniqueRelations = Array.from(
+            new Map(combinedRelations.map((rel) => [rel.name, rel])).values()
+          );
+          console.log(uniqueRelations);
+          setPossibleRelations(uniqueRelations);
+        };
+  
+        fetchVirtualRelationCounts();
+  
+        axios
+          .post(BASE_URL + '/get_available_actions/', { node_type: contextMenu.node.group })
+          .then((response) => {
+            setAvailableActions(response.data.actions || []);
+          })
+          .catch((error) => {
+            console.error('Error fetching available actions:', error);
+          });
       });
-
-      axios
-        .post(BASE_URL + '/get_available_actions/', { node_type: contextMenu.node.group })
-        .then((response) => {
-          setAvailableActions(response.data.actions || []);
-        })
-        .catch((error) => {
-          console.error('Error fetching available actions:', error);
-        });
     }
   }, [contextMenu]);
 
@@ -356,111 +391,178 @@ const ContextMenu = ({
       </div>
 
       {subContextMenu?.visible && (
-        <div
-          className="sub-context-menu"
-          style={{ '--sub-context-menu-y': `${subContextMenu.y}px`, '--sub-context-menu-x': `${subContextMenu.x}px` }}
-          ref={subContextRef}
-          onMouseLeave={() => setSubContextMenu(null)}
+  <div
+    className="sub-context-menu"
+    style={{ '--sub-context-menu-y': `${subContextMenu.y}px`, '--sub-context-menu-x': `${subContextMenu.x}px` }}
+    ref={subContextRef}
+    onMouseLeave={() => setSubContextMenu(null)}
+  >
+    {/* Expand options */}
+    <div className="expand-options">
+      <label>
+        {t('Limit')}:
+        <input
+          type="number"
+          min="1"
+          value={expandLimit}
+          onChange={(e) => setExpandLimit(Number(e.target.value))}
+          style={{ width: '60px', marginLeft: '8px', marginRight: '16px' }}
+        />
+      </label>
+      <label>
+        {t('Direction')}:
+        <select
+          value={expandDirection}
+          onChange={(e) => setExpandDirection(e.target.value)}
+          style={{ marginLeft: '8px' }}
         >
-          <div className="menu-header">{t('Expand Options')}</div>
-          <div className="menu-items">
-          <div className="expand-options">
-              <label>
-                {t('Limit')}:
-                <input
-                  type="number"
-                  min="1"
-                  value={expandLimit}
-                  onChange={(e) => setExpandLimit(Number(e.target.value))}
-                  style={{ width: '60px', marginLeft: '8px', marginRight: '16px' }}
-                />
-              </label>
-              <label>
-                {t('Direction')}:
-                <select
-                  value={expandDirection}
-                  onChange={(e) => setExpandDirection(e.target.value)}
-                  style={{ marginLeft: '8px' }}
+          <option value="In">{t('In')}</option>
+          <option value="Out">{t('Out')}</option>
+          <option value="Both">{t('Both')}</option>
+        </select>
+      </label>
+    </div>
+
+    <div className="menu-header">{t('Expand Options')}</div>
+    <div className="menu-items">
+      <button
+        className="menu-item"
+        onClick={() => handleContextMenuAction('View Neighborhood')}
+      >
+        <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
+        {t('Expand All')}
+      </button>
+
+      {/* Normal Relations Section */}
+      <div className="relations-section">
+        <div className="section-header">{t('Normal Relations')}</div>
+        {possibleRelations.filter(relation => !relation.isVirtual).length > 0 ? (
+          possibleRelations
+            .filter(relation => !relation.isVirtual)
+            .map((relation, index) => {
+              const startIconPath = getNodeIcon(relation.startNode);
+              const endIconPath = getNodeIcon(relation.endNode);
+              return (
+                <button
+                  key={`normal-${index}`}
+                  className="menu-item"
+                  onClick={() => handleContextMenuAction(t('Expand Specific Relation'), relation.name)}
                 >
-                  <option value="In">{t('In')}</option>
-                  <option value="Out">{t('Out')}</option>
-                  <option value="Both">{t('Both')}</option>
-                </select>
-              </label>
-            </div>
-
-            <button
-              className="menu-item"
-              onClick={() =>
-                handleContextMenuAction('View Neighborhood')
-              }
-            >
-              <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
-              {t('Expand All')}
-            </button>
-            {possibleRelations.length > 0 ? (
-              possibleRelations.map((relation, index) => {
-                const startIconPath = getNodeIcon(relation.startNode);
-                const endIconPath = getNodeIcon(relation.endNode);
-                return (
-                  <button
-                    key={index}
-                    className={`menu-item ${relation.isVirtual ? 'virtual-relation' : ''}`}
-                    onClick={() => handleContextMenuAction(t('Expand Specific Relation'), relation.name)}
-                  >
-                    <FaArrowRight
-                      style={{ marginRight: '10px', color: relation.isVirtual ? '#38b000' : '#4361ee' }}
-                    />
-                    <span className="relation-display">
-                      <span className="node-start" style={{ color: getNodeColor(relation.startNode) }}>
-                        {startIconPath && (
-                          <span
-                            className="icon-container"
-                            style={{ backgroundColor: getNodeColor(relation.startNode) }}
-                          >
-                            <img
-                              src={startIconPath}
-                              alt={`${relation.startNode} icon`}
-                              className="node-icon"
-                            />
-                          </span>
-                        )}
-                        {relation.startNode}
-                      </span>
-                      <span className="relation-name"> ---- {relation.name} ----{'>'} </span>
-                      <span className="node-end" style={{ color: getNodeColor(relation.endNode) }}>
-                        {endIconPath && (
-                          <span
-                            className="icon-container"
-                            style={{ backgroundColor: getNodeColor(relation.endNode) }}
-                          >
-                            <img
-                              src={endIconPath}
-                              alt={`${relation.endNode} icon`}
-                              className="node-icon"
-                            />
-                          </span>
-                        )}
-                        {relation.endNode}
-                      </span>
+                  <FaArrowRight
+                    style={{ marginRight: '10px', color: '#4361ee' }}
+                  />
+                  <span className="relation-display">
+                    <span className="node-start" style={{ color: getNodeColor(relation.startNode) }}>
+                      {startIconPath && (
+                        <span
+                          className="icon-container"
+                          style={{ backgroundColor: getNodeColor(relation.startNode) }}
+                        >
+                          <img
+                            src={startIconPath}
+                            alt={`${relation.startNode} icon`}
+                            className="node-icon"
+                          />
+                        </span>
+                      )}
+                      {relation.startNode}
                     </span>
-                  </button>
-                );
-              })
-            ) : (
-              <div className="no-relations">{t('No relations available')}</div>
-            )}
-            <hr />
-            {selectedNodes.size > 0 && (
-              <button className="menu-item" onClick={() => handleContextMenuAction(t('Expand All seleced nodes'))}>
-                <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
-                {t('Expand All seleced nodes')}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+                    <span className="relation-name"> ---- {relation.name} ----</span>
+                    <span className="node-end" style={{ color: getNodeColor(relation.endNode) }}>
+                      {endIconPath && (
+                        <span
+                          className="icon-container"
+                          style={{ backgroundColor: getNodeColor(relation.endNode) }}
+                        >
+                          <img
+                            src={endIconPath}
+                            alt={`${relation.endNode} icon`}
+                            className="node-icon"
+                          />
+                        </span>
+                      )}
+                      {relation.endNode}
+                    </span>
+                    | ({relation.count})
+                  </span>
+                </button>
+              );
+            })
+        ) : (
+          <div className="no-relations">{t('No normal relations available')}</div>
+        )}
+      </div>
 
+      {/* Virtual Relations Section */}
+      <div className="relations-section">
+        <div className="section-header">{t('Virtual Relations')}</div>
+        {possibleRelations.filter(relation => relation.isVirtual).length > 0 ? (
+          possibleRelations
+            .filter(relation => relation.isVirtual)
+            .map((relation, index) => {
+              const startIconPath = getNodeIcon(relation.startNode);
+              const endIconPath = getNodeIcon(relation.endNode);
+              return (
+                <button
+                  key={`virtual-${index}`}
+                  className="menu-item virtual-relation"
+                  onClick={() => handleContextMenuAction(t('Expand Specific Relation'), relation.name)}
+                >
+                  <FaArrowRight
+                    style={{ marginRight: '10px', color: '#38b000' }}
+                  />
+                  <span className="relation-display">
+                    <span className="node-start" style={{ color: getNodeColor(relation.startNode) }}>
+                      {startIconPath && (
+                        <span
+                          className="icon-container"
+                          style={{ backgroundColor: getNodeColor(relation.startNode) }}
+                        >
+                          <img
+                            src={startIconPath}
+                            alt={`${relation.startNode} icon`}
+                            className="node-icon"
+                          />
+                        </span>
+                      )}
+                      {relation.startNode}
+                    </span>
+                    <span className="relation-name"> ---- {relation.name} ----</span>
+                    <span className="node-end" style={{ color: getNodeColor(relation.endNode) }}>
+                      {endIconPath && (
+                        <span
+                          className="icon-container"
+                          style={{ backgroundColor: getNodeColor(relation.endNode) }}
+                        >
+                          <img
+                            src={endIconPath}
+                            alt={`${relation.endNode} icon`}
+                            className="node-icon"
+                          />
+                        </span>
+                      )}
+                      {relation.endNode}
+                    </span>
+                    | ({relation.count})
+                  </span>
+                </button>
+              );
+            })
+        ) : (
+          <div className="no-relations">{t('No virtual relations available')}</div>
+        )}
+      </div>
+
+      <hr />
+      {selectedNodes.size > 0 && (
+        <button className="menu-item" onClick={() => handleContextMenuAction(t('Expand All seleced nodes'))}>
+          <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
+          {t('Expand All seleced nodes')}
+        </button>
+      )}
+    </div>
+  </div>
+)}
       {actionsSubMenu?.visible && (
         <div
           className="sub-context-menu"
@@ -470,33 +572,54 @@ const ContextMenu = ({
         >
           <div className="menu-header">{t('Action Options')}</div>
           <div className="menu-items">
-            {availableActions.length > 0 ? (
-              availableActions.map((action, index) => {
-                const Icon = actionIcons[action.name] || FaCog;
-                return (
-                  <button
-                    key={index}
-                    className="menu-item"
-                    onClick={() =>
-                      handleActionSelect(
-                        action.name,
-                        contextMenu.node,
-                        setActionsSubMenu,
-                        setContextMenu,
-                        setNodes,
-                        setEdges,
-                        setActiveAggregations
-                      )
-                    }
-                  >
-                    <Icon style={{ marginRight: '10px', color: '#4361ee' }} />
-                    {action.name}
-                  </button>
-                );
-              })
-            ) : (
-              <div className="no-relations">{t('No actions available')}</div>
-            )}
+          {availableActions.length > 0 ? (
+  availableActions.map((action, index) => {
+    const Icon = actionIcons[action.name] || FaCog;
+    return (
+      <div key={index} className="menu-item-wrapper">
+        <button
+          className="menu-item d-flex align-items-center justify-content-between w-100"
+          onClick={() =>
+            handleActionSelect(
+              action.name,
+              contextMenu.node,
+              setActionsSubMenu,
+              setContextMenu,
+              setNodes,
+              setEdges,
+              setActiveAggregations
+            )
+          }
+        >
+          <div className="d-flex align-items-center">
+            <Icon style={{ marginRight: '10px', color: '#4361ee' }} />
+            {action.name}
+          </div>
+
+          {/* Info Icon */}
+          <FaInfoCircle
+            title={t('Show Description')}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering the action itself
+              toggleDescription(index);
+            }}
+            style={{ color: '#888', cursor: 'pointer' }}
+          />
+        </button>
+
+        {/* Description shown conditionally */}
+        {visibleDescriptions[index] && (
+          <div className="action-description text-muted small px-3 pb-2">
+            {action.description}
+          </div>
+        )}
+      </div>
+    );
+  })
+) : (
+  <div className="no-relations">{t('No actions available')}</div>
+)}
+
             <div className="menu-divider"></div>
             <button
               className="menu-item"
