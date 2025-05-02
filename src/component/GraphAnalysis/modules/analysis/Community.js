@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Button, Spinner, Form } from 'react-bootstrap';
 import { BASE_URL } from '../../utils/Urls';
 import { useTranslation } from 'react-i18next';
 import randomColor from 'randomcolor';
+import globalWindowState from '../../utils/globalWindowState';
+import { Sliders, Zap, Activity, Target, BarChart2 } from 'lucide-react';
 
 const Community = ({ nodes, setNodes, isLoading, setIsLoading, ColorPersonWithClass }) => {
   const [selectedCommunityMeasure, setSelectedCommunityMeasure] = useState('uniform');
@@ -18,6 +20,27 @@ const communityMethods = [
   // {value :'_wcc',label :'wcc' },
 ];
 
+  const [nodeData, setNodeData] = useState([]);
+  const [error, setError] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState('');
+
+  useEffect(() => {
+    const fetchNodeTypes = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(BASE_URL + '/node-types/', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.status !== 200) throw new Error('Network response was not ok');
+        setNodeData(response.data.node_types);
+        if (response.data.node_types.length > 0)
+          setSelectedGroup(response.data.node_types[0].type);
+      } catch (error) {
+        setError(error.message || 'An error occurred');
+      }
+    };
+    fetchNodeTypes();
+  }, []);
 
   const ColorNodeWithCommunity = (nodes, setNodes, measure) => {
     const newNodes = [...nodes];
@@ -110,28 +133,36 @@ const communityMethods = [
         {t('Color Node with Class')}
       </Button>
 
+
+      <Form.Label>{t('Select Node Type')}</Form.Label>
+                {/* <OverlayTrigger
+                  placement="top"
+                  overlay={<Tooltip id="node-group-tooltip">{t('Select the group of nodes for analysis')}</Tooltip>}
+                > */}
+                  <Form.Select
+                    size="sm"
+                    value={selectedGroup}
+                    onChange={(e) => setSelectedGroup(e.target.value)}
+                  >
+                    {nodeData.map((node) => (
+                      <option key={node.type} value={node.type}>
+                        <Target size={16} className="me-2" />
+                        {node.type}
+                      </option>
+                    ))}
+                  </Form.Select>
+{/* </OverlayTrigger> */}
+
       <Button
-        variant="secondary"
-        className="w-100"
-        onClick={() => handleSecteurActiviti()}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Spinner
-              as="span"
-              animation="border"
-              size="sm"
-              role="status"
-              aria-hidden="true"
-              className="me-2"
-            />
-            {t('Loading...')}
-          </>
-        ) : (
-          t('Secteur Activiti (Backend)')
-        )}
-      </Button>
+    size="sm"
+    variant="info"
+    className="w-100 d-flex align-items-center justify-content-center gap-1"
+    onClick={() => globalWindowState.setWindow("Community_BackEnd",  selectedGroup )}
+    style={{ height: '50px' }} // Match height with other buttons
+  >
+    <BarChart2 size={14} className="me-1" /> {/* Adding BarChart2 icon for statistical analysis */}
+    {t('Backend')}
+  </Button>
     </div>
   );
 };

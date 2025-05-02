@@ -16,7 +16,7 @@ import axios from 'axios';
 import { BASE_URL } from '../../../../utils/Urls';
 import { useTranslation } from 'react-i18next';
 
-const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
+const Community_BackEnd = ({ selectedGroup, onClose }) => {
   const [isMaximized, setIsMaximized] = useState(true);
   const [relationshipTypes, setRelationshipTypes] = useState([]);
   const [virtualRelationItems, setVirtualRelationItems] = useState([]);
@@ -34,14 +34,11 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
 
   // List of centrality algorithms
   const centralityAlgorithms = [
-    'Article Rank',
-    'Articulation Points',
-    'Betweenness Centrality',
-    'Bridges',
-    'Closeness Centrality',
-    'Degree Centrality',
-    'Eigenvector Centrality',
-    'Page Rank'
+    'K-1 Coloring',
+    'Leiden',
+    'Modularity Optimization',
+    'Label Propagation',
+    'Louvain'
   ];
 
   useEffect(() => {
@@ -189,16 +186,7 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
             </Form.Group>
           </Col>
         </Row>
-        <Form.Group className="mb-3">
-          <Form.Check
-            type="checkbox"
-            label={t('Normalisation')}
-            checked={isNormalized}
-            onChange={handleNormalizationChange}
-            className="fw-bold"
-          />
-        </Form.Group>
-
+        
         <h5 className="mt-4 mb-3 text-primary">{t('Relationship Types for')} {selectedGroup}</h5>
         {loading && (
           <div className="text-center">
@@ -289,10 +277,11 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
       ) : (
         <Draggable nodeRef={nodeRef} handle=".window-header" bounds="parent">
           <div ref={nodeRef}>{windowContent}</div>
+          
         </Draggable>
       )}
     </div>
   );
 };
 
-export default Analyse_BackEnd;
+export default Community_BackEnd;

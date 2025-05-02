@@ -147,12 +147,12 @@ const Centrality = ({
 
       {/* Buttons to trigger actions */}
       <Row className="g-2 mb-3">
-  <Col xs={12} md={6}>
+  
     {/* <OverlayTrigger
       placement="top"
       // overlay={<Tooltip id="frontend-tooltip">Calculate centrality  sur le graphe affiche</Tooltip>}
     > */}
-      <Button
+      {/* <Button
         size="sm"
         variant="warning"
         className="w-100 d-flex align-items-center justify-content-center"
@@ -163,11 +163,11 @@ const Centrality = ({
       >
         <Zap size={14} className="me-1" />
         {t('Frontend')}
-      </Button>
+      </Button> */}
     {/* </OverlayTrigger> */}
-  </Col>
+  
 
-  <Col xs={12} md={6}>
+  <Col xs={12} md={12}>
     {/* <OverlayTrigger
       placement="top"
       overlay={<Tooltip id="backend-tooltip">Calculate centrality sur le graphe complete</Tooltip>}

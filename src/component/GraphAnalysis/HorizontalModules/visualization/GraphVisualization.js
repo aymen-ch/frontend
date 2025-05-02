@@ -6,6 +6,7 @@ import PersonProfileWindow from "../../modules/Windows/Actions/PersonProfileWind
 import AddActionWindow from "../../modules/Windows/Actions/PersonProfileWindow/Actions";
 import Analyse_statistique from "../../modules/Windows/Actions/PersonProfileWindow/analyse_statistique";
 import Analyse_BackEnd from "../../modules/Windows/Actions/PersonProfileWindow/Analyse_BackEnd";
+import Community_BackEnd from "../../modules/Windows/Actions/PersonProfileWindow/Community_BackEnd";
 import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa'; // Added FaSpinner
 import { MdOutlineTabUnselected } from "react-icons/md";
 import { FaDiaspora } from "react-icons/fa6";
@@ -569,6 +570,11 @@ const GraphVisualization = React.memo(({
       )}
          {activeWindow === 'Analyse_BackEnd' && (
         <Analyse_BackEnd selectedGroup={globalWindowState.windowData} onClose={handleCloseWindow} />
+      )}
+
+      {activeWindow === 'Community_BackEnd' && (
+         
+        <Community_BackEnd selectedGroup={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
     </div>
   );
