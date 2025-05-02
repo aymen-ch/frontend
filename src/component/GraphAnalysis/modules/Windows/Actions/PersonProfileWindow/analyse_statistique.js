@@ -191,7 +191,7 @@ const Analyse_statistique = ({ data, onClose }) => {
   const [numBins, setNumBins] = useState(10);
   const [brushIndex, setBrushIndex] = useState({ startIndex: 0, endIndex: 9 });
   const nodeRef = useRef(null);
-  const { selectedCentralityAttribute, selectedGroup } = data;
+  const { selectedAttribute, selectedGroup } = data;
   const token = localStorage.getItem('authToken');
 
   // Calculate binned data
@@ -251,7 +251,7 @@ const Analyse_statistique = ({ data, onClose }) => {
         const response = await axios.get(BASE_URL + '/get_attribute_values_for_node_type/', {
           params: {
             selectedGroup: selectedGroup,
-            selectedCentralityAttribute: selectedCentralityAttribute
+            selectedCentralityAttribute: selectedAttribute
           },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -266,10 +266,10 @@ const Analyse_statistique = ({ data, onClose }) => {
       }
     };
 
-    if (selectedGroup && selectedCentralityAttribute) {
+    if (selectedGroup && selectedAttribute) {
       fetchAttributeValues();
     }
-  }, [selectedGroup, selectedCentralityAttribute, token]);
+  }, [selectedGroup, selectedAttribute, token]);
 
   const toggleMaximize = () => {
     setIsMaximized(!isMaximized);
@@ -306,7 +306,7 @@ const Analyse_statistique = ({ data, onClose }) => {
       <Card.Header className="window-header d-flex justify-content-between align-items-center">
         <div className="d-flex align-items-center">
           <Person className="me-2" />
-          <span>{t('Statistical Analysis')}: {selectedGroup} - {selectedCentralityAttribute}</span>
+          <span>{t('Statistical Analysis')}: {selectedGroup} - {selectedAttribute}</span>
         </div>
         <div className="window-controls">
           <Button variant="link" className="control-button p-0 me-2" title={t('Minimize')}>
@@ -372,7 +372,7 @@ const Analyse_statistique = ({ data, onClose }) => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="label" 
-                        label={{ value: `${selectedCentralityAttribute} (${t('binned')})`, position: 'insideBottomRight', offset: -10 }}
+                        label={{ value: `${selectedAttribute} (${t('binned')})`, position: 'insideBottomRight', offset: -10 }}
                         angle={-45}
                         textAnchor="end"
                         height={70}

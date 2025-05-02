@@ -87,16 +87,7 @@ const Centrality = ({
   placement="top"
   // overlay={<Tooltip id="stat-analysis-tooltip">Open statistical analysis for selected node group and centrality</Tooltip>}
 > */}
-  <Button
-    size="sm"
-    variant="info"
-    className="w-100 d-flex align-items-center justify-content-center gap-1"
-    onClick={() => globalWindowState.setWindow("analyse_statistique", { selectedCentralityAttribute, selectedGroup })}
-    style={{ height: '50px' }} // Match height with other buttons
-  >
-    <BarChart2 size={14} className="me-1" /> {/* Adding BarChart2 icon for statistical analysis */}
-    {t('Button Statistical Analysistton')}
-  </Button>
+  
 {/* </OverlayTrigger> */}
 
       <Row className="g-2 mb-3">

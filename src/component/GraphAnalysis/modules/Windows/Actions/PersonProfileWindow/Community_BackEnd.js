@@ -17,7 +17,7 @@ import { BASE_URL } from '../../../../utils/Urls';
 import { useTranslation } from 'react-i18next';
 
 const Community_BackEnd = ({ selectedGroup, onClose }) => {
-  const [isMaximized, setIsMaximized] = useState(true);
+  const [isMaximized, setIsMaximized] = useState(false);
   const [relationshipTypes, setRelationshipTypes] = useState([]);
   const [virtualRelationItems, setVirtualRelationItems] = useState([]);
   const [selectedRelationships, setSelectedRelationships] = useState([]);

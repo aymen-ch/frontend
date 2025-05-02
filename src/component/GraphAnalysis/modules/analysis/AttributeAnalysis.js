@@ -1,16 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NODE_CONFIG } from '../../utils/Parser'; // Adjust path as needed
+import axios from 'axios';
+import { NODE_CONFIG } from '../../utils/Parser';
+import { Button, Spinner, Form, Row, Col, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import globalWindowState from '../../utils/globalWindowState';
+import { Sliders, Zap, Activity, Target, BarChart2 } from 'lucide-react';
+import { BASE_URL } from '../../utils/Urls';
 
 const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
-  const { t } = useTranslation();
   const [selectedNodeType, setSelectedNodeType] = useState(null);
   const [nodeSize, setNodeSize] = useState({});
   const [sizeProperty, setSizeProperty] = useState('');
-  
+  const [selectedGroup, setSelectedGroup] = useState('');
+  const [selectedAttribute, setSelectedAttribute] = useState('_betweenness');
+  const [nodeData, setNodeData] = useState([]);
+  const [nodeProperties, setNodeProperties] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
+
+  // const centralityAttributes = [
+  //   '_betweenness',
+  //   '_degree',
+  //   '_closeness',
+  //   '_eigenvector',
+  // ];
+
+  const fetchNodeProperties = async (nodeType) => {
+    const token = localStorage.getItem('authToken');
+    try {
+      const response = await axios.get(`${BASE_URL}/node-types/properties/`, {
+        params: { node_type: nodeType },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.properties || [];
+    } catch (error) {
+      console.error('API Error:', error);
+      throw new Error(t('error_fetching_properties'));
+    }
+  };
+
+  useEffect(() => {
+    const fetchNodeTypes = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`${BASE_URL}/node-types/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setNodeData(response.data.node_types || []);
+        if (response.data.node_types?.length > 0) {
+          setSelectedGroup(response.data.node_types[0].type);
+        }
+      } catch (error) {
+        setError(error.message || t('error_fetching_node_types'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNodeTypes();
+  }, [t]);
+
+  useEffect(() => {
+    const getNodeProperties = async () => {
+      if (!selectedGroup) return;
+      setLoading(true);
+      try {
+        const properties = await fetchNodeProperties(selectedGroup);
+        setNodeProperties(properties || []);
+      } catch (error) {
+        setError(t('error_fetching_properties'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    getNodeProperties();
+  }, [selectedGroup, t]);
+
   const nodeTypes = [...new Set(combinedNodes.map(node => node.group))];
 
-  // Get unique numeric properties from both properties and properties_analyse
   const getPropertiesForNodeType = (nodeType) => {
     const nodesOfType = combinedNodes.filter(node => node.group === nodeType);
     if (nodesOfType.length === 0) return [];
@@ -34,7 +104,17 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
       });
     }
 
-    console.log(`Properties for ${nodeType}:`, numericProperties);
+    return numericProperties;
+  };
+
+  // Updated function to filter numeric properties (int and float) from nodeProperties
+  const getNumericNodeProperties = () => {
+    if (!nodeProperties.length) return [];
+
+    const numericProperties = nodeProperties
+      .filter(prop => prop.type === 'int' || prop.type === 'float')
+      .map(prop => prop.name);
+
     return numericProperties;
   };
 
@@ -42,14 +122,11 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
     const size = Math.max(50, parseInt(newSize) || NODE_CONFIG.defaultNodeSize || 100);
     const updatedSizes = {};
     combinedNodes.forEach(node => {
-      if (node.group === nodeType) {
-        updatedSizes[node.id] = size;
-      } else {
-        updatedSizes[node.id] = nodeSize[node.id] || NODE_CONFIG.defaultNodeSize || 100;
-      }
+      updatedSizes[node.id] = node.group === nodeType 
+        ? size 
+        : nodeSize[node.id] || NODE_CONFIG.defaultNodeSize || 100;
     });
     setNodeSize(updatedSizes);
-    console.log(`Manual size change for ${nodeType}:`, updatedSizes);
     if (onNodeConfigChange) {
       onNodeConfigChange({
         type: 'size',
@@ -61,8 +138,6 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
 
   const handleSizePropertyChange = (nodeType, property) => {
     setSizeProperty(property);
-    console.log(`Size property selected for ${nodeType}:`, property);
-
     const defaultSize = NODE_CONFIG.defaultNodeSize || 100;
     const updatedSizes = {};
 
@@ -84,11 +159,8 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
         return value;
       });
 
-      console.log(`Values for ${property} in ${nodeType}:`, values);
-
       const minValue = Math.min(...values);
       const maxValue = Math.max(...values);
-      
       const minSize = 150;
       const maxSize = 500;
 
@@ -97,20 +169,15 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
           ? node.properties?.[property.split('.')[1]] || 0
           : node.properties_analyse?.[property.split('.')[1]] || 0;
         
-        let normalizedSize;
-        if (maxValue === minValue || maxValue === 0) {
-          normalizedSize = minSize;
-        } else {
-          normalizedSize = minSize + ((value - minValue) / (maxValue - minValue)) * (maxSize - minSize);
-        }
+        let normalizedSize = maxValue === minValue || maxValue === 0
+          ? minSize
+          : minSize + ((value - minValue) / (maxValue - minValue)) * (maxSize - minSize);
         
         normalizedSize = Math.max(minSize, Math.round(normalizedSize || minSize));
         updatedSizes[node.id] = normalizedSize;
-        console.log(`Node ${node.id} (${node.group}) - ${property}: ${value}, Size: ${normalizedSize}`);
       });
     }
 
-    console.log('Updated sizes before onNodeConfigChange:', updatedSizes);
     setNodeSize(updatedSizes);
     if (onNodeConfigChange) {
       onNodeConfigChange({
@@ -122,7 +189,6 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
     }
   };
 
-  // Initialize node sizes
   useEffect(() => {
     const defaultSize = NODE_CONFIG.defaultNodeSize || 100;
     const initialSizes = {};
@@ -130,15 +196,17 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
       initialSizes[node.id] = nodeSize[node.id] || defaultSize;
     });
     setNodeSize(initialSizes);
-    console.log('Initial node sizes:', initialSizes);
   }, [combinedNodes]);
 
   return (
     <div className="p-3">
       <h5>{t('attribute_analysis')}</h5>
+      {error && <div className="alert alert-danger">{error}</div>}
+      {loading && <Spinner animation="border" />}
+      
       <div className="node-config-container" style={{ marginBottom: '20px' }}>
         <h6>{t('change_size_of_node_by')}</h6>
-        <select 
+        <Form.Select 
           value={selectedNodeType || ''} 
           onChange={(e) => setSelectedNodeType(e.target.value)}
           style={{ marginBottom: '10px', width: '100%', padding: '5px' }}
@@ -147,13 +215,13 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
           {nodeTypes.map(type => (
             <option key={type} value={type}>{type}</option>
           ))}
-        </select>
+        </Form.Select>
 
         {selectedNodeType && (
           <div className="config-controls">
             <div style={{ marginBottom: '10px' }}>
-              <label>{t('size_by_property')}</label>
-              <select
+              <Form.Label>{t('size_by_property')}</Form.Label>
+              <Form.Select
                 value={sizeProperty}
                 onChange={(e) => handleSizePropertyChange(selectedNodeType, e.target.value)}
                 style={{ width: '100%', padding: '5px', marginTop: '5px' }}
@@ -162,12 +230,12 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
                 {getPropertiesForNodeType(selectedNodeType).map(prop => (
                   <option key={prop} value={prop}>{prop}</option>
                 ))}
-              </select>
+              </Form.Select>
             </div>
 
             {!sizeProperty && (
               <div style={{ marginBottom: '10px' }}>
-                <label>{t('size')}: {nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}px</label>
+                <Form.Label>{t('size')}: {nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}px</Form.Label>
                 <input
                   type="range"
                   min="50"
@@ -180,6 +248,47 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
             )}
           </div>
         )}
+      </div>
+
+      <div>
+        <Form.Label>{t('select_node_type')}</Form.Label>
+        <Form.Select
+          size="sm"
+          value={selectedGroup}
+          onChange={(e) => setSelectedGroup(e.target.value)}
+        >
+          <option value="">{t('select_node_type')}</option>
+          {nodeData.map((node) => (
+            <option key={node.type} value={node.type}>
+              <Target size={16} className="me-2" />
+              {node.type}
+            </option>
+          ))}
+        </Form.Select>
+
+        <Form.Label>{t('numeric_properties')}</Form.Label>
+        <Form.Select
+          size="sm"
+          value={selectedAttribute}
+          onChange={(e) => setSelectedAttribute(e.target.value)}
+        >
+          <option value="">{t('select_attribute')}</option>
+          {getNumericNodeProperties().map(prop => (
+            <option key={prop} value={prop}>{prop}</option>
+          ))}
+        
+        </Form.Select>
+
+        <Button
+          size="sm"
+          variant="info"
+          className="w-100 d-flex align-items-center justify-content-center gap-1 mt-3"
+          onClick={() => globalWindowState.setWindow("analyse_statistique", { selectedAttribute, selectedGroup })}
+          style={{ height: '50px' }}
+        >
+          <BarChart2 size={14} className="me-1" />
+          {t('button_statistical_analysis')}
+        </Button>
       </div>
     </div>
   );
