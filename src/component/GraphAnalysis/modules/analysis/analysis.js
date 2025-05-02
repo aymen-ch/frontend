@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 
 const Analysis = ({
   drawCirclesOnPersonneNodes,
+  onNodeConfigChange,
   ColorPersonWithClass,
   activeAggregations,
   setActiveAggregations,
@@ -44,7 +45,7 @@ const Analysis = ({
   const renderContent = () => {
     switch (activeTab) {
       case 'attribute':
-        return <AttributeAnalysis />;
+        return <AttributeAnalysis combinedNodes={nodes} onNodeConfigChange={onNodeConfigChange}/>;
       case 'centrality':
         return (
           <Centrality

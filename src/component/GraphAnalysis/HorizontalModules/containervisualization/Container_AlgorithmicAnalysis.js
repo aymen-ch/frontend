@@ -346,6 +346,7 @@ return (
                   <Analysis
                     setEdges={setEdges}
                     setNodes={setNodes}
+                    onNodeConfigChange={handleNodeConfigChange}
                     nodes={nodes}
                     edges={edges}
                     ColorPersonWithClass={ColorPersonWithClass}
