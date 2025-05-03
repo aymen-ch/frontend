@@ -161,7 +161,7 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-bold">{t('Centrality Algorithm')}</Form.Label>
+              <Form.Label className="fw-bold">Community Algorithm</Form.Label>
               <Form.Select
                 value={selectedCentrality}
                 onChange={handleCentralityChange}
