@@ -32,7 +32,7 @@ export const fetchPossibleRelations = async (node, setPossibleRelations) => {
 };
 
 
-export const handleNodeExpansion_selected = async (selectedNodes, setNodes, setEdges) => {
+export const handleNodeExpansion_selected = async (selectedNodes, setNodes, setEdges,expandLimit,expandDirection) => {
   const token = localStorage.getItem('authToken');
 
   try {
@@ -62,7 +62,10 @@ export const handleNodeExpansion_selected = async (selectedNodes, setNodes, setE
         // Make API call for standard relations (relationType = null)
         const response = await axios.post(
           BASE_URL + '/get_node_relationships/',
-          { node_type, id, relation_type: null },
+          { node_type, id, relation_type: null ,
+            expandLimit, // Include sense
+          expandDirection  // Include limit
+          },
           {
             headers: {
               Authorization: `Bearer ${token}`,
