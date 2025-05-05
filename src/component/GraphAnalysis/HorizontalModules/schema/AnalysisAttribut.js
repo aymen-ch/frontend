@@ -138,7 +138,7 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
     return null; // Don't render the form if the selected item is not a node
   }
 
-  // Render analysis properties
+  // Render analysis properties, removing leading underscore
   const renderAnalysisProperties = () => {
     if (!analysisProperties.length) {
       return <p className="no-properties">{t('sidebar.noAnalysisProperties')}</p>;
@@ -147,7 +147,9 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
     return (
       <ul className="analysis-properties-list">
         {analysisProperties.map((prop, index) => (
-          <li key={index} className="analysis-property-item">• {prop}</li>
+          <li key={index} className="analysis-property-item">
+            • {prop.startsWith('_') ? prop.substring(1) : prop}
+          </li>
         ))}
       </ul>
     );

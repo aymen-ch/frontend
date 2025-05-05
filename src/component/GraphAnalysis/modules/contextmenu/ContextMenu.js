@@ -484,7 +484,7 @@ const ContextMenu = ({
                             )}
                             {relation.endNode}
                           </span>
-                          | ({relation.count})
+                          x {relation.count}
                         </span>
                       </button>
                     );
@@ -543,7 +543,7 @@ const ContextMenu = ({
                             )}
                             {relation.endNode}
                           </span>
-                          | ({relation.count})
+                           x {relation.count}
                         </span>
                       </button>
                     );
