@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import {
@@ -27,7 +27,7 @@ import {
   handleAllConnections,
   handleActionSelect,
   handleAdvancedExpand,
-  handleNodeExpansion_selected
+  handleNodeExpansion_selected,
 } from './functions_node_click';
 import { getNodeColor, getNodeIcon } from '../../utils/Parser';
 import { BASE_URL } from '../../utils/Urls';
@@ -51,6 +51,9 @@ const ContextMenu = ({
   const [subContextMenu, setSubContextMenu] = useState(null);
   const [actionsSubMenu, setActionsSubMenu] = useState(null);
   const [advancedAggregationSubMenu, setAdvancedAggregationSubMenu] = useState(null);
+  const [nodeProperties, setNodeProperties] = useState([]);
+  const [loadingProperties, setLoadingProperties] = useState(false);
+  const [errorProperties, setErrorProperties] = useState(null);
   const expandButtonRef = useRef(null);
   const actionsButtonRef = useRef(null);
   const advancedAggregationButtonRef = useRef(null);
@@ -58,9 +61,10 @@ const ContextMenu = ({
   const actionsSubRef = useRef(null);
   const advancedAggregationSubRef = useRef(null);
   const [advancedExpandParams, setAdvancedExpandParams] = useState({
-    attribute: '_betweenness',
+    attribute: '',
     threshold: 0.01,
     maxLevel: 5,
+    direction: 'Both', // New field for direction
   });
   const [availableActions, setAvailableActions] = useState([]);
   const actionIcons = {
@@ -70,37 +74,66 @@ const ContextMenu = ({
   };
   const [visibleDescriptions, setVisibleDescriptions] = useState({});
 
+  const [expandLimit, setExpandLimit] = useState(10);
+  const [expandDirection, setExpandDirection] = useState('Both');
+
+  // Fetch numeric node properties
+  const fetchNodeProperties = useCallback(async (nodeType) => {
+    if (!nodeType) return;
+    setLoadingProperties(true);
+    setErrorProperties(null);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(`${BASE_URL}/node-types/properties/`, {
+        params: { node_type: nodeType },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const properties = response.data.properties || [];
+      setNodeProperties(properties);
+      const numericProperties = properties.filter(
+        (prop) => prop.type === 'int' || prop.type === 'float'
+      );
+      if (numericProperties.length > 0 && !advancedExpandParams.attribute) {
+        setAdvancedExpandParams((prev) => ({
+          ...prev,
+          attribute: numericProperties[0].name,
+        }));
+      }
+    } catch (error) {
+      setErrorProperties(t('error_fetching_properties'));
+    } finally {
+      setLoadingProperties(false);
+    }
+  }, [t]);
+
+  // Get numeric properties
+  const getNumericNodeProperties = useCallback(() => {
+    return nodeProperties
+      .filter((prop) => prop.type === 'int' || prop.type === 'float')
+      .map((prop) => prop.name);
+  }, [nodeProperties]);
+
   const toggleDescription = (index) => {
     setVisibleDescriptions((prev) => ({
       ...prev,
       [index]: !prev[index],
     }));
   };
-  const centralityAttributes = [
-    'degree_out',
-    'degree_in',
-    '_betweennessCentrality',
-    '_pagerank',
-    '_articleRank',
-    '_eigenvector',
-    '_betweenness',
-  ];
-  const [expandLimit, setExpandLimit] = useState(10);
-  const [expandDirection, setExpandDirection] = useState('Both'); // 'in', 'out', 'both'
+
+  // Fetch relations, actions, and properties when context menu is visible
 
   useEffect(() => {
     if (contextMenu?.node && contextMenu.visible) {
-      let relations = [];
-  
+      fetchNodeProperties(contextMenu.node.group);
       fetchPossibleRelations(contextMenu.node, (backendRelations) => {
-        relations = backendRelations.map((rel) => ({
+        const relations = backendRelations.map((rel) => ({
           name: rel.name,
           startNode: rel.startNode,
           endNode: rel.endNode,
           isVirtual: false,
           count: rel.count,
         }));
-  
+
         let virtualRelations = [];
         try {
           const stored = JSON.parse(localStorage.getItem('virtualRelations'));
@@ -108,19 +141,18 @@ const ContextMenu = ({
             virtualRelations = stored;
           }
         } catch (err) {
-          console.warn("Invalid virtualRelations data in localStorage", err);
+          console.warn('Invalid virtualRelations data in localStorage', err);
         }
-  
+
         const nodeGroup = contextMenu.node.group;
-  
-        // Fetch counts for virtual relations
+
         const fetchVirtualRelationCounts = async () => {
           const matchingVirtualRelations = await Promise.all(
             virtualRelations
               .filter((vr) => vr.path[0] === nodeGroup)
               .map(async (vr) => {
                 try {
-                  const response = await axios.post(BASE_URL + '/get_virtual_relation_count/', {
+                  const response = await axios.post(`${BASE_URL}/get_virtual_relation_count/`, {
                     node_type: nodeGroup,
                     node_id: contextMenu.node.id,
                     path: vr.path,
@@ -144,19 +176,18 @@ const ContextMenu = ({
                 }
               })
           );
-  
+
           const combinedRelations = [...relations, ...matchingVirtualRelations];
           const uniqueRelations = Array.from(
             new Map(combinedRelations.map((rel) => [rel.name, rel])).values()
           );
-          console.log(uniqueRelations);
           setPossibleRelations(uniqueRelations);
         };
-  
+
         fetchVirtualRelationCounts();
-  
+
         axios
-          .post(BASE_URL + '/get_available_actions/', { node_type: contextMenu.node.group })
+          .post(`${BASE_URL}/get_available_actions/`, { node_type: contextMenu.node.group })
           .then((response) => {
             setAvailableActions(response.data.actions || []);
           })
@@ -165,7 +196,7 @@ const ContextMenu = ({
           });
       });
     }
-  }, [contextMenu]);
+  }, [contextMenu, fetchNodeProperties]);
 
   const handleMouseEnterExpand = () => {
     if (expandButtonRef.current) {
@@ -227,12 +258,7 @@ const ContextMenu = ({
   const handleAdvancedExpandSubmit = async () => {
     if (!contextMenu?.node) return;
 
-    await handleAdvancedExpand(
-      contextMenu.node,
-      setNodes,
-      setEdges,
-      advancedExpandParams
-    );
+    await handleAdvancedExpand(contextMenu.node, setNodes, setEdges, advancedExpandParams);
 
     setContextMenu(null);
     setAdvancedAggregationSubMenu(null);
@@ -250,7 +276,9 @@ const ContextMenu = ({
       setNodes((prev) => prev.filter((node) => !selectedNodeIds.has(node.id)));
       setEdges((prev) => prev.filter((edge) => !selectedNodeIds.has(edge.from) && !selectedNodeIds.has(edge.to)));
       setSelectedNodes(new Set());
-    } else if (action === t('View Neighborhood') || action === t('Expand Specific Relation')) {
+
+    } else if (action === 'View Neighborhood' || action === t('Expand Specific Relation')) {
+
       handleNodeExpansion(contextMenu.node, relationType, setNodes, setEdges, expandLimit, expandDirection);
     } else if (action === t('Select Node')) {
       setSelectedNodes((prev) => new Set([...prev, contextMenu.node.id]));
@@ -310,6 +338,8 @@ const ContextMenu = ({
   };
 
   if (!contextMenu || !contextMenu.visible) return null;
+
+  const centralityAttributes = getNumericNodeProperties();
 
   return (
     <>
@@ -377,7 +407,10 @@ const ContextMenu = ({
             {t('Dismiss')}
           </button>
           {selectedNodes.size > 0 && (
-            <button className="menu-item danger" onClick={() => handleContextMenuAction(t('Delete Selected Nodes'))}>
+            <button
+              className="menu-item danger"
+              onClick={() => handleContextMenuAction(t('Delete Selected Nodes'))}
+            >
               <FaTrash style={{ marginRight: '10px' }} />
               {t('Delete Selected Nodes')}
             </button>
@@ -427,19 +460,23 @@ const ContextMenu = ({
 
           <div className="menu-header">{t('Expand Options')}</div>
           <div className="menu-items">
+
             <button
               className="menu-item"
               onClick={() => handleContextMenuAction(t('View Neighborhood'))}
             >
+
               <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
               {t('Expand All')}
             </button>
 
             <div className="relations-section">
               <div className="section-header">{t('Normal Relations')}</div>
-              {possibleRelations.filter(relation => !relation.isVirtual).length > 0 ? (
+
+              {possibleRelations.filter((relation) => !relation.isVirtual).length > 0 ? (
                 possibleRelations
-                  .filter(relation => !relation.isVirtual)
+                  .filter((relation) => !relation.isVirtual)
+
                   .map((relation, index) => {
                     const startIconPath = getNodeIcon(relation.startNode);
                     const endIconPath = getNodeIcon(relation.endNode);
@@ -449,9 +486,11 @@ const ContextMenu = ({
                         className="menu-item"
                         onClick={() => handleContextMenuAction(t('Expand Specific Relation'), relation.name)}
                       >
+
                         <FaArrowRight
                           style={{ marginRight: '10px', color: '#4361ee' }}
                         />
+
                         <span className="relation-display">
                           <span className="node-start" style={{ color: getNodeColor(relation.startNode) }}>
                             {startIconPath && (
@@ -476,7 +515,9 @@ const ContextMenu = ({
                                 style={{ backgroundColor: getNodeColor(relation.endNode) }}
                               >
                                 <img
-                                  src={startIconPath}
+
+                                  src={endIconPath}
+
                                   alt={`${relation.endNode} icon`}
                                   className="node-icon"
                                 />
@@ -496,9 +537,11 @@ const ContextMenu = ({
 
             <div className="relations-section">
               <div className="section-header">{t('Virtual Relations')}</div>
-              {possibleRelations.filter(relation => relation.isVirtual).length > 0 ? (
+
+              {possibleRelations.filter((relation) => relation.isVirtual).length > 0 ? (
                 possibleRelations
-                  .filter(relation => relation.isVirtual)
+                  .filter((relation) => relation.isVirtual)
+
                   .map((relation, index) => {
                     const startIconPath = getNodeIcon(relation.startNode);
                     const endIconPath = getNodeIcon(relation.endNode);
@@ -508,9 +551,9 @@ const ContextMenu = ({
                         className="menu-item virtual-relation"
                         onClick={() => handleContextMenuAction(t('Expand Specific Relation'), relation.name)}
                       >
-                        <FaArrowRight
-                          style={{ marginRight: '10px', color: '#38b000' }}
-                        />
+
+                        <FaArrowRight style={{ marginRight: '10px', color: '#38b000' }} />
+
                         <span className="relation-display">
                           <span className="node-start" style={{ color: getNodeColor(relation.startNode) }}>
                             {startIconPath && (
@@ -555,7 +598,12 @@ const ContextMenu = ({
 
             <hr />
             {selectedNodes.size > 0 && (
-              <button className="menu-item" onClick={() => handleContextMenuAction(t('Expand All seleced nodes'))}>
+
+              <button
+                className="menu-item"
+                onClick={() => handleContextMenuAction(t('Expand All seleced nodes'))}
+              >
+
                 <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
                 {t('Expand All seleced nodes')}
               </button>
@@ -610,6 +658,7 @@ const ContextMenu = ({
                       />
                     </button>
                     {visibleDescriptions[index] && (
+
                       <div
                         className="action-description text-muted small px-3 pb-2"
                         style={{
@@ -619,6 +668,7 @@ const ContextMenu = ({
                           lineHeight: '1.4',
                         }}
                       >
+
                         {action.description}
                       </div>
                     )}
@@ -653,52 +703,105 @@ const ContextMenu = ({
       {advancedAggregationSubMenu?.visible && (
         <div
           className="sub-context-menu"
-          style={{ '--sub-context-menu-y': `${advancedAggregationSubMenu.y}px`, '--sub-context-menu-x': `${advancedAggregationSubMenu.x}px` }}
+          style={{
+            '--sub-context-menu-y': `${advancedAggregationSubMenu.y}px`,
+            '--sub-context-menu-x': `${advancedAggregationSubMenu.x}px`,
+          }}
           ref={advancedAggregationSubRef}
           onMouseLeave={() => setAdvancedAggregationSubMenu(null)}
         >
           <div className="menu-header">{t('Advanced Aggregation')}</div>
           <div className="menu-items" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{t('Attribute')}:</label>
-              <select
-                value={advancedExpandParams.attribute}
-                onChange={(e) => setAdvancedExpandParams({ ...advancedExpandParams, attribute: e.target.value })}
-                style={{ width: '100%', padding: '5px' }}
-              >
-                {centralityAttributes.map((attr) => (
-                  <option key={attr} value={attr}>
-                    {attr}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{t('Threshold')}:</label>
-              <input
-                type="number"
-                step="0.001"
-                value={advancedExpandParams.threshold}
-                onChange={(e) => setAdvancedExpandParams({ ...advancedExpandParams, threshold: parseFloat(e.target.value) })}
-                style={{ width: '100%', padding: '5px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{t('Max Level')}:</label>
-              <input
-                type="number"
-                value={advancedExpandParams.maxLevel}
-                onChange={(e) => setAdvancedExpandParams({ ...advancedExpandParams, maxLevel: parseInt(e.target.value) })}
-                style={{ width: '100%', padding: '5px' }}
-              />
-            </div>
-            <button
-              className="menu-item"
-              onClick={handleAdvancedExpandSubmit}
-              style={{ marginTop: '10px', background: '#4361ee', color: 'white', padding: '8px', borderRadius: '4px' }}
-            >
-              {t('Apply')}
-            </button>
+            {loadingProperties ? (
+              <div className="text-center">
+                <FaCog className="fa-spin" />
+                <span className="ms-2">{t('Loading properties...')}</span>
+              </div>
+            ) : errorProperties ? (
+              <div className="text-danger">{errorProperties}</div>
+            ) : (
+              <>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>{t('Attribute')}:</label>
+                  <select
+                    value={advancedExpandParams.attribute}
+                    onChange={(e) =>
+                      setAdvancedExpandParams({ ...advancedExpandParams, attribute: e.target.value })
+                    }
+                    style={{ width: '100%', padding: '5px' }}
+                    disabled={centralityAttributes.length === 0}
+                  >
+                    {centralityAttributes.length === 0 ? (
+                      <option value="">{t('No numeric attributes available')}</option>
+                    ) : (
+                      centralityAttributes.map((attr) => (
+                        <option key={attr} value={attr}>
+                          {attr}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>{t('Threshold')}:</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    value={advancedExpandParams.threshold}
+                    onChange={(e) =>
+                      setAdvancedExpandParams({
+                        ...advancedExpandParams,
+                        threshold: parseFloat(e.target.value),
+                      })
+                    }
+                    style={{ width: '100%', padding: '5px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>{t('Max Level')}:</label>
+                  <input
+                    type="number"
+                    value={advancedExpandParams.maxLevel}
+                    onChange={(e) =>
+                      setAdvancedExpandParams({
+                        ...advancedExpandParams,
+                        maxLevel: parseInt(e.target.value),
+                      })
+                    }
+                    style={{ width: '100%', padding: '5px' }}
+                  />
+                </div>
+                {advancedExpandParams.maxLevel === 1 && (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>{t('Direction')}:</label>
+                    <select
+                      value={advancedExpandParams.direction}
+                      onChange={(e) =>
+                        setAdvancedExpandParams({ ...advancedExpandParams, direction: e.target.value })
+                      }
+                      style={{ width: '100%', padding: '5px' }}
+                    >
+                      <option value="In">{t('In')}</option>
+                      <option value="Out">{t('Out')}</option>
+                      <option value="Both">{t('Both')}</option>
+                    </select>
+                  </div>
+                )}
+                <button
+                  className="menu-item"
+                  onClick={handleAdvancedExpandSubmit}
+                  style={{
+                    marginTop: '10px',
+                    background: '#4361ee',
+                    color: 'white',
+                    padding: '8px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  {t('Apply')}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

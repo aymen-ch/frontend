@@ -89,7 +89,9 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
         disabled={isLoading || !selectedGroup || !selectedCentralityAttribute}
         size="sm"
         className="w-100 mb-3"
+        
       >
+        
         {isLoading ? (
           <>
             <Spinner
@@ -103,7 +105,7 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
             Fetching...
           </>
         ) : (
-          'Fetch Nodes'
+          t('Fetch Nodes')
         )}
       </Button>
 

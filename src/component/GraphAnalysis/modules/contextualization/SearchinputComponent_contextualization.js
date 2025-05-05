@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BASE_URL } from '../../utils/Urls';
 import { getNodeIcon, getNodeColor } from '../../utils/Parser';
 import './SearchInputComponent.css';
+import { useTranslation } from 'react-i18next';
 
 const SearchinputComponent = ({ setContextData }) => {
     const [affaireTypes, setaffaireTypes] = useState([]);
@@ -18,6 +19,7 @@ const SearchinputComponent = ({ setContextData }) => {
     const [selectedCommune, setSelectedCommune] = useState('');
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [totalAffaires, setTotalAffaires] = useState(null);
+    const { t } = useTranslation();
 
     const [formValues, setFormValues] = useState({
         startDate: '',
@@ -210,82 +212,101 @@ const SearchinputComponent = ({ setContextData }) => {
 
     return (
         <div className="container search-container p-3">
-            <div class="region-filter">
-            <div class="filter-section-title-total">Total Affaires: {totalAffaires}</div>
-            
-      
+            <div className="region-filter">
+                <div className="filter-section-title-total">{t('searchInput.totalAffaires')}: {totalAffaires}</div>
             </div>
 
             {/* Region selection row */}
-            <div class="region-filter">
-    <div class="filter-section-title"> <i className="bi bi-geo-alt-fill me-2 text-primary"></i>Location Analysis</div>
-    <div className="row mb-2">
-                <div className="col-md">
-                     Wilaya
-                    <select className="form-select" value={selectedWilaya} onChange={handleWilayaChange}>
-                        <option value="">Wilaya</option>
-                        {wilayas.map(w => <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_name}</option>)}
-                    </select>
+            <div className="region-filter">
+                <div className="filter-section-title">
+                    <i className="bi bi-geo-alt-fill me-2 text-primary"></i>{t('searchInput.locationAnalysis')}
                 </div>
-                <div className="col-md">
-                     Daira
-                    <select className="form-select" value={selectedDaira} onChange={handleDairaChange} disabled={!selectedWilaya}>
-                        <option value="">Daira</option>
-                        {dairas.map(d => <option key={d.daira_id} value={d.daira_id}>{d.daira_name}</option>)}
-                    </select>
-                </div>
-                <div className="col-md">
-                    Commune
-                    <select className="form-select" value={selectedCommune} onChange={handleCommuneChange} disabled={!selectedDaira}>
-                        <option value="">Commune</option>
-                        {communes.map(c => <option key={c.commune_id} value={c.commune_id}>{c.commune_name}</option>)}
-                    </select>
+                <div className="row mb-2">
+                    <div className="col-md">
+                        {t('searchInput.wilaya')}
+                        <select className="form-select" value={selectedWilaya} onChange={handleWilayaChange}>
+                            <option value="">{t('searchInput.wilayaPlaceholder')}</option>
+                            {wilayas.map(w => (
+                                <option key={w.wilaya_id} value={w.wilaya_id}>{w.wilaya_name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-md">
+                        {t('searchInput.daira')}
+                        <select className="form-select" value={selectedDaira} onChange={handleDairaChange} disabled={!selectedWilaya}>
+                            <option value="">{t('searchInput.dairaPlaceholder')}</option>
+                            {dairas.map(d => (
+                                <option key={d.daira_id} value={d.daira_id}>{d.daira_name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-md">
+                        {t('searchInput.commune')}
+                        <select className="form-select" value={selectedCommune} onChange={handleCommuneChange} disabled={!selectedDaira}>
+                            <option value="">{t('searchInput.communePlaceholder')}</option>
+                            {communes.map(c => (
+                                <option key={c.commune_id} value={c.commune_id}>{c.commune_name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
-</div>
-           
             {/* Date Range */}
+            <div className="temporal-filter">
+                <div className="filter-section-title">
+                    <i className="bi bi-calendar-event-fill me-2 text-primary"></i>{t('searchInput.temporalAnalysis')}
+                </div>
+                <div className="row mb-3">
+                    <div className="col">
+                        {t('searchInput.startDate')}
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={formValues.startDate}
+                            onChange={(e) => handleInputChange(e, 'startDate')}
+                        />
+                    </div>
+                    <div className="col">
+                        {t('searchInput.endDate')}
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={formValues.endDate}
+                            onChange={(e) => handleInputChange(e, 'endDate')}
+                        />
+                    </div>
+                </div>
+            </div>
 
-            <div class="temporal-filter">
-    <div class="filter-section-title"><i className="bi bi-calendar-event-fill me-2 text-primary"></i>  Temporal analysis</div>
-    <div className="row mb-3">
-                <div className="col">
-                       start date 
-                    <input type="date" className="form-control" value={formValues.startDate} onChange={(e) => handleInputChange(e, 'startDate')} />
+            {/* Categories */}
+            <div className="temporal-filter">
+                <div className="filter-section-title">
+                    <i className="bi bi-tags-fill me-2 text-primary"></i>{t('searchInput.categoriesOfAffaires')}
                 </div>
-                <div className="col">
-                    end date
-                    <input type="date" className="form-control" value={formValues.endDate} onChange={(e) => handleInputChange(e, 'endDate')} />
+                <div className="mb-3">
+                    <div className="d-flex flex-wrap">
+                        {affaireTypes.affaire_types?.map((type, index) => (
+                            <div key={index} className="form-check form-check-inline">
+                                <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    value={type}
+                                    checked={selectedCategories.includes(type)}
+                                    onChange={(e) => handleCategoryCheckboxChange(e, type)}
+                                />
+                                <label className="form-check-label">{type}</label>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
-</div>
-          
-<div class="temporal-filter">
-<div class="filter-section-title"><i className="bi bi-tags-fill me-2 text-primary"></i> Categories of affairess</div>
-{/* Categories */}
-<div className="mb-3">
-               
-                <div className="d-flex flex-wrap">
-                    {affaireTypes.affaire_types?.map((type, index) => (
-                        <div key={index} className="form-check form-check-inline">
-                            <input
-                                type="checkbox"
-                                className="form-check-input"
-                                value={type}
-                                checked={selectedCategories.includes(type)}
-                                onChange={(e) => handleCategoryCheckboxChange(e, type)}
-                            />
-                            <label className="form-check-label">{type}</label>
-                        </div>
-                    ))}
-                </div>
-            </div>
             </div>
 
             {/* Node Types */}
             <div className="mb-3">
-                <label className="form-label"> <i className="bi bi-diagram-3-fill me-2 text-primary"></i>Node Types a afficher</label>
+                <label className="form-label">
+                    <i className="bi bi-diagram-3-fill me-2 text-primary"></i>{t('searchInput.nodeTypesToDisplay')}
+                </label>
                 <div className="node-types-container d-flex flex-wrap border rounded p-2" style={{ maxHeight: '150px', overflowY: 'auto' }}>
                     {nodeData.filter(nt => nt.type !== 'Affaire').map((nodeType, idx) => (
                         <div key={idx} className="d-flex align-items-center me-3 mb-2">
@@ -295,43 +316,46 @@ const SearchinputComponent = ({ setContextData }) => {
                                 onChange={(e) => handleCheckboxChange(e, nodeType)}
                                 checked={selectedNodeTypes.includes(nodeType.type)}
                             />
-                            <img src={getNodeIcon(nodeType.type)} alt="" style={{ width: 20, height: 20, backgroundColor: getNodeColor(nodeType.type),borderRadius: '50%' }} className="me-1" />
+                            <img
+                                src={getNodeIcon(nodeType.type)}
+                                alt=""
+                                style={{ width: 20, height: 20, backgroundColor: getNodeColor(nodeType.type), borderRadius: '50%' }}
+                                className="me-1"
+                            />
                             <small>{nodeType.type}</small>
                         </div>
                     ))}
                 </div>
             </div>
 
-            
             {/* Depth */}
             <div className="mb-3">
-                <label className="form-label">Depth</label>
+                <label className="form-label">{t('searchInput.depth')}</label>
                 <div className="d-flex flex-wrap align-items-center gap-3">
-                {[0, 1, 2].map((d) => {
-    const depthLabels = {
-        0: 'only Affaires',
-        1: 'Direct',
-        2: 'Indirect'
-    };
+                    {[0, 1, 2].map((d) => {
+                        const depthLabels = {
+                            0: t('searchInput.depthOnlyAffaires'),
+                            1: t('searchInput.depthDirect'),
+                            2: t('searchInput.depthIndirect')
+                        };
 
-    return (
-        <div className="form-check" key={d}>
-            <input
-                className="form-check-input"
-                type="radio"
-                name="depth"
-                id={`depth${d}`}
-                value={d}
-                checked={formValues.depth === `${d}`}
-                onChange={(e) => handleInputChange(e, 'depth')}
-            />
-            <label className="form-check-label" htmlFor={`depth${d}`}>
-                {depthLabels[d]}
-            </label>
-        </div>
-    );
-})}
-
+                        return (
+                            <div className="form-check" key={d}>
+                                <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="depth"
+                                    id={`depth${d}`}
+                                    value={d}
+                                    checked={formValues.depth === `${d}`}
+                                    onChange={(e) => handleInputChange(e, 'depth')}
+                                />
+                                <label className="form-check-label" htmlFor={`depth${d}`}>
+                                    {depthLabels[d]}
+                                </label>
+                            </div>
+                        );
+                    })}
                     <div className="form-check">
                         <input
                             className="form-check-input"
@@ -342,7 +366,7 @@ const SearchinputComponent = ({ setContextData }) => {
                             checked={!['0', '1', '2'].includes(formValues.depth)}
                             onChange={(e) => handleInputChange(e, 'depth')}
                         />
-                        <label className="form-check-label" htmlFor="depthAdvanced">Advanced</label>
+                        <label className="form-check-label" htmlFor="depthAdvanced">{t('searchInput.depthAdvanced')}</label>
                     </div>
                     {!['0', '1', '2'].includes(formValues.depth) && (
                         <input

@@ -133,7 +133,11 @@ const ImportTab = () => {
               onChange={handleJsonFileChange}
               disabled={loading}
               accept=".json"
+              
+             
             />
+            
+       
           </Form.Group>
         );
       case 'cypher':

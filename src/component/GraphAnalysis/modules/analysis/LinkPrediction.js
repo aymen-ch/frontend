@@ -66,7 +66,7 @@ const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIs
             {t('Loading...')}
           </>
         ) : (
-          t('Aggregation with Algorithm')
+          t('links pridiction with Algorithm')
         )}
       </Button>
 
@@ -84,7 +84,7 @@ const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIs
         className="w-100"
         onClick={() => setShowNodeClassification(true)}
       >
-        {t('Node Classification (Backend)')}
+        {t('applicate the algorithme of links pridiciton')}
       </Button>
 
       {showNodeClassification && (

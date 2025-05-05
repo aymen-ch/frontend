@@ -474,20 +474,17 @@ export const handleAdvancedExpand = async (
   advancedExpandParams
 ) => {
   const token = localStorage.getItem('authToken');
-  
+
   try {
-    // console.log("parm" ,parseInt(node.id, 10),
-    // attribute,
-    // threshold,
-    // max_level   );
-    const { attribute, threshold, maxLevel } = advancedExpandParams; // Destructure the params
+    const { attribute, threshold, maxLevel, direction } = advancedExpandParams;
     const response = await axios.post(
-      `${BASE_URL}/expand_path_from_node/`,  // Matched your endpoint URL
+      `${BASE_URL}/expand_path_from_node/`,
       {
         id_start: parseInt(node.id, 10),
-        attribute, // Use destructured value
-        threshold, // Use destructured value
-        max_level: maxLevel, // Map maxLevel to max_level for API
+        attribute,
+        threshold,
+        max_level: maxLevel,
+        direction, // Include direction in the request
       },
       {
         headers: {
@@ -498,36 +495,29 @@ export const handleAdvancedExpand = async (
     );
 
     if (response.status === 200) {
-      console.log("nodes_BOB2" ,response.data );
-
       const { nodes: expandedNodes, edges: expandedEdges } = parsergraph(response.data.data);
-      
-      // Update state with new nodes and edges
-       setNodes(prevNodes => [...prevNodes, ...expandedNodes]);
-       setEdges(prevEdges => [...prevEdges, ...expandedEdges]);
 
-      
+      setNodes((prevNodes) => [...prevNodes, ...expandedNodes]);
+      setEdges((prevEdges) => [...prevEdges, ...expandedEdges]);
 
-      return { 
-        success: true, 
-        // nodes: expandedNodes, 
-        // edges: expandedEdges,
-        message: 'Path expanded successfully'
+      return {
+        success: true,
+        message: 'Path expanded successfully',
       };
     } else {
       console.error('Failed to expand path from node');
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'API request failed',
-        status: response.status
+        status: response.status,
       };
     }
   } catch (error) {
     console.error('Error expanding path:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error.response?.data?.error || error.message,
-      status: error.response?.status
+      status: error.response?.status,
     };
   }
 };

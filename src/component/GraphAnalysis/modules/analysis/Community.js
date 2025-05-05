@@ -108,6 +108,39 @@ const communityMethods = [
 
   return (
     <div className="p-3 d-flex flex-column gap-3">
+
+      
+
+<Button
+    size="sm"
+    variant="info"
+    className="w-100 d-flex align-items-center justify-content-center gap-1"
+    onClick={() => globalWindowState.setWindow("Community_BackEnd",  selectedGroup )}
+    style={{ height: '50px' }} // Match height with other buttons
+  >
+    <BarChart2 size={14} className="me-1" /> {/* Adding BarChart2 icon for statistical analysis */}
+    {t('add new comunoty attribute')}
+  </Button>
+
+  <Form.Label>{t('Select Node Type')}</Form.Label>
+                {/* <OverlayTrigger
+                  placement="top"
+                  overlay={<Tooltip id="node-group-tooltip">{t('Select the group of nodes for analysis')}</Tooltip>}
+                > */}
+                  <Form.Select
+                    size="sm"
+                    value={selectedGroup}
+                    onChange={(e) => setSelectedGroup(e.target.value)}
+                  >
+                    {nodeData.map((node) => (
+                      <option key={node.type} value={node.type}>
+                        <Target size={16} className="me-2" />
+                        {node.type}
+                      </option>
+                    ))}
+                  </Form.Select>
+
+
       <Form.Group>
         <Form.Label>{t('Community Detection')}</Form.Label>
         <Form.Select
@@ -134,35 +167,10 @@ const communityMethods = [
       </Button>
 
 
-      <Form.Label>{t('Select Node Type')}</Form.Label>
-                {/* <OverlayTrigger
-                  placement="top"
-                  overlay={<Tooltip id="node-group-tooltip">{t('Select the group of nodes for analysis')}</Tooltip>}
-                > */}
-                  <Form.Select
-                    size="sm"
-                    value={selectedGroup}
-                    onChange={(e) => setSelectedGroup(e.target.value)}
-                  >
-                    {nodeData.map((node) => (
-                      <option key={node.type} value={node.type}>
-                        <Target size={16} className="me-2" />
-                        {node.type}
-                      </option>
-                    ))}
-                  </Form.Select>
+
 {/* </OverlayTrigger> */}
 
-      <Button
-    size="sm"
-    variant="info"
-    className="w-100 d-flex align-items-center justify-content-center gap-1"
-    onClick={() => globalWindowState.setWindow("Community_BackEnd",  selectedGroup )}
-    style={{ height: '50px' }} // Match height with other buttons
-  >
-    <BarChart2 size={14} className="me-1" /> {/* Adding BarChart2 icon for statistical analysis */}
-    {t('Backend')}
-  </Button>
+ 
     </div>
   );
 };
