@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { FaProjectDiagram, FaLayerGroup, FaSitemap, FaMapMarkedAlt } from 'react-icons/fa';
+import { FaProjectDiagram, FaLayerGroup, FaSitemap, FaMapMarkedAlt ,FaStream} from 'react-icons/fa';
 import { FaDiaspora } from 'react-icons/fa6';
 import { d3ForceLayoutType, ForceDirectedLayoutType, HierarchicalLayoutType,GridLayoutType } from '@neo4j-nvl/base';
 import { buttonStyle, activeButtonStyle, layoutControlStyle } from '../../HorizontalModules/visualization/GraphVisualizationStyles';
@@ -14,8 +14,8 @@ const LayoutControl = ({ nvlRef, nodes, edges,layoutType,setLayoutType}) => {
     { type: GridLayoutType, icon: <FaLayerGroup size={16} />, title: 'GridLayoutType' },
     // { type: 'dagre', icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
     { type: 'Operationnelle_Soutien_Leader', icon: <FaSitemap size={16} />, title: 'Free Layout' },
-    // { type: HierarchicalLayoutType, icon: <FaSitemap size={16} />, title: 'Hierarchical' },
-    { type: 'geospatial', icon: <FaMapMarkedAlt size={16} />, title: 'Geospatial Layout' },
+    { type: HierarchicalLayoutType, icon: <FaStream size={16} />, title: 'Hierarchical' },
+    // { type: 'geospatial', icon: <FaMapMarkedAlt size={16} />, title: 'Geospatial Layout' },
   ];
 
   const handleLayoutSelect = (type) => {

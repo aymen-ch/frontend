@@ -14,7 +14,7 @@ import { useGlobalContext } from '../../GlobalVariables';
 import { LabelManager, LabelManagerSchema } from '../Parser';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS
+import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,7 +48,7 @@ const useNvlVisualization = ({
   SetContextMenucanvas,
   setnodetoshow,
   setrelationtoshow,
-  shiftPressed, // Note: This is no longer used for multi-selection
+  shiftPressed,
   selectedEdges,
   setselectedEdges,
   sethoverEdge,
@@ -75,10 +75,25 @@ const useNvlVisualization = ({
     }
   }, []);
 
+  // Add Ctrl + A event listener for selecting all nodes
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey && event.key === 'a') {
+        event.preventDefault(); // Prevent browser default behavior (e.g., selecting all text)
+        const allNodeIds = nodes.map(node => node.id);
+        setSelectedNodes(new Set(allNodeIds));
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [nodes, setSelectedNodes]);
+
   useEffect(() => {
     if (!nvlRef.current) return;
 
-    // Initialize interaction handlers
     const panInteraction = new PanInteraction(nvlRef.current);
     const boxSelectInteraction = new BoxSelectInteraction(nvlRef.current);
     const clickInteraction = new ClickInteraction(nvlRef.current);
@@ -88,7 +103,6 @@ const useNvlVisualization = ({
 
     dragNodeInteraction.mouseDownNode = null;
 
-    // Configure interactions based on multiselecte and layout type
     if (multiselecte) {
       boxSelectInteraction.updateCallback('onBoxSelect', ({ nodes, rels }) => {
         setSelectedNodes((prevSelected) => {
@@ -107,13 +121,11 @@ const useNvlVisualization = ({
           return newSelected;
         });
 
-        // Reset multiselecte to false after selection
         setmultiselecte(false);
       });
       panInteraction.destroy();
       zoomInteraction.destroy();
     } else if (layoutType === 'geospatial') {
-      // Disable NVL pan and zoom for geospatial layout to allow map interactions
       panInteraction.destroy();
       zoomInteraction.destroy();
       boxSelectInteraction.destroy();
@@ -123,7 +135,6 @@ const useNvlVisualization = ({
       boxSelectInteraction.destroy();
     }
 
-    // Right-click on node
     clickInteraction.updateCallback('onNodeRightClick', (node, hitElements, event) => {
       event.preventDefault();
       setContextMenu({
@@ -134,7 +145,6 @@ const useNvlVisualization = ({
       });
     });
 
-    // Node click
     clickInteraction.updateCallback('onNodeClick', (node, hitElements, event) => {
       if (node && node.id) {
         setSelectedNodes((prevSelected) => {
@@ -147,7 +157,6 @@ const useNvlVisualization = ({
       }
     });
 
-    // Relationship click
     clickInteraction.updateCallback('onRelationshipClick', (edge, hitElements, event) => {
       if (edge && edge.id) {
         setselectedEdges?.((prevSelected) => {
@@ -169,7 +178,6 @@ const useNvlVisualization = ({
       });
     });
 
-    // Canvas click (deselect)
     clickInteraction.updateCallback('onCanvasClick', (event) => {
       if (!event.hitElements || event.hitElements.length === 0) {
         setSelectedNodes?.(new Set());
@@ -180,7 +188,6 @@ const useNvlVisualization = ({
         if (typeof setContextMenu === 'function') {
           setContextMenu(null);
         }
-        
         if (typeof SetContextMenucanvas === 'function') {
           SetContextMenucanvas(null);
         }
@@ -196,10 +203,8 @@ const useNvlVisualization = ({
           y: event.clientY - 200,
         });
       }
-    
     });
 
-    // Hover interaction
     hoverInteraction.updateCallback('onHover', (element, hitElements, event) => {
       if (!hitElements || ((!hitElements.nodes || hitElements.nodes.length === 0) && 
           (!hitElements.relationships || hitElements.relationships.length === 0))) {
@@ -247,7 +252,6 @@ const useNvlVisualization = ({
       }
     });
 
-    // Cleanup
     return () => {
       panInteraction.destroy();
       boxSelectInteraction.destroy();
@@ -258,7 +262,7 @@ const useNvlVisualization = ({
     };
   }, [
     nvlRef,
-    multiselecte, // Replaced shiftPressed with multiselecte
+    multiselecte,
     setSelectedNodes,
     setContextMenu,
     setnodetoshow,
@@ -267,7 +271,7 @@ const useNvlVisualization = ({
     sethoverEdge,
     isMinimapReady,
     layoutType,
-    setmultiselecte, // Added to dependencies
+    setmultiselecte,
   ]);
 
   const nvlOptions = {
@@ -277,7 +281,7 @@ const useNvlVisualization = ({
       disabledItemFontColor: '#808080',
       selectedBorderColor: 'rgba(71, 39, 134, 0.9)',
       dropShadowColor: 'rgba(85, 83, 174, 0.5)',
-      backgroundColor: 'transparent', // Transparent to show map when active
+      backgroundColor: 'transparent',
     },
     initialZoom: 1,
     layoutOptions: layoutoptions,
@@ -311,7 +315,6 @@ const useNvlVisualization = ({
       })),
     };
 
-    // Calculate map center based on nodes with lat/lng
     const validNodes = nodes.filter((node) => {
       const lat = node.properties?.latitude || node.properties?.lat;
       const lng = node.properties?.longitude || node.properties?.lng;
@@ -327,7 +330,6 @@ const useNvlVisualization = ({
 
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        {/* Leaflet Map Background - Shown only for geospatial layout */}
         {layoutType === 'geospatial' && (
           <MapContainer
             center={mapCenter}
@@ -344,7 +346,6 @@ const useNvlVisualization = ({
             />
           </MapContainer>
         )}
-        {/* NVL Visualization */}
         {(isMinimapReady || !ispath) && (
           <InteractiveNvlWrapper
             ref={nvlRef}
@@ -360,12 +361,11 @@ const useNvlVisualization = ({
               top: 0,
               left: 0,
               zIndex: 0,
-              cursor: multiselecte ? 'crosshair' : 'pointer', // Crosshair when multiselecte is true
-              pointerEvents: layoutType === 'geospatial' ? 'none' : 'auto', // Disable canvas events in geospatial mode
+              cursor: multiselecte ? 'crosshair' : 'pointer',
+              pointerEvents: layoutType === 'geospatial' ? 'none' : 'auto',
             }}
           />
         )}
-        {/* Minimap container */}
         <div
           ref={minimapContainerRef}
           style={{

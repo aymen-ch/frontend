@@ -5,6 +5,8 @@ import {
   FaExpand,
   FaEdit,
   FaTrash,
+  FaPowerOff,
+  FaPlay,
   FaCheck,
   FaTimes,
   FaProjectDiagram,
@@ -364,7 +366,7 @@ const toggleDescription = (index) => {
             </button>
           ) : (
             <button className="menu-item" onClick={() => handleContextMenuAction(t('Activated'))}>
-              <FaCheck style={{ marginRight: '10px', color: '#38b000' }} />
+              <FaPlay style={{ marginRight: '10px', color: '#38b000' }} />
               {t('Activated')}
             </button>
           )}
@@ -384,7 +386,7 @@ const toggleDescription = (index) => {
             {t('Delete Node')}
           </button>
           <button className="menu-item danger" onClick={() => handleContextMenuAction(t('Disable Others'))}>
-            <FaTrash style={{ marginRight: '10px' }} />
+            <FaPowerOff style={{ marginRight: '10px' }} />
             {t('Disable Others')}
           </button>
         </div>

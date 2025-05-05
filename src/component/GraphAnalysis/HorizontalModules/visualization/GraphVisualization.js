@@ -7,12 +7,13 @@ import AddActionWindow from "../../modules/Windows/Actions/PersonProfileWindow/A
 import Analyse_statistique from "../../modules/Windows/Actions/PersonProfileWindow/analyse_statistique";
 import Analyse_BackEnd from "../../modules/Windows/Actions/PersonProfileWindow/Analyse_BackEnd";
 import Community_BackEnd from "../../modules/Windows/Actions/PersonProfileWindow/Community_BackEnd";
-import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaAdn, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa'; // Added FaSpinner
+import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaCog, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa';
 import { MdOutlineTabUnselected } from "react-icons/md";
 import { FaDiaspora } from "react-icons/fa6";
 import { d3ForceLayoutType, ForceDirectedLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../containervisualization/function_container';
 import globalWindowState from '../../utils/globalWindowState';
+import { useTranslation } from 'react-i18next';
 import { 
   buttonStyle, 
   activeButtonStyle, 
@@ -30,6 +31,7 @@ import LayoutControl from '../../modules/layout/Layoutcontrol';
 import ContextMenuRel from '../../modules/contextmenu/contextmenuRelarion';
 import ContextMenucanvas from '../../modules/contextmenu/contextmenucanvas';
 import { useGlobalContext } from '../../GlobalVariables';
+
 const GraphVisualization = React.memo(({
   setEdges,
   edges,
@@ -50,13 +52,13 @@ const GraphVisualization = React.memo(({
   setrelationtoshow,
   setActiveAggregations,
   selectedEdges,
-    setselectedEdges,
-    setSubGrapgTable
+  setselectedEdges,
+  setSubGrapgTable
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [contextMenuRel, setContextMenuRel] = useState(null);
   const [ContextMenucanvass, SetContextMenucanvass] = useState(null);
-
+  const { t } = useTranslation();
 
   const [allPaths, setAllPaths] = useState([]);
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
@@ -70,8 +72,8 @@ const GraphVisualization = React.memo(({
   const [activeWindow, setActiveWindow] = useState(null);
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false); // New loading state
-  const [multiselecte, setmultiselecte] = useState(false); // New loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const [multiselecte, setmultiselecte] = useState(false);
 
   const searchRef = useRef(null);
   const resultsRef = useRef(null);
@@ -81,7 +83,6 @@ const GraphVisualization = React.memo(({
       if (nodes.length === 0) return;
 
       try {
-        // const token = localStorage("");
         const analysisPromises = nodes.map((node) =>
           axios
             .post(
@@ -90,7 +91,6 @@ const GraphVisualization = React.memo(({
               {
                 headers: {
                   'Content-Type': 'application/json',
-                  // Authorization: `Bearer ${token}`,
                 },
               }
             )
@@ -105,8 +105,7 @@ const GraphVisualization = React.memo(({
         );
 
         const analysisResults = await Promise.all(analysisPromises);
-        console.log("analysis  result",analysisResults)
-        // Update nodes with properties_analyse
+        console.log("analysis result", analysisResults);
         setNodes((prevNodes) =>
           prevNodes.map((node) => {
             const result = analysisResults.find((res) => res.id === node.id);
@@ -123,12 +122,8 @@ const GraphVisualization = React.memo(({
       }
     };
     
-    // Fetch analysis and update nodes
-
     // fetchNodeAnalysis();
-
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
-    
   }, [nodes.length]);
 
   useEffect(() => {
@@ -141,16 +136,13 @@ const GraphVisualization = React.memo(({
   }, []);
 
   useEffect(() => {
-    // Only add to history if there are actual changes
     if (nodes.length > 0 || edges.length > 0) {
-      // Create a deep copy of current state
       const newState = {
         nodes: JSON.parse(JSON.stringify(nodes)),
         edges: JSON.parse(JSON.stringify(edges)),
         timestamp: Date.now()
       };
       
-      // If we're not at the latest state, truncate history
       if (historyIndex < graphHistory.length - 1) {
         setGraphHistory(prev => prev.slice(0, historyIndex + 1));
       }
@@ -159,7 +151,6 @@ const GraphVisualization = React.memo(({
       setHistoryIndex(prev => prev + 1);
     }
   }, [nodes, edges]);
-
 
   const handleSearchClick = async () => {
     if (searchtype === "current_graph") {
@@ -184,8 +175,7 @@ const GraphVisualization = React.memo(({
       );
       setSearchResults([]);
     } else {
-     
-      setIsLoading(true); // Start loading
+      setIsLoading(true);
       try {
         const response = await axios.post(BASE_URL + '/recherche/', {
           query: inputValue
@@ -196,20 +186,18 @@ const GraphVisualization = React.memo(({
         });
 
         const limitedResults = response.data.slice(0, 50);
-        console.log(limitedResults)
+        console.log(limitedResults);
         setSearchResults(limitedResults);
-        //console.log(response.data);
       } catch (error) {
         console.error('Error searching database:', error);
-     //   setSearchResults([{ node: { id: 'error', label: 'Error performing search' }, score: 0 }]);
       } finally {
-        setIsLoading(false); // Stop loading
+        setIsLoading(false);
       }
     }
   };
 
   const handleAddNodeToCanvas = (result) => {
-    console.log(result)
+    console.log(result);
     setNodes(prevNodes => {
       const node = createNode(result.id, result.properties.type, result.properties);
       if (prevNodes.some(n => n.id === node.id)) {
@@ -245,16 +233,13 @@ const GraphVisualization = React.memo(({
       const previousIndex = historyIndex - 1;
       const previousState = graphHistory[previousIndex];
       
-      // Restore previous state
       setNodes(previousState.nodes);
       setEdges(previousState.edges);
       setHistoryIndex(previousIndex);
       
-      // Reset selections and view
       setSelectedNodes([]);
       setselectedEdges([]);
       
-      // Fit view to restored graph
       setTimeout(() => {
         nvlRef.current.fit(
           previousState.nodes.map(n => n.id),
@@ -273,25 +258,27 @@ const GraphVisualization = React.memo(({
   };
 
   const handleDelete = () => {
-    setNodes([]);
-    setEdges([]);
-    setSubGrapgTable({ results: [] })
+    const selectedNodeIds = Array.from(selectedNodes);
+    const updatedNodes = nodes.filter(node => !selectedNodeIds.includes(node.id));
+    const updatedEdges = edges.filter(
+      edge => !selectedNodeIds.includes(edge.source) && !selectedNodeIds.includes(edge.target)
+    );
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
+    setSubGrapgTable({ results: [] });
+    setSelectedNodes(new Set());
+    setselectedEdges(new Set());
   };
 
-  const handlewebgl = () => {
-    if (render === 'WebGL') {
-      nvlRef.current.setRenderer("canvas");
-      setRenderer("canvas");
-    } else {
-      nvlRef.current.setRenderer("webgl");
-      setRenderer("WebGL");
-    }
+  const handlewebgl = (e) => {
+    const selectedRenderer = e.target.value;
+    setRenderer(selectedRenderer);
+    nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
   };
 
   const hanldemultiselecte = () => {
-    setmultiselecte(!multiselecte)
+    setmultiselecte(!multiselecte);
   };
-
 
   const toggleSettingsPanel = () => {
     setShowSettings(!showSettings);
@@ -302,21 +289,19 @@ const GraphVisualization = React.memo(({
     setActiveWindow(null);
   };
 
-
-
   return (
     <div style={containerStyle(isFullscreen)}>
       <div ref={searchRef} style={{ ...searchStyle, display: 'flex', alignItems: 'center' }}>
         <FaSearch 
-          style={{ marginRight: '5px', cursor: 'pointer',width:'200px' }} 
+          style={{ marginRight: '5px', cursor: 'pointer', width: '200px' }} 
           onClick={handleSearchClick}
         />
         <input
           type="text"
           value={inputValue}
-          onChange={handleInputChange}
-          placeholder="Search nodes by any property..."
-          style={{ border: 'none', outline: 'none', background: 'transparent', width: '200px', marginRight: '5px' }}
+          onChange={handleInputChange}  
+          placeholder={t("Search nodes by any property")}
+          style={{ border: 'none', outline: 'none', background: 'transparent', width: '500px', marginRight: '5px' }}
         />
         {isLoading ? (
           <FaSpinner
@@ -324,7 +309,7 @@ const GraphVisualization = React.memo(({
           />
         ) : inputValue && (
           <FaTimes
-            style={{ marginRight: '5px', cursor: 'pointer', color: '#666',width: '200px' }}
+            style={{ marginRight: '5px', cursor: 'pointer', color: '#666', width: '200px' }}
             onClick={handleClearSearch}
             title="Clear search"
           />
@@ -334,8 +319,8 @@ const GraphVisualization = React.memo(({
           onChange={handleSearchTypeChange}
           style={searchSelectStyle}
         >
-          <option value="current_graph">Graphe Actuel</option>
-          <option value="database">Base de données</option>
+          <option value="current_graph">{t('Current Graph')}</option>
+          <option value="database">{t('Database')}</option>
         </select>
       </div>
 
@@ -372,9 +357,6 @@ const GraphVisualization = React.memo(({
                   borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
                   display: 'flex',
                   alignItems: 'center',
-                  '&:hover': {
-                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
-                  }
                 }}
                 onClick={() => handleAddNodeToCanvas(result)}
               >
@@ -414,7 +396,7 @@ const GraphVisualization = React.memo(({
           })}
         </div>
       )}
-     <LayoutControl 
+      <LayoutControl 
         nvlRef={nvlRef}
         nodes={nodes}
         edges={edges}
@@ -422,12 +404,10 @@ const GraphVisualization = React.memo(({
         setLayoutType={setLayoutType} 
       />
 
-
- 
-<button
+      <button
         style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '380px' }}
         onClick={handleSave}
-        title="Save"
+        title={t('Save')}
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
       >
@@ -437,19 +417,17 @@ const GraphVisualization = React.memo(({
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '420px' }}
         onClick={toggleFullscreen}
-        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        title={isFullscreen ? t("Exit Fullscreen") : t("Enter Fullscreen")}
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
       >
         {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
       </button>
 
-      
-
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '460px' }}
         onClick={handleBack}
-        title="Back"
+        title={t('Back')}
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
       >
@@ -459,41 +437,55 @@ const GraphVisualization = React.memo(({
       <button
         style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '500px' }}
         onClick={handleDelete}
-        title="Global View"
+        title={t('Delete Selected')}
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
         onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
       >
         <FaTrash size={16} />
       </button>
 
-      <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '540px' }}
-        onClick={handlewebgl}
-        title="Toggle Renderer"
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
+      {/* Renderer Dropdown */}
+      <select
+        value={render}
+        onChange={handlewebgl}
+        style={{
+          ...searchSelectStyle,
+          position: 'absolute',
+          top: '10px',
+          left: '580px',
+          width: '100px',
+          height: '35px',
+          padding: '0 8px',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          border: '1px solid rgba(0, 0, 0, 0.1)',
+          borderRadius: '4px',
+          zIndex: 1001,
+          fontSize: '14px',
+          cursor: 'pointer',
+        }}
+        title={t('Select Renderer')}
       >
-        <FaAdn size={16} />
+        <option value="canvas">{t('Canvas')}</option>
+        <option value="WebGL">{t('WebGL')}</option>
+      </select>
 
-        
-      </button>
       <button
-  style={{
-    ...buttonStyle,
-    position: 'absolute',
-    top: '10px',
-    left: '580px',
-    backgroundColor: multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)', // Blue when multiselecte is true
-    cursor: multiselecte ? 'crosshair' : 'pointer', // Crosshair when multiselecte is true
-  }}
-  onClick={hanldemultiselecte}
-  title="multi selecte"
-  onMouseOver={(e) => e.currentTarget.style.backgroundColor = multiselecte ? 'darkblue' : 'rgba(255, 255, 255, 0.9)'}
-  onMouseOut={(e) => e.currentTarget.style.backgroundColor = multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)'}
->
-  <MdOutlineTabUnselected size={16} />
-</button>
-
+        style={{
+          ...buttonStyle,
+          position: 'absolute',
+          top: '10px',
+          left: '540px',
+         
+          backgroundColor: multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)',
+          cursor: multiselecte ? 'crosshair' : 'pointer',
+        }}
+        onClick={hanldemultiselecte}
+        title={t('Multi select')}
+        onMouseOver={(e) => e.currentTarget.style.backgroundColor = multiselecte ? 'darkblue' : 'rgba(255, 255, 255, 0.9)'}
+        onMouseOut={(e) => e.currentTarget.style.backgroundColor = multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)'}
+      >
+        <MdOutlineTabUnselected size={16} />
+      </button>
 
       <GraphCanvas
         nvlRef={nvlRef}
@@ -532,11 +524,11 @@ const GraphVisualization = React.memo(({
           setIsBoxPath={setIsBoxPath}
           depth={depth}
           isPathFindingStarted={isPathFindingStarted}
-        setActiveAggregations={setActiveAggregations}
+          setActiveAggregations={setActiveAggregations}
         />
       )}
 
-{contextMenuRel && contextMenuRel.visible && (
+      {contextMenuRel && contextMenuRel.visible && (
         <ContextMenuRel
           contextMenuRel={contextMenuRel}
           setContextMenuRel={setContextMenuRel}
@@ -545,14 +537,14 @@ const GraphVisualization = React.memo(({
         />
       )}
 
-{ContextMenucanvass && ContextMenucanvass.visible && (
+      {ContextMenucanvass && ContextMenucanvass.visible && (
         <ContextMenucanvas
-        ContextMenucanvas={ContextMenucanvass}
+          ContextMenucanvas={ContextMenucanvass}
           SetContextMenucanvas={SetContextMenucanvass}
           setNodes={setNodes}
           setEdges={setEdges}
           selectedNodes={selectedNodes}
-          setSelectedNodes = {setSelectedNodes}
+          setSelectedNodes={setSelectedNodes}
           selectedEdges={selectedEdges}
           setselectedEdges={setselectedEdges}
         />
@@ -568,12 +560,11 @@ const GraphVisualization = React.memo(({
       {activeWindow === 'analyse_statistique' && (
         <Analyse_statistique data={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
-         {activeWindow === 'Analyse_BackEnd' && (
+      {activeWindow === 'Analyse_BackEnd' && (
         <Analyse_BackEnd selectedGroup={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
 
       {activeWindow === 'Community_BackEnd' && (
-         
         <Community_BackEnd selectedGroup={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
     </div>
