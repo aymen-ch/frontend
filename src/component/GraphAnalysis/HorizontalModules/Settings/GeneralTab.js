@@ -5,6 +5,7 @@ import { Card, Table, Spinner, Alert } from 'react-bootstrap';
 import { useDatabase } from './DatabaseContext';
 import { useTranslation } from 'react-i18next'; // Importing the translation hook
 
+
 const GeneralTab = () => {
   const { t } = useTranslation(); // Initialize the translation hook
   const { currentDb, databases } = useDatabase();

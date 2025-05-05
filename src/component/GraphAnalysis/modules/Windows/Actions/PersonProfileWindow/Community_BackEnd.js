@@ -157,11 +157,11 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
         </div>
       </Card.Header>
       <Card.Body className="window-content p-4 bg-light">
-        <h5 className="mb-3 text-primary">{t('Analysis Settings')}</h5>
+        <h5 className="mb-3 text-primary">{t('communityBackend.analysisSettings')}</h5>
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-bold">Community Algorithm</Form.Label>
+              <Form.Label className="fw-bold">{t('communityBackend.communityAlgorithm')}</Form.Label>
               <Form.Select
                 value={selectedCentrality}
                 onChange={handleCentralityChange}
@@ -231,7 +231,7 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
                   className="me-3"
                 />
                 <span>
-                  {item.name} <Badge bg="secondary" className="ms-2">Path: {item.path.join(' → ')}</Badge>
+                  {item.name} <Badge bg="secondary" className="ms-2">{t('communityBackend.path')}: {item.path.join(' → ')}</Badge>
                 </span>
               </ListGroup.Item>
             ))}
@@ -277,7 +277,6 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
       ) : (
         <Draggable nodeRef={nodeRef} handle=".window-header" bounds="parent">
           <div ref={nodeRef}>{windowContent}</div>
-          
         </Draggable>
       )}
     </div>

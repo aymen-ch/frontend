@@ -3,7 +3,8 @@ import axios from 'axios';
 import { getNodeIcon, getNodeColor, parseAggregationResponse, parseAggregationResponse_advanced } from '../../utils/Parser';
 import { BASE_URL } from '../../utils/Urls';
 import { handleAggregation, getIntermediateTypes } from './aggregationUtils';
-import virtualRelationsData from './aggregations.json'; // Adjust path according to your project structure
+import virtualRelationsData from './aggregations.json';
+import { useTranslation } from 'react-i18next';
 
 const Aggregation = ({
   setEdges,
@@ -15,16 +16,17 @@ const Aggregation = ({
   activeAggregations,
   setActiveAggregations,
 }) => {
-  const [virtualRelations,setVirtualRelations] = useState(virtualRelationsData); // Use imported JSON data
+  const [virtualRelations, setVirtualRelations] = useState(virtualRelationsData);
   const [selectedAffaires, setSelectedAffaires] = useState([]);
+  const { t } = useTranslation();
 
-   useEffect(() => {
-      const storedRelations = localStorage.getItem('virtualRelations');
-      if (storedRelations) {
-        setVirtualRelations(JSON.parse(storedRelations));
-      }
-    }, []);
-  
+  useEffect(() => {
+    const storedRelations = localStorage.getItem('virtualRelations');
+    if (storedRelations) {
+      setVirtualRelations(JSON.parse(storedRelations));
+    }
+  }, []);
+
   useEffect(() => {
     const affids = nodes
       .filter((node) => node.group === "Affaire")
@@ -132,7 +134,7 @@ const Aggregation = ({
 
   return (
     <div className="container-fluid p-3 bg-white shadow-sm rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Aggregation</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('aggregation.title')}</h3>
 
       <div className="d-flex flex-wrap gap-2 mb-4">
         {virtualRelations.map((relation) => (
@@ -149,7 +151,7 @@ const Aggregation = ({
               {relation.name}
             </label>
             <br />
-            Result: {renderAggregationPath(relation)}
+            {t('aggregation.result')}: {renderAggregationPath(relation)}
           </div>
         ))}
       </div>

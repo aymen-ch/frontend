@@ -33,23 +33,27 @@ const Dashboard = () => {
   const [affaireCountsByWilaya, setAffaireCountsByWilaya] = useState({});
   const [affaireCountsByDay, setAffaireCountsByDay] = useState({});
   const [topUnites, setTopUnites] = useState([]);
-  
+  const [relationshipTypeCounts, setRelationshipTypeCounts] = useState({});
+
   // Loading states
   const [loadingStats, setLoadingStats] = useState(false);
   const [loadingNodeTypes, setLoadingNodeTypes] = useState(false);
   const [loadingWilaya, setLoadingWilaya] = useState(false);
   const [loadingDay, setLoadingDay] = useState(false);
   const [loadingTopUnites, setLoadingTopUnites] = useState(false);
-  
+  const [loadingRelationshipTypes, setLoadingRelationshipTypes] = useState(false);
+
   // Error states
   const [errorStats, setErrorStats] = useState('');
   const [errorNodeTypes, setErrorNodeTypes] = useState('');
   const [errorWilaya, setErrorWilaya] = useState('');
   const [errorDay, setErrorDay] = useState('');
   const [errorTopUnites, setErrorTopUnites] = useState('');
+  const [errorRelationshipTypes, setErrorRelationshipTypes] = useState('');
 
   const token = localStorage.getItem('authToken');
-  const{t} = useTranslation()
+  const { t } = useTranslation();
+
   // Format data for charts
   const formatWilayaData = () => {
     return Object.entries(affaireCountsByWilaya).map(([wilaya, count]) => ({
@@ -68,12 +72,13 @@ const Dashboard = () => {
       .sort((a, b) => a.parsedDate - b.parsedDate) // Sort by parsed date
       .map(({ date, count }) => ({ date, count })); // Return only date and count
   };
-  
+
   // Helper function to parse DD-MM-YYYY format
   const parseDate = (dateStr) => {
     const [day, month, year] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day); // month is 0-based in JS Date
   };
+
   // Fetch data functions
   const fetchDatabaseStats = async () => {
     setLoadingStats(true);
@@ -109,8 +114,6 @@ const Dashboard = () => {
       const response = await axios.get(`${BASE_URL}/DashBoard_get_affaire_counts_by_wilaya/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      console.log('response' , response)
       setAffaireCountsByWilaya(response.data.affaire_counts_by_wilaya);
     } catch (err) {
       setErrorWilaya(err.response?.data?.error || t('Failed to fetch affaire counts by wilaya'));
@@ -147,6 +150,20 @@ const Dashboard = () => {
     }
   };
 
+  const fetchRelationshipTypeCounts = async () => {
+    setLoadingRelationshipTypes(true);
+    try {
+      const response = await axios.get(`${BASE_URL}/DashBoard_get_relationship_type_counts/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRelationshipTypeCounts(response.data.relationship_type_counts);
+    } catch (err) {
+      setErrorRelationshipTypes(err.response?.data?.error || t('Failed to fetch relationship type counts'));
+    } finally {
+      setLoadingRelationshipTypes(false);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchDatabaseStats();
@@ -154,6 +171,7 @@ const Dashboard = () => {
       fetchAffaireCountsByWilaya();
       fetchAffaireCountsByDay();
       fetchTopUniteByAffaireCount();
+      fetchRelationshipTypeCounts();
     }
   }, [token]);
 
@@ -163,9 +181,9 @@ const Dashboard = () => {
         overflowY: 'auto',
         padding: '20px'
       }}>
-        <h2 className="my-4" style={{ position: 'sticky', top: 0, background: 'white', zIndex: 100, padding: '10px 0' }}>
-          {t('Database Dashboard')}
-        </h2>
+      <h2 className="my-4" style={{ position: 'sticky', top: 0, background: 'white', zIndex: 100, padding: '10px 0' }}>
+        {t('Database Dashboard')}
+      </h2>
       
       {/* Database Stats Card */}
       <Row className="mb-4">
@@ -218,114 +236,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Charts Row */}
-      <Row className="mb-4">
-        {/* Affaire Counts by Wilaya - Bar Chart */}
-        <Col md={6}>
-          <Card>
-            <Card.Header>{t('Affaire Counts by Wilaya')}</Card.Header>
-            <Card.Body>
-              {loadingWilaya ? (
-                <Spinner animation="border" />
-              ) : errorWilaya ? (
-                <Alert variant="danger">{errorWilaya}</Alert>
-              ) : (
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart
-                    data={formatWilayaData()}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill="#8884d8" name={t('Affaire Count')} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Affaire Counts by Day - Line Chart */}
-    {/* Affaire Counts by Day - Line Chart */}
-
-<Col md={6}>
-  <Card>
-    <Card.Header>{t('Affaire Counts by Day')}</Card.Header>
-    <Card.Body>
-      {loadingDay ? (
-        <Spinner animation="border" />
-      ) : errorDay ? (
-        <Alert variant="danger">{errorDay}</Alert>
-      ) : (
-        <div style={{ width: '100%', height: 500 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={formatDayData()}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                angle={-45} 
-                textAnchor="end" 
-                height={70}
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis 
-                label={{ 
-                  value: t('Count'), 
-                  angle: -90, 
-                  position: 'insideLeft',
-                  fontSize: 14
-                }}
-              />
-              <Tooltip 
-                contentStyle={{
-                  fontSize: 14,
-                  padding: 10,
-                  backgroundColor: '#fff',
-                  border: '1px solid #ddd'
-                }}
-              />
-              <Legend 
-                wrapperStyle={{
-                  paddingTop: 20,
-                  fontSize: 14
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="count" 
-                stroke="#82ca9d" 
-                name={t('Affaire Count')} 
-                strokeWidth={2}
-                activeDot={{ r: 8 }} 
-              />
-              <Brush 
-                dataKey="date"
-                height={30}
-                stroke="#8884d8"
-                travellerWidth={10}
-                startIndex={0}
-                endIndex={Math.min(30, formatDayData().length - 1)} // Show first 30 days by default
-                tickFormatter={(date) => {
-                  // Format date for brush ticks (show only day/month)
-                  const [day, month] = date.split('-');
-                  return `${day}/${month}`;
-                }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-    </Card.Body>
-  </Card>
-</Col>
-      </Row>
-
+  
       {/* Additional Data Sections */}
       <Row className="mb-4">
         {/* Node Type Counts */}
@@ -359,8 +270,148 @@ const Dashboard = () => {
           </Card>
         </Col>
 
-        {/* Top Unites by Affaire Count */}
+        {/* Relationship Type Counts */}
         <Col md={6}>
+          <Card>
+            <Card.Header>{t('Relationship Type Counts')}</Card.Header>
+            <Card.Body>
+              {loadingRelationshipTypes ? (
+                <Spinner animation="border" />
+              ) : errorRelationshipTypes ? (
+                <Alert variant="danger">{errorRelationshipTypes}</Alert>
+              ) : (
+                <Table striped bordered hover>
+                  <thead>
+                    <tr>
+                      <th>{t('Relationship Type')}</th>
+                      <th>{t('Count')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(relationshipTypeCounts).map(([type, count]) => (
+                      <tr key={type}>
+                        <td>{type}</td>
+                        <td>{count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+    {/* Charts Row */}
+    <Row className="mb-4">
+        {/* Affaire Counts by Wilaya - Bar Chart */}
+        <Col md={6}>
+          <Card>
+            <Card.Header>{t('Affaire Counts by Wilaya')}</Card.Header>
+            <Card.Body>
+              {loadingWilaya ? (
+                <Spinner animation="border" />
+              ) : errorWilaya ? (
+                <Alert variant="danger">{errorWilaya}</Alert>
+              )  : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart
+                    data={formatWilayaData()}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" fill="#8884d8" name={t('Affaire Count')} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Affaire Counts by Day - Line Chart */}
+        <Col md={6}>
+          <Card>
+            <Card.Header>{t('Affaire Counts by Day')}</Card.Header>
+            <Card.Body>
+              {loadingDay ? (
+                <Spinner animation="border" />
+              ) : errorDay ? (
+                <Alert variant="danger">{errorDay}</Alert>
+              ) : (
+                <div style={{ width: '100%', height: 500 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={formatDayData()}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        angle={-45} 
+                        textAnchor="end" 
+                        height={70}
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis 
+                        label={{ 
+                          value: t('Count'), 
+                          angle: -90, 
+                          position: 'insideLeft',
+                          fontSize: 14
+                        }}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          fontSize: 14,
+                          padding: 10,
+                          backgroundColor: '#fff',
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{
+                          paddingTop: 20,
+                          fontSize: 14
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="count" 
+                        stroke="#82ca9d" 
+                        name={t('Affaire Count')} 
+                        strokeWidth={2}
+                        activeDot={{ r: 8 }} 
+                      />
+                      <Brush 
+                        dataKey="date"
+                        height={30}
+                        stroke="#8884d8"
+                        travellerWidth={10}
+                        startIndex={0}
+                        endIndex={Math.min(30, formatDayData().length - 1)} // Show first 30 days by default
+                        tickFormatter={(date) => {
+                          // Format date for brush ticks (show only day/month)
+                          const [day, month] = date.split('-');
+                          return `${day}/${month}`;
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+
+      {/* Top Unites by Affaire Count */}
+      <Row className="mb-4">
+        <Col md={12}>
           <Card>
             <Card.Header>{t('Top 10 Unites by Affaire Count')}</Card.Header>
             <Card.Body>
