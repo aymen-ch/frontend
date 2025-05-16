@@ -211,6 +211,7 @@ const SchemaVisualizer = () => {
           { relType: 'Appel_telephone', startLabel: 'Personne', endLabel: 'Affaire' },
           { relType: 'appartient', startLabel: 'Commune', endLabel: 'Wilaya' },
           { relType: 'appartient', startLabel: 'Daira', endLabel: 'Daira' },
+          { relType: 'DAB', startLabel: 'DAB', endLabel: 'DAB' },
         ];
 
         const shouldSkip = unwantedRelationships.some(
