@@ -277,7 +277,7 @@ const ContextMenu = ({
       setEdges((prev) => prev.filter((edge) => !selectedNodeIds.has(edge.from) && !selectedNodeIds.has(edge.to)));
       setSelectedNodes(new Set());
 
-    } else if (action === 'View Neighborhood' || action === t('Expand Specific Relation')) {
+    } else if (action === t('View Neighborhood') || action === t('Expand Specific Relation')) {
 
       handleNodeExpansion(contextMenu.node, relationType, setNodes, setEdges, expandLimit, expandDirection);
     } else if (action === t('Select Node')) {

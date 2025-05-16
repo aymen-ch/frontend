@@ -8,8 +8,10 @@ import { arabicQuestions } from './tamplate_question';
 import { convertNeo4jToGraph } from './chat/graphconvertor';
 import neo4j from 'neo4j-driver';
 import { useGlobalContext } from '../../GlobalVariables';
+import { useTranslation } from 'react-i18next'; // Importing the translation hook
 
-const Template = ({ nodes, setNodes, edges, setEdges } ) => {
+const Template = ({ nodes, setNodes, edges, setEdges }) => {
+  const { t } = useTranslation(); // Initialize the translation hook
   const [selectedQuestion, setSelectedQuestion] = useState('');
   const [queryParameters, setQueryParameters] = useState({});
   const [queryResult, setQueryResult] = useState('');
@@ -28,10 +30,9 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
   });
   const [templateError, setTemplateError] = useState('');
   const [newParam, setNewParam] = useState({ name: '', description: '', type: 'string' });
-  const [detectedParams, setDetectedParams] = useState([]); // Store detected parameters
+  const [detectedParams, setDetectedParams] = useState([]);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Effect to clear success message after 3 seconds
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(''), 3000);
@@ -39,7 +40,6 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
     }
   }, [successMessage]);
 
-  // Effect to save customQuestions to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('customQuestions', JSON.stringify(customQuestions));
   }, [customQuestions]);
@@ -77,35 +77,33 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
       );
       try {
         const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
-        console.log(newNodes,newEdges)
+        console.log(newNodes, newEdges);
         if (newNodes.length > 0 || newEdges.length > 0) {
           setNodes([...nodes, ...newNodes]);
           setEdges([...edges, ...newEdges]);
-          setQueryResult('تم تحديث الرسم البياني بالعقد والحواف الجديدة.');
+          setQueryResult(t('Graph updated'));
         } else {
-          setQueryResult('النتيجة فارغة.');
-          throw new Error('النتيجة فارغة');
+          setQueryResult(t('Empty result'));
+          throw new Error(t('Empty result'));
         }
       } catch (graphError) {
-        setQueryResult(
-          'لا يمكن تحويل نتيجة الاستعلام إلى رسم بياني. قد لا يُرجع الاستعلام العُقد والعلاقات. يرجى تعديل استعلام Cypher لإرجاع بيانات متوافقة مع الرسم البياني (العُقد والعلاقات).'
-        );
+        setQueryResult(t('Invalid query result'));
       } finally {
         await driver.close();
       }
     } catch (error) {
-      setError(`خطأ في تنفيذ الاستعلام: ${error.message}`);
+      setError(`${t('Query execution error')}: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const formatQueryResult = (result) => {
-    if (!result || result.length === 0) return 'لا توجد بيانات.';
+    if (!result || result.length === 0) return t('No data');
     return result
       .map((item, index) => {
         const properties = Object.entries(item).map(([key, value]) => `${key}: ${value}`).join('\n');
-        return `النتيجة ${index + 1}:\n${properties}`;
+        return `${t('Query Result')} ${index + 1}:\n${properties}`;
       })
       .join('\n\n');
   };
@@ -122,17 +120,13 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
 
   const handleQueryChange = (value) => {
     setNewTemplate((prev) => ({ ...prev, query: value }));
-    // Detect parameters from the query
     detectQueryParameters(value);
   };
 
   const detectQueryParameters = (query) => {
-    // Match parameters like $paramName in the query
     const paramRegex = /\$([a-zA-Z][a-zA-Z0-9]*)/g;
     const detected = [...new Set(query.match(paramRegex)?.map((p) => p.slice(1)) || [])];
     setDetectedParams(detected);
-
-    // If no parameter is currently being edited, set the first detected parameter
     if (!newParam.name && detected.length > 0) {
       setNewParam((prev) => ({ ...prev, name: detected[0] }));
     }
@@ -152,10 +146,9 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
       }));
       setNewParam({ name: detectedParams.find((p) => p !== name) || '', description: '', type: 'string' });
       setTemplateError('');
-      // Update detectedParams to remove the added parameter
       setDetectedParams((prev) => prev.filter((p) => p !== name));
     } else {
-      setTemplateError('يرجى إدخل اسم ووصف ونوع صالح للمتغير!');
+      setTemplateError(t('Invalid parameter'));
     }
   };
 
@@ -165,7 +158,6 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
       const { [paramName]: __, ...remainingTypes } = prev.parameterTypes;
       return { ...prev, parameters: remainingParams, parameterTypes: remainingTypes };
     });
-    // Re-add the removed parameter to detectedParams if it was detected
     if (detectedParams.includes(paramName) || newTemplate.query.includes(`$${paramName}`)) {
       setDetectedParams((prev) => [...new Set([...prev, paramName])]);
     }
@@ -175,9 +167,9 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
     const randomParams = {};
     Object.entries(parameterTypes).forEach(([paramName, type]) => {
       if (type === 'int') {
-        randomParams[paramName] = Math.floor(Math.random() * 100); // Random integer between 0 and 99
+        randomParams[paramName] = Math.floor(Math.random() * 100);
       } else {
-        randomParams[paramName] = `test_${paramName}_${Math.random().toString(36).substring(2, 8)}`; // Random string
+        randomParams[paramName] = `test_${paramName}_${Math.random().toString(36).substring(2, 8)}`;
       }
     });
     return randomParams;
@@ -192,11 +184,11 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
       });
       const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
       if (newNodes.length === 0 && newEdges.length === 0) {
-        throw new Error('الاستعلام لا يُرجع عُقد أو علاقات.');
+        throw new Error(t('Empty result'));
       }
       return true;
     } catch (error) {
-      throw new Error(`فشل التحقق من الاستعلام: ${error.message}`);
+      throw new Error(`${t('Query verification failed')}: ${error.message}`);
     } finally {
       await driver.close();
     }
@@ -206,26 +198,25 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
     const requiredFields = ['question', 'query', 'parameters', 'parameterTypes'];
     for (const field of requiredFields) {
       if (!(field in userTemplate) || !userTemplate[field]) {
-        throw new Error(`الحقل المطلوب مفقود أو فارغ: ${field}`);
+        throw new Error(`${t('Missing field')}: ${field}`);
       }
     }
     const paramKeys = Object.keys(userTemplate.parameters);
     const typeKeys = Object.keys(userTemplate.parameterTypes);
     if (paramKeys.length !== typeKeys.length || !paramKeys.every((key) => typeKeys.includes(key))) {
-      throw new Error('عدم تطابق بين المتغيرات وأنواعها');
+      throw new Error(t('Parameter mismatch'));
     }
     const validTypes = ['string', 'int'];
     for (const type of Object.values(userTemplate.parameterTypes)) {
       if (!validTypes.includes(type)) {
-        throw new Error(`نوع متغير غير صالح: ${type}. يجب أن يكون string أو int`);
+        throw new Error(`${t('Invalid parameter type')}: ${type}. ${t('Must be string or int')}`);
       }
     }
     const query = userTemplate.query.toLowerCase();
     if (!query.includes('match') || !query.includes('return')) {
-      throw new Error('استعلام Cypher غير صالح: يجب أن يحتوي على MATCH و RETURN');
+      throw new Error(t('Invalid query'));
     }
 
-    // Verify query by executing with random parameters
     await verifyQuery(userTemplate.query, userTemplate.parameters, userTemplate.parameterTypes);
 
     const newId = Math.max(...arabicQuestions.map((q) => q.id), ...customQuestions.map((q) => q.id), 0) + 1;
@@ -234,43 +225,43 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
     setNewTemplate({ question: '', query: '', parameters: {}, parameterTypes: {} });
     setShowNewTemplateForm(false);
     setTemplateError('');
-    setSuccessMessage('تم إضافة القالب بنجاح!');
+    setSuccessMessage(t('Template saved successfully'));
   };
 
   const saveNewTemplate = async () => {
     try {
       await addAbstractQuestionTemplate(newTemplate);
     } catch (error) {
-      setTemplateError(`خطأ في حفظ القالب: ${error.message}`);
+      setTemplateError(`${t('Error saving template')}: ${error.message}`);
     }
   };
 
   return (
     <div className="template-container">
-      <h3 className="header">إدارة القوالب والاستعلامات</h3>
-      <p className="subheader">اختر سؤالًا مسبقًا لمساعدتك في استعلام قاعدة البيانات:</p>
+      <h3 className="header">{t('Manage Templates and Queries')}</h3>
+      <p className="subheader">{t('Select a predefined question to query the database')}</p>
 
       <select onChange={handleQuestionSelect} className="question-select">
-        <option value="">اختر سؤالًا...</option>
+        <option value="">{t('Choose a question')}</option>
         {[...arabicQuestions, ...customQuestions].map((q) => (
           <option key={q.id} value={q.id}>{q.question}</option>
         ))}
       </select>
 
       <button className="add-template-button" onClick={() => setShowNewTemplateForm(true)}>
-        إضافة قالب جديد
+        {t('Add New Template')}
       </button>
 
       {showNewTemplateForm && (
         <div className="modal-overlay">
           <div className="new-template-modal">
-            <h5>إضافة قالب جديد</h5>
+            <h5>{t('Add New Template Title')}</h5>
             <input
               type="text"
               name="question"
               value={newTemplate.question}
               onChange={handleNewTemplateChange}
-              placeholder="أدخل السؤال (بالعربية)"
+              placeholder={t('Enter question in Arabic')}
               className="new-template-input"
             />
             <AceEditor
@@ -295,12 +286,12 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
                 borderRadius: '8px',
                 marginBottom: '15px',
               }}
-              placeholder="أدخل استعلام Cypher"
+              placeholder={t('Enter Cypher query')}
             />
-            <h6>المتغيرات</h6>
+            <h6>{t('Parameters')}</h6>
             {detectedParams.length > 0 && (
               <div className="detected-params">
-                <p>المتغيرات المكتشفة:</p>
+                <p>{t('Detected Parameters')}:</p>
                 {detectedParams.map((param) => (
                   <button
                     key={param}
@@ -318,35 +309,35 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
                 name="name"
                 value={newParam.name}
                 onChange={handleNewParamChange}
-                placeholder="اسم المتغير (بالإنجليزية)"
+                placeholder={t('Parameter Name')}
               />
               <input
                 type="text"
                 name="description"
                 value={newParam.description}
                 onChange={handleNewParamChange}
-                placeholder="وصف المتغير (بالعربية)"
+                placeholder={t('Parameter Description')}
               />
               <select name="type" value={newParam.type} onChange={handleNewParamChange}>
                 <option value="string">String</option>
                 <option value="int">Int</option>
               </select>
               <button className="add-parameter-button" onClick={addNewParameter}>
-                إضافة
+                {t('Add')}
               </button>
             </div>
             <div className="parameter-list">
               {Object.entries(newTemplate.parameters).map(([paramName, paramDescription]) => (
                 <div key={paramName} className="parameter-item">
                   <span>{paramDescription} ({paramName}): {newTemplate.parameterTypes[paramName]}</span>
-                  <button onClick={() => removeParameter(paramName)}>حذف</button>
+                  <button onClick={() => removeParameter(paramName)}>{t('Remove')}</button>
                 </div>
               ))}
             </div>
             {templateError && <p className="error-text">{templateError}</p>}
             <div className="modal-buttons">
-              <button className="save-button" onClick={saveNewTemplate}>حفظ القالب</button>
-              <button className="cancel-button" onClick={() => setShowNewTemplateForm(false)}>إلغاء</button>
+              <button className="save-button" onClick={saveNewTemplate}>{t('Save Template')}</button>
+              <button className="cancel-button" onClick={() => setShowNewTemplateForm(false)}>{t('Cancel')}</button>
             </div>
           </div>
         </div>
@@ -360,7 +351,7 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
 
       {selectedQuestion && (
         <div className="query-section">
-          <h5 className="section-title">السؤال المحدد:</h5>
+          <h5 className="section-title">{t('Selected Question')}:</h5>
           <p className="selected-question">{selectedQuestion.question}</p>
           {Object.entries(selectedQuestion.parameters).map(([paramName, paramDescription]) => (
             <div key={paramName} className="parameter-input">
@@ -369,27 +360,27 @@ const Template = ({ nodes, setNodes, edges, setEdges } ) => {
                 type="text"
                 value={queryParameters[paramName] || ''}
                 onChange={(e) => handleParameterChange(e, paramName)}
-                placeholder={`أدخل ${paramDescription}`}
+                placeholder={`${t('Enter')} ${paramDescription}`}
                 className="parameter-field"
               />
             </div>
           ))}
           <button className="execute-button" onClick={executeQuery} disabled={isLoading}>
-            {isLoading ? 'جاري التنفيذ...' : 'تنفيذ الاستعلام'}
+            {isLoading ? t('Executing') : t('Execute Query')}
           </button>
         </div>
       )}
 
       {error && (
         <div className="error-message">
-          <h5 className="error-title">خطأ:</h5>
+          <h5 className="error-title">{t('Error')}:</h5>
           <p className="error-text">{error}</p>
         </div>
       )}
 
       {queryResult && (
         <div className="result-section">
-          <h5 className="section-title">نتيجة الاستعلام:</h5>
+          <h5 className="section-title">{t('Query Result')}:</h5>
           <pre className="result-pre">{queryResult}</pre>
         </div>
       )}
