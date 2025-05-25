@@ -393,7 +393,6 @@
       "Missing field": "Champ requis manquant ou vide",
       "Parameter mismatch": "Incohérence entre les paramètres et leurs types",
       "Invalid parameter type": "Type de paramètre non valide",
-      "Query verification failed": "Échec de la vérification de la requête"
-  "WebGL": "WebGL",
-  "Weight Property": "Propriété de poids"
+      "Query verification failed": "Échec de la vérification de la requête",
+      "Weight Property": "Propriété de poids"
 }
