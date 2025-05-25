@@ -13,7 +13,7 @@ import {
 import Draggable from 'react-draggable';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
-import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+import { BASE_URL } from '../../../../utils/Urls';
 import { useTranslation } from 'react-i18next';
 
 const Community_BackEnd = ({ selectedGroup, onClose }) => {
@@ -50,7 +50,7 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
       setError(null);
 
       try {
-        const response = await axios.get(`${BASE_URL_Backend}/get_relationship_types_for_node_type/`, {
+        const response = await axios.get(`${BASE_URL}/get_relationship_types_for_node_type/`, {
           params: {
             nodeType: selectedGroup,
           },

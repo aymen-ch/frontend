@@ -29,9 +29,9 @@ const Sidebar = () => {
         <div style={{ display: 'flex', flexDirection: 'column', height: '70%' }}>
           <CDBSidebarContent className="sidebar-content" style={{ flex: 1, overflowY: 'auto' }}>
             <CDBSidebarMenu>
-              <NavLink exact="true" to="/home" activeclassname="activeClicked">
+              {/* <NavLink exact="true" to="/home" activeclassname="activeClicked">
                 <CDBSidebarMenuItem icon="columns">Moteur de recherche</CDBSidebarMenuItem>
-              </NavLink>
+              </NavLink> */}
               <NavLink exact="true" to="/home/upload" activeclassname="activeClicked">
                 <CDBSidebarMenuItem icon="table">Upload Files</CDBSidebarMenuItem>
               </NavLink>
@@ -51,7 +51,7 @@ const Sidebar = () => {
           </CDBSidebarContent>
 
           <CDBSidebarFooter style={{ padding: '20px', textAlign: 'center' }}>
-            <button
+            {/* <button
               onClick={handleLogout}
               style={{
                 backgroundColor: 'rgb(255, 76, 76)',
@@ -64,7 +64,7 @@ const Sidebar = () => {
               }}
             >
               Déconnexion
-            </button>
+            </button> */}
           </CDBSidebarFooter>
         </div>
       </CDBSidebar>

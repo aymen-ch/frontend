@@ -13,7 +13,7 @@ import {
 import Draggable from 'react-draggable';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
-import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+import { BASE_URL } from '../../../../utils/Urls';
 import { useTranslation } from 'react-i18next';
 
 const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
@@ -74,7 +74,7 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
       setError(null);
 
       try {
-        const response = await axios.get(`${BASE_URL_Backend}/get_relationship_types_for_node_type/`, {
+        const response = await axios.get(`${BASE_URL}/get_relationship_types_for_node_type/`, {
           params: { nodeType: selectedGroup },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -124,7 +124,7 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
 
       try {
         for (const relType of selectedRelationships) {
-          const response = await axios.get(`${BASE_URL_Backend}/get_relationship_numeric_properties/`, {
+          const response = await axios.get(`${BASE_URL}/get_relationship_numeric_properties/`, {
             params: { relationshipType: relType },
             headers: {
               Authorization: `Bearer ${token}`,
@@ -192,7 +192,7 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
     setCentralityResults([]); // Clear previous results
 
     try {
-      const response = await axios.post(`${BASE_URL_Backend}/calculate_centrality/`, {
+      const response = await axios.post(`${BASE_URL}/calculate_centrality/`, {
         nodeType: selectedGroup,
         centralityAlgorithm: selectedCentrality,
         attributeName: attributeName,
@@ -477,7 +477,7 @@ export default Analyse_BackEnd;
 // import Draggable from 'react-draggable';
 // import 'bootstrap/dist/css/bootstrap.min.css';
 // import axios from 'axios';
-// import { BASE_URL_Backend } from '../../../../utils/Urls';
+// import { BASE_URL } from '../../../../utils/Urls';
 // import { useTranslation } from 'react-i18next';
 
 // const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
@@ -519,7 +519,7 @@ export default Analyse_BackEnd;
 //       setError(null);
 
 //       try {
-//         const response = await axios.get(`${BASE_URL_Backend}/get_relationship_types_for_node_type/`, {
+//         const response = await axios.get(`${BASE_URL}/get_relationship_types_for_node_type/`, {
 //           params: { nodeType: selectedGroup },
 //           headers: {
 //             Authorization: `Bearer ${token}`,
@@ -568,7 +568,7 @@ export default Analyse_BackEnd;
 
 //       try {
 //         for (const relType of selectedRelationships) {
-//           const response = await axios.get(`${BASE_URL_Backend}/get_relationship_numeric_properties/`, {
+//           const response = await axios.get(`${BASE_URL}/get_relationship_numeric_properties/`, {
 //             params: { relationshipType: relType },
 //             headers: {
 //               Authorization: `Bearer ${token}`,
@@ -634,7 +634,7 @@ export default Analyse_BackEnd;
 //     setError(null);
 
 //     try {
-//       const response = await axios.post(`${BASE_URL_Backend}/calculate_centrality/`, {
+//       const response = await axios.post(`${BASE_URL}/calculate_centrality/`, {
 //         nodeType: selectedGroup,
 //         centralityAlgorithm: selectedCentrality,
 //         attributeName: attributeName,

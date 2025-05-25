@@ -1,0 +1,122 @@
+.dashboard-container {
+  padding: 20px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.dashboard-header {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 100;
+  padding: 10px 0;
+  margin-bottom: 20px;
+}
+
+.card {
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  font-weight: bold;
+  background-color: #f8f9fa;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.recharts-wrapper {
+  margin: 0 auto;
+}
+
+.chart-container {
+  min-height: 400px;
+}
+
+/* Style for scrollable chart */
+.scrollable-chart {
+  overflow-x: auto;
+  width: 100%;
+  scrollbar-width: thin; /* For Firefox */
+}
+
+/* Custom scrollbar for WebKit browsers (Chrome, Safari) */
+.scrollable-chart::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scrollable-chart::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.scrollable-chart::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.scrollable-chart::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+
+
+.recharts-brush-traveller {
+  fill: #8884d8;
+}
+
+.recharts-brush-texts {
+  font-size: 12px;
+  fill: #666;
+}
+
+/* Chart tooltip */
+.custom-tooltip {
+  background-color: white;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.custom-tooltip-label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.custom-tooltip-value {
+  color: #82ca9d;
+}
+
+/* Brush styling */
+.recharts-brush-slide {
+    fill: #f0f0f0;
+  }
+  
+  .recharts-brush-traveller {
+    fill: #8884d8;
+  }
+  
+  .recharts-brush-texts {
+    font-size: 12px;
+    fill: #666;
+  }
+  
+  /* Chart tooltip */
+  .custom-tooltip {
+    background-color: white;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .custom-tooltip-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .custom-tooltip-value {
+    color: #82ca9d;
+  }

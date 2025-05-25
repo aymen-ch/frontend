@@ -11,7 +11,7 @@ import 'codemirror/theme/dracula.css'; // Dark theme similar to Neo4j Browser
 import './cyphermode'; // Import custom Cypher mode
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './AddActionWindow.css';
-import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+import { BASE_URL } from '../../../../utils/Urls';
 
 const AddActionWindow = ({ node, onClose }) => {
   const { t } = useTranslation();
@@ -63,7 +63,7 @@ const AddActionWindow = ({ node, onClose }) => {
     try {
       const defaultQuestion = t('add_action_window.default_question', { nodeType: formData.node_type });
       const response = await axios.post(
-        `${BASE_URL_Backend}/generate_cypher/`,
+        `${BASE_URL}/generate_cypher/`,
         {
           question: defaultQuestion,
           node_type: formData.node_type,
@@ -102,7 +102,7 @@ const AddActionWindow = ({ node, onClose }) => {
 
     try {
       const response = await axios.post(
-        `${BASE_URL_Backend}/validate_cypher/`,
+        `${BASE_URL}/validate_cypher/`,
         {
           query: formData.query,
           node_type: formData.node_type,
@@ -153,7 +153,7 @@ const AddActionWindow = ({ node, onClose }) => {
 
     try {
       const response = await axios.post(
-        `${BASE_URL_Backend}/add_action/`,
+        `${BASE_URL}/add_action/`,
         formData,
         {
           headers: {

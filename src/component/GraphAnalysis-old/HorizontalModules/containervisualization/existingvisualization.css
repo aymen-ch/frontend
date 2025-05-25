@@ -1,0 +1,46 @@
+.visualization-list-container {
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin: 0 auto;
+  }
+  
+  .visualization-list-container h3 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .visualization-item {
+    font-size: 1.1rem;
+    padding: 14px 20px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background-color: #f9f9f9;
+  }
+  
+  .visualization-item:hover {
+    background-color: #e9f2ff;
+    transform: translateX(4px);
+    cursor: pointer;
+  }
+  
+  button.btn-primary {
+    font-size: 1rem;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background-color: #007bff;
+    border: none;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  button.btn-primary:hover {
+    background-color: #0056b3;
+  }
+  

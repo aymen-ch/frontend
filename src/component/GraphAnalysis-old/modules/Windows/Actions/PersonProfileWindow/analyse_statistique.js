@@ -13,7 +13,7 @@ import {
 } from 'react-bootstrap-icons';
 import Draggable from 'react-draggable';
 import axios from 'axios';
-import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+import { BASE_URL } from '../../../../utils/Urls';
 import './PersonProfileWindow.css';
 import { 
   BarChart, 
@@ -248,7 +248,7 @@ const Analyse_statistique = ({ data, onClose }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get(BASE_URL_Backend + '/get_attribute_values_for_node_type/', {
+        const response = await axios.get(BASE_URL + '/get_attribute_values_for_node_type/', {
           params: {
             selectedGroup: selectedGroup,
             selectedCentralityAttribute: selectedAttribute
