@@ -12,7 +12,7 @@ const Community = ({ nodes, setNodes, isLoading, setIsLoading, ColorPersonWithCl
 const{t} = useTranslation()
 const communityMethods = [
   { value: 'uniform', label: 'Uniform' },
-  { value: '_color_k1coloring', label: 'K1 Coloring' },
+  { value: '_color_k1coloring', label: 'K1_coloring' },
   { value: '_labelPropagation', label: 'Label Propagation' },
   { value: '_louvain', label: 'Louvain' },
   {value :'_modularityOptimization',label :'modularityOptimization' },
@@ -157,14 +157,14 @@ const communityMethods = [
           ))}
         </Form.Select>
       </Form.Group>
-
+{/* 
       <Button
         variant="warning"
         className="w-100"
         onClick={() => ColorPersonWithClass(nodes, setNodes)}
       >
         {t('Color Node with Class')}
-      </Button>
+      </Button> */}
 
 
 
