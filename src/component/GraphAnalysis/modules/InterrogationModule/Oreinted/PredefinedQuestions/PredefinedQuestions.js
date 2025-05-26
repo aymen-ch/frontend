@@ -7,6 +7,8 @@ import { convertNeo4jToGraph } from '../../LLM/graphconvertor';
 import neo4j from 'neo4j-driver';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
+import {URI,USER,PASSWORD}  from '../../../../Platforme/Urls'
+
 
 const Template = ({ nodes, setNodes, edges, setEdges }) => {
   const { t } = useTranslation();
@@ -80,7 +82,7 @@ const Template = ({ nodes, setNodes, edges, setEdges }) => {
     setQueryResult('');
 
     try {
-      const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
+      const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
       const nvlResult = await driver.executeQuery(
         selectedQuestion.query,
         queryParameters,
@@ -186,7 +188,7 @@ const Template = ({ nodes, setNodes, edges, setEdges }) => {
   };
 
   const verifyQuery = async (query, parameters, parameterTypes) => {
-    const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
+    const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
     try {
       const randomParams = generateRandomParameters(parameterTypes);
       const nvlResult = await driver.executeQuery(query, randomParams, {

@@ -61,7 +61,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         )
       );
 
-      const driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic("neo4j", "12345678"));
+      const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
       const nvlResult = await driver.executeQuery(
         editedQuery,
         {},
@@ -218,7 +218,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       }
 
       if (responseType === 'Graph') {
-        const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
+        const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
         const nvlGraph = await driver.executeQuery(
           response.data.cypher,
           {},
@@ -269,7 +269,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
       } else if (responseType === 'Table') {
-        const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
+        const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
         const nvlTable = await driver.executeQuery(
           response.data.cypher,
           {},
@@ -375,7 +375,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       };
 
       if (resumedResponse.cypher && (botMessage.type === 'Graph' || botMessage.type === 'Table')) {
-        const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', '12345678'));
+        const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
         const nvlResult = await driver.executeQuery(
           resumedResponse.cypher,
           {},

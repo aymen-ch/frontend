@@ -17,9 +17,9 @@ import Actions from './Actions'
 import { FaInfoCircle, FaCogs, FaPlusCircle ,FaSpinner} from 'react-icons/fa';
 import './schema.css';
 
-const URI = 'neo4j://localhost:7687';
-const USER = 'neo4j';
-const PASSWORD = '12345678';
+
+import {URI,USER,PASSWORD}  from '../../../Platforme/Urls'
+
 
 const SchemaVisualizer = () => {
   const { t } = useTranslation();
