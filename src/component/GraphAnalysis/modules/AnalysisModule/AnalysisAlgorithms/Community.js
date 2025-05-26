@@ -5,9 +5,9 @@ import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
 import randomColor from 'randomcolor';
 import globalWindowState from '../../globalWindowState';
-import { Sliders, Zap, Activity, Target, BarChart2 } from 'lucide-react';
+import { Target, BarChart2 } from 'lucide-react';
 
-const Community = ({ nodes, setNodes, isLoading, setIsLoading, ColorPersonWithClass }) => {
+const Community = ({ nodes, setNodes, isLoading, setIsLoading }) => {
   const [selectedCommunityMeasure, setSelectedCommunityMeasure] = useState('uniform');
 const{t} = useTranslation()
 const communityMethods = [
@@ -83,28 +83,7 @@ const communityMethods = [
     setNodes(newNodes);
   };
 
-  const handleSecteurActiviti = async () => {
-    try {
-      setIsLoading(true);
-      const token = localStorage.getItem('authToken');
-      const response = await axios.post(BASE_URL_Backend + '/Secteur_Activite/', {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
 
-      if (response.status === 200) {
-        console.log(response.data);
-      } else {
-        console.error('handle Secteur Activiti failed.');
-      }
-    } catch (error) {
-      console.error('Error during handleSecteurActiviti:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="p-3 d-flex flex-column gap-3">
@@ -123,10 +102,6 @@ const communityMethods = [
   </Button>
 
   <Form.Label>{t('Select Node Type')}</Form.Label>
-                {/* <OverlayTrigger
-                  placement="top"
-                  overlay={<Tooltip id="node-group-tooltip">{t('Select the group of nodes for analysis')}</Tooltip>}
-                > */}
                   <Form.Select
                     size="sm"
                     value={selectedGroup}
@@ -139,8 +114,6 @@ const communityMethods = [
                       </option>
                     ))}
                   </Form.Select>
-
-
       <Form.Group>
         <Form.Label>{t('Community Detection')}</Form.Label>
         <Form.Select
@@ -157,19 +130,6 @@ const communityMethods = [
           ))}
         </Form.Select>
       </Form.Group>
-
-      <Button
-        variant="warning"
-        className="w-100"
-        onClick={() => ColorPersonWithClass(nodes, setNodes)}
-      >
-        {t('Color Node with Class')}
-      </Button>
-
-
-
-{/* </OverlayTrigger> */}
-
  
     </div>
   );
