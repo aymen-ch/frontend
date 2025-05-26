@@ -3,13 +3,14 @@ import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-sql';
 import 'ace-builds/src-noconflict/theme-monokai';
 import './Predifinedquestions.css';
-import { arabicQuestions } from './tamplate_question';
 import { convertNeo4jToGraph } from '../../LLM/graphconvertor';
 import neo4j from 'neo4j-driver';
-import { useTranslation } from 'react-i18next'; // Importing the translation hook
+import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+import { useTranslation } from 'react-i18next';
 
 const Template = ({ nodes, setNodes, edges, setEdges }) => {
-  const { t } = useTranslation(); // Initialize the translation hook
+  const { t } = useTranslation();
+  const [questions, setQuestions] = useState([]); // State for all questions (fetched from backend)
   const [selectedQuestion, setSelectedQuestion] = useState('');
   const [queryParameters, setQueryParameters] = useState({});
   const [queryResult, setQueryResult] = useState('');
@@ -22,15 +23,32 @@ const Template = ({ nodes, setNodes, edges, setEdges }) => {
     parameters: {},
     parameterTypes: {},
   });
-  const [customQuestions, setCustomQuestions] = useState(() => {
-    const savedQuestions = localStorage.getItem('customQuestions');
-    return savedQuestions ? JSON.parse(savedQuestions) : [];
-  });
   const [templateError, setTemplateError] = useState('');
   const [newParam, setNewParam] = useState({ name: '', description: '', type: 'string' });
   const [detectedParams, setDetectedParams] = useState([]);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Fetch predefined questions on component mount
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await fetch(`${BASE_URL_Backend}/get_predefined_questions`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setQuestions(data);
+      } catch (err) {
+        setError(`${t('Error fetching questions')}: ${err.message}`);
+      }
+    };
+    fetchQuestions();
+  }, [t]);
+
+  // Clear success message after 3 seconds
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(''), 3000);
@@ -38,14 +56,9 @@ const Template = ({ nodes, setNodes, edges, setEdges }) => {
     }
   }, [successMessage]);
 
-  useEffect(() => {
-    localStorage.setItem('customQuestions', JSON.stringify(customQuestions));
-  }, [customQuestions]);
-
   const handleQuestionSelect = (e) => {
     const questionId = e.target.value;
-    const allQuestions = [...arabicQuestions, ...customQuestions];
-    const selected = allQuestions.find((q) => q.id === parseInt(questionId));
+    const selected = questions.find((q) => q.id === parseInt(questionId));
     setSelectedQuestion(selected);
     setQueryParameters({});
     setQueryResult('');
@@ -54,7 +67,7 @@ const Template = ({ nodes, setNodes, edges, setEdges }) => {
 
   const handleParameterChange = (e, paramName) => {
     const value = e.target.value;
-    const type = selectedQuestion.parameterTypes[paramName];
+    const type = selectedQuestion?.parameterTypes[paramName];
     const parsedValue = type === 'int' ? parseInt(value, 10) : value;
     setQueryParameters((prev) => ({ ...prev, [paramName]: parsedValue }));
   };
@@ -75,7 +88,6 @@ const Template = ({ nodes, setNodes, edges, setEdges }) => {
       );
       try {
         const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
-        console.log(newNodes, newEdges);
         if (newNodes.length > 0 || newEdges.length > 0) {
           setNodes([...nodes, ...newNodes]);
           setEdges([...edges, ...newEdges]);
@@ -217,20 +229,34 @@ const Template = ({ nodes, setNodes, edges, setEdges }) => {
 
     await verifyQuery(userTemplate.query, userTemplate.parameters, userTemplate.parameterTypes);
 
-    const newId = Math.max(...arabicQuestions.map((q) => q.id), ...customQuestions.map((q) => q.id), 0) + 1;
-    const newQuestion = { id: newId, ...userTemplate };
-    setCustomQuestions((prev) => [...prev, newQuestion]);
-    setNewTemplate({ question: '', query: '', parameters: {}, parameterTypes: {} });
-    setShowNewTemplateForm(false);
-    setTemplateError('');
-    setSuccessMessage(t('Template saved successfully'));
+    // Send new template to backend
+    try {
+      const response = await fetch(`${BASE_URL_Backend}/add_predefined_question`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userTemplate),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      // Add new question to state
+      setQuestions((prev) => [...prev, { id: data.id, ...userTemplate }]);
+      setNewTemplate({ question: '', query: '', parameters: {}, parameterTypes: {} });
+      setShowNewTemplateForm(false);
+      setTemplateError('');
+      setSuccessMessage(t('Template saved successfully'));
+    } catch (error) {
+      throw new Error(`${t('Error saving template')}: ${error.message}`);
+    }
   };
 
   const saveNewTemplate = async () => {
     try {
       await addAbstractQuestionTemplate(newTemplate);
     } catch (error) {
-      setTemplateError(`${t('Error saving template')}: ${error.message}`);
+      setTemplateError(error.message);
     }
   };
 
@@ -241,7 +267,7 @@ const Template = ({ nodes, setNodes, edges, setEdges }) => {
 
       <select onChange={handleQuestionSelect} className="question-select">
         <option value="">{t('Choose a question')}</option>
-        {[...arabicQuestions, ...customQuestions].map((q) => (
+        {questions.map((q) => (
           <option key={q.id} value={q.id}>{q.question}</option>
         ))}
       </select>

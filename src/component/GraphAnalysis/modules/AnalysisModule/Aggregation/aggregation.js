@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getNodeIcon, getNodeColor} from '../../Parser';
+import { getNodeIcon, getNodeColor } from '../../Parser';
 import { handleAggregation, getIntermediateTypes } from './aggregationUtils';
-import virtualRelationsData from './BACKend.json';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
+import { BASE_URL_Backend } from '../../../Platforme/Urls';
 
 const Aggregation = ({
   setEdges,
@@ -14,15 +15,28 @@ const Aggregation = ({
   activeAggregations,
   setActiveAggregations,
 }) => {
-  const [virtualRelations, setVirtualRelations] = useState(virtualRelationsData);
+  const [virtualRelations, setVirtualRelations] = useState([]);
   const [selectedAffaires, setSelectedAffaires] = useState([]);
   const { t } = useTranslation();
 
   useEffect(() => {
-    const storedRelations = localStorage.getItem('virtualRelations');
-    if (storedRelations) {
-      setVirtualRelations(JSON.parse(storedRelations));
-    }
+    // Fetch aggregations from backend
+    const fetchAggregations = async () => {
+      try {
+        const response = await axios.post(`${BASE_URL_Backend}/get_aggregations/`);
+        if (response.status === 200) {
+          setVirtualRelations(response.data);
+        } else {
+          console.error('Failed to fetch aggregations:', response.data.error);
+          setVirtualRelations([]);
+        }
+      } catch (error) {
+        console.error('Error fetching aggregations:', error);
+        setVirtualRelations([]);
+      }
+    };
+
+    fetchAggregations();
   }, []);
 
   useEffect(() => {

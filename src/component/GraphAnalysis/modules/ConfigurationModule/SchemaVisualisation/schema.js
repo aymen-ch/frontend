@@ -6,7 +6,6 @@ import PathBuilder from './PathBuilder';
 import GraphCanvas from '../../VisualisationModule/GraphCanvas';
 import LayoutControl from '../../VisualisationModule/layout/Layoutcontrol';
 import { createNode, createEdge, createNodeHtml } from '../../Parser';
-import virtualRelationsData from '../../AnalysisModule/Aggregation/BACKend.json';
 import {  ForceDirectedLayoutType } from '@neo4j-nvl/base';
 import NodeConfigForm from './NodeConfigForm';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +14,7 @@ import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import '../../../../../i18n';
 import axios from 'axios';
 import Actions from './Actions'
-import { FaInfoCircle, FaCogs, FaTools, FaLink, FaPlusCircle, FaPalette ,FaSpinner} from 'react-icons/fa';
+import { FaInfoCircle, FaCogs, FaPlusCircle ,FaSpinner} from 'react-icons/fa';
 import './schema.css';
 
 const URI = 'neo4j://localhost:7687';
@@ -37,11 +36,32 @@ const SchemaVisualizer = () => {
   const [isPathValid, setIsPathValid] = useState(false);
   const [pathResult, setPathResult] = useState(null);
   const nvlRef = useRef(null);
-  const [virtualRelations, setVirtualRelations] = useState(virtualRelationsData);
+  const [virtualRelations, setVirtualRelations] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const token = localStorage.getItem('authToken');
   const [error, setError] = useState('');
   const [currentDb, setCurrentDb] = useState('');
+
+
+ useEffect(() => {
+    // Fetch aggregations from backend
+    const fetchAggregations = async () => {
+      try {
+        const response = await axios.post(`${BASE_URL_Backend}/get_aggregations/`);
+        if (response.status === 200) {
+          setVirtualRelations(response.data);
+        } else {
+          console.error('Failed to fetch aggregations:', response.data.error);
+          setVirtualRelations([]);
+        }
+      } catch (error) {
+        console.error('Error fetching aggregations:', error);
+        setVirtualRelations([]);
+      }
+    };
+
+    fetchAggregations();
+  }, []);
 
   useEffect(() => {
     fetchCurrentDatabase();

@@ -4,6 +4,8 @@ import EdgeDetails from './EdgeDetails';
 import { createEdge } from '../../Parser';
 import { constructPath } from './cunstructpath';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
+import { BASE_URL_Backend } from '../../../Platforme/Urls';
 const styles = {
   container: { marginTop: '20px', background: '#fff', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
   button: { width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer', color: '#fff', transition: 'background-color 0.3s' },
@@ -78,25 +80,40 @@ const PathBuilder = ({
     }
   };
 
-  const handleCreatePath = () => {
+  const handleCreatePath = async () => {
     if (!pathName.trim()) return alert(t('Please enter a path name.'));
     if (virtualRelations.some((r) => JSON.stringify(r.path) === JSON.stringify(pathResult)))
       return alert(t('This path already exists.'));
+
     const newRelation = { name: pathName, path: pathResult };
-    const startId = [...selectedNodes][0];
-    const endId = selectedNodes.size > 1 ? [...selectedNodes][1] : startId;
-    const startNode = nodes.find((n) => n.id === startId);
-    const endNode = nodes.find((n) => n.id === endId) || startNode;
-    setEdges((prev) => [
-      ...prev,
-      createEdge({ type: pathName, identity: `virtual_${pathName}_${startId}_${endId}` }, startId, endId, 'green'),
-    ]);
-    setVirtualRelations((prev) => [...prev, newRelation]);
-    localStorage.setItem('virtualRelations', JSON.stringify([...virtualRelations, newRelation]));
-    setCurrentStep(5);
-    // handleLayoutChange(FreeLayoutType,nvlRef,nodes,edges,setLayoutType)
-    console.log('New path saved:', newRelation);
-    setTimeout(() => setIsPathBuilding(false), 1000);
+
+    try {
+      // Save to backend
+      const response = await axios.post(BASE_URL_Backend+'/add_aggregation/', {
+        name: pathName,
+        path: pathResult
+      });
+
+      if (response.status === 201) {
+        const startId = [...selectedNodes][0];
+        const endId = selectedNodes.size > 1 ? [...selectedNodes][1] : startId;
+        const startNode = nodes.find((n) => n.id === startId);
+        const endNode = nodes.find((n) => n.id === endId) || startNode;
+        setEdges((prev) => [
+          ...prev,
+          createEdge({ type: pathName, identity: `virtual_${pathName}_${startId}_${endId}` }, startId, endId, 'green'),
+        ]);
+        setVirtualRelations((prev) => [...prev, newRelation]);
+        setCurrentStep(5);
+        console.log('New path saved to backend:', newRelation);
+        setTimeout(() => setIsPathBuilding(false), 1000);
+      } else {
+        alert(t('Failed to save path to backend: ') + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error saving path to backend:', error);
+      alert(t('Error saving path to backend: ') + (error.response?.data?.error || error.message));
+    }
   };
 
   return (

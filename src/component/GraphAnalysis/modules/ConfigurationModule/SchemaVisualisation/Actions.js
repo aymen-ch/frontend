@@ -51,7 +51,8 @@ const Actions = ({ selectedItem }) => {
       const response = await axios.post(`${BASE_URL_Backend}/get_available_actions/`, {
         node_type: nodeType,
       });
-      setAvailableActions(response.data.actions || []);
+      setAvailableActions(response.data || []);
+      console.log(response.data.actions)
       setActionError('');
     } catch (error) {
       setActionError(error.response?.data?.error || t('sidebar.actionsFetchError'));
