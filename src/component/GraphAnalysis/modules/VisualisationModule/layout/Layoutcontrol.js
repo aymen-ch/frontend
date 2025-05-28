@@ -1,21 +1,21 @@
-
-import React, { useState } from 'react';
-import { FaProjectDiagram, FaLayerGroup, FaSitemap, FaMapMarkedAlt ,FaStream} from 'react-icons/fa';
+import React from 'react';
+import { FaProjectDiagram, FaLayerGroup, FaSitemap, FaStream } from 'react-icons/fa';
 import { FaDiaspora } from 'react-icons/fa6';
-import { d3ForceLayoutType, ForceDirectedLayoutType, HierarchicalLayoutType,GridLayoutType } from '@neo4j-nvl/base';
-import { buttonStyle, activeButtonStyle, layoutControlStyle } from '../GraphVisualizationStyles';
+import {
+  d3ForceLayoutType,
+  ForceDirectedLayoutType,
+  HierarchicalLayoutType,
+  GridLayoutType,
+} from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../../function_container';
 
-const LayoutControl = ({ nvlRef, nodes, edges,layoutType,setLayoutType}) => {
-
+const LayoutControl = ({ nvlRef, nodes, edges, layoutType, setLayoutType }) => {
   const layouts = [
     { type: d3ForceLayoutType, icon: <FaProjectDiagram size={16} />, title: 'd3ForceLayoutType' },
     { type: ForceDirectedLayoutType, icon: <FaDiaspora size={16} />, title: 'ForceDirectedLayoutType' },
     { type: GridLayoutType, icon: <FaLayerGroup size={16} />, title: 'GridLayoutType' },
-    // { type: 'dagre', icon: <FaSitemap size={16} />, title: 'Hierarchical Layout' },
     { type: 'Operationnelle_Soutien_Leader', icon: <FaSitemap size={16} />, title: 'Free Layout' },
     { type: HierarchicalLayoutType, icon: <FaStream size={16} />, title: 'Hierarchical' },
-    // { type: 'geospatial', icon: <FaMapMarkedAlt size={16} />, title: 'Geospatial Layout' },
   ];
 
   const handleLayoutSelect = (type) => {
@@ -23,18 +23,17 @@ const LayoutControl = ({ nvlRef, nodes, edges,layoutType,setLayoutType}) => {
   };
 
   return (
-    <div style={layoutControlStyle}>
+    <div className="flex flex-col md:flex-row gap-2">
       {layouts.map((layout) => (
         <button
           key={layout.type}
-          style={layoutType === layout.type ? activeButtonStyle : buttonStyle}
+          className={`w-12 h-12 border border-gray-200 rounded p-2 hover:scale-105 transition-all flex items-center justify-center ${
+            layoutType === layout.type
+              ? 'bg-blue-500 text-white hover:bg-blue-600'
+              : 'bg-white/80 text-gray-600 hover:bg-white'
+          }`}
           onClick={() => handleLayoutSelect(layout.type)}
           title={layout.title}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)')}
-          onMouseOut={(e) =>
-            (e.currentTarget.style.backgroundColor =
-              layoutType === layout.type ? 'rgba(66, 153, 225, 0.8)' : 'rgba(255, 255, 255, 0.8)')
-          }
         >
           {layout.icon}
         </button>

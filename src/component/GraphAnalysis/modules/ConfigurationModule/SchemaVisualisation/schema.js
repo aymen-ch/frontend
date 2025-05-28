@@ -15,7 +15,7 @@ import '../../../../../i18n';
 import axios from 'axios';
 import Actions from './Actions'
 import { FaInfoCircle, FaCogs, FaPlusCircle ,FaSpinner} from 'react-icons/fa';
-import './schema.css';
+
 
 
 import {URI,USER,PASSWORD}  from '../../../Platforme/Urls'
@@ -498,143 +498,131 @@ const SchemaVisualizer = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
+
   return (
-  <div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column' }}>
-    <h2 style={{ margin: '10px 0', textAlign: 'center', height: '40px' }}>
-      {t('Schema visualization')}
-    </h2>
-    <div style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}>
-      <div
-        style={{
-          flex: 1,
-          position: 'relative',
-          marginRight: isSidebarVisible
-            ? activeModule
-              ? '630px' // Full sidebar width when a module is active
-              : '0px' // Narrower width for navigation-only
-            : '0', // No margin when sidebar is hidden
-         
-        }}
-      >
-        <GraphCanvas
-          nvlRef={nvlRef}
-          nodes={nodes}
-          edges={edges}
-          selectedNodes={selectedNodes}
-          setSelectedNodes={setSelectedNodes}
-          setContextMenu={setContextMenu}
-          setnodetoshow={() => {}}
-          ispath={false}
-          setrelationtoshow={() => {}}
-          setEdges={setEdges}
-          setNodes={setNodes}
-          selectedEdges={selectedEdges}
-          setselectedEdges={setSelectedEdges}
-        />
-        <div>
-          <LayoutControl
+    <div className="h-screen w-screen flex flex-col">
+      <h2 className="my-2.5 text-center h-10">
+        {t('Schema visualization')}
+      </h2>
+      <div className="flex-1 flex min-h-0 relative">
+        <div
+          className={`flex-1 relative ${
+            isSidebarVisible
+              ? activeModule
+                ? 'mr-[630px] md:mr-[400px] sm:mr-[80vw]'
+                : 'mr-0'
+              : 'mr-0'
+          }`}
+        >
+          <GraphCanvas
             nvlRef={nvlRef}
             nodes={nodes}
             edges={edges}
-            layoutType={layoutType}
-            setLayoutType={setLayoutType}
+            selectedNodes={selectedNodes}
+            setSelectedNodes={setSelectedNodes}
+            setContextMenu={setContextMenu}
+            setnodetoshow={() => {}}
+            ispath={false}
+            setrelationtoshow={() => {}}
+            setEdges={setEdges}
+            setNodes={setNodes}
+            selectedEdges={selectedEdges}
+            setselectedEdges={setSelectedEdges}
           />
-        </div>
-      </div>
-
-      {isSidebarVisible && (
-        <div
-          style={{
-            position: 'fixed',
-            right: '0',
-            top:'120px',///// here use logique to make it start  with the parent of it
-            width: activeModule ? '630px' : '60px', // Full width for active module, narrow for navigation
-            height: 'calc(100vh - 40px)',
-            background: '#f0f0f0',
-            borderLeft: '1px solid #ccc',
-            overflowY: 'auto',
-            padding: activeModule ? '15px' : '15px 5px', // Adjust padding for navigation-only
-            zIndex: 1000,
-            boxSizing: 'border-box',
-            transition: 'width 0.3s ease-in-out, padding 0.3s ease-in-out',
-          }}
-        >
-          <div className="side-nav">
-            <div className="side-nav-inner">
-              {[
-                { label: t('Detail'), icon: <FaInfoCircle /> },
-                { label: t('Attribue danalyse'), icon: <FaSpinner /> },
-                { label: t('NodeConfig'), icon: <FaCogs /> },
-                { label: t('Aggregation'), icon: <FaPlusCircle /> },
-                { label: t('Actions'), icon: <FaPlusCircle /> },
-              ].map(({ label, icon }) => (
-                <div
-                  key={label}
-                  className={`side-nav-item ${activeModule === label ? 'active' : ''}`}
-                  onClick={() => handleModuleClick(label)}
-                  style={{
-                    padding: '10px',
-                    cursor: 'pointer',
-                    background: activeModule === label ? '#ddd' : 'transparent',
-                  }}
-                >
-                  <span className="nav-icon">{icon}</span>
-                  <span>{label}</span>
-                </div>
-              ))}
-            </div>
+          <div>
+            <LayoutControl
+              nvlRef={nvlRef}
+              nodes={nodes}
+              edges={edges}
+              layoutType={layoutType}
+              setLayoutType={setLayoutType}
+            />
           </div>
+        </div>
 
-          {activeModule && (
-            <div className="module-panel">
-              <div className="module-header">
-                <h5 className="module-title">{activeModule}</h5>
-                <button
-                  className="btn btn-sm module-close-btn"
-                  onClick={() => setActiveModule(null)}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="module-content">
-                {activeModule === t('Detail') && <Sidebar selectedItem={selectedItem} />}
-                {activeModule === t('NodeConfig') && (
-                  <NodeConfigForm selectedNode={selectedItem} onUpdate={redrawGraph} />
-                )}
-                {activeModule === t('Aggregation') && (
-                  <PathBuilder
-                    isPathBuilding={isPathBuilding}
-                    setIsPathBuilding={setIsPathBuilding}
-                    selectedNodes={selectedNodes}
-                    selectedEdges={selectedEdges}
-                    nodes={nodes}
-                    edges={edges}
-                    pathName={pathName}
-                    setPathName={setPathName}
-                    isPathValid={isPathValid}
-                    setIsPathValid={setIsPathValid}
-                    pathResult={pathResult}
-                    setPathResult={setPathResult}
-                    virtualRelations={virtualRelations}
-                    setVirtualRelations={setVirtualRelations}
-                    setEdges={setEdges}
-                    nvlRef={nvlRef}
-                    setLayoutType={setLayoutType}
-                  />
-                )}
-                {activeModule === t('Actions') && <Actions selectedItem={selectedItem} />}
-                {activeModule === t('Attribue danalyse') && (
-                  <AnalysisAttributeForm selectedItem={selectedItem} />
-                )}
+        {isSidebarVisible && (
+          <div
+            className={`fixed right-0 top-[120px] ${
+              activeModule
+                ? 'w-[630px] md:w-[630px] sm:w-[200vw]'
+                : 'w-[60px]'
+            } h-[calc(100vh-40px)] bg-gray-100 border-l border-gray-300 overflow-y-auto ${
+              activeModule ? 'p-4' : 'p-4 px-1.5'
+            } z-[1000] box-border transition-all duration-300 ease-in-out`}
+          >
+            <div className="side-nav">
+              <div className="side-nav-inner">
+                {[
+                  { label: t('Detail'), icon: <FaInfoCircle /> },
+                  { label: t('Attribue danalyse'), icon: <FaSpinner /> },
+                  { label: t('NodeConfig'), icon: <FaCogs /> },
+                  { label: t('Aggregation'), icon: <FaPlusCircle /> },
+                  { label: t('Actions'), icon: <FaPlusCircle /> },
+                ].map(({ label, icon }) => (
+                  <div
+  key={label}
+  className={`side-nav-item flex items-center gap-2 p-2.5 cursor-pointer rounded-md transition-all duration-200
+    ${activeModule === label
+      ? 'bg-blue-500 text-white font-semibold shadow-md hover:bg-blue-600'
+      : 'bg-transparent text-gray-700 hover:bg-gray-100'}`}
+>
+                    <span className="nav-icon text-base">{icon}</span>
+                    <span>{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
-      )}
+
+            {activeModule && (
+              <div className="module-panel">
+                <div className="module-header flex items-center justify-between">
+                  <h5 className="module-title">{activeModule}</h5>
+                  <button
+                    className="btn btn-sm module-close-btn text-lg"
+                    onClick={() => setActiveModule(null)}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="module-content">
+                  {activeModule === t('Detail') && <Sidebar selectedItem={selectedItem} />}
+                  {activeModule === t('NodeConfig') && (
+                    <NodeConfigForm selectedNode={selectedItem} onUpdate={redrawGraph} />
+                  )}
+                  {activeModule === t('Aggregation') && (
+                    <PathBuilder
+                      isPathBuilding={isPathBuilding}
+                      setIsPathBuilding={setIsPathBuilding}
+                      selectedNodes={selectedNodes}
+                      selectedEdges={selectedEdges}
+                      nodes={nodes}
+                      edges={edges}
+                      pathName={pathName}
+                      setPathName={setPathName}
+                      isPathValid={isPathValid}
+                      setIsPathValid={setIsPathValid}
+                      pathResult={pathResult}
+                      setPathResult={setPathResult}
+                      virtualRelations={virtualRelations}
+                      setVirtualRelations={setVirtualRelations}
+                      setEdges={setEdges}
+                      nvlRef={nvlRef}
+                      setLayoutType={setLayoutType}
+                    />
+                  )}
+                  {activeModule === t('Actions') && <Actions selectedItem={selectedItem} />}
+                  {activeModule === t('Attribue danalyse') && (
+                    <AnalysisAttributeForm selectedItem={selectedItem} />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default SchemaVisualizer;
