@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import './Chat.css';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
-import neo4j from "neo4j-driver";
+import neo4j from 'neo4j-driver';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEdit,
@@ -11,17 +10,16 @@ import {
   faTimes,
   faEye,
   faRedo,
-  faChevronDown, // Added for collapse icon
-  faChevronUp,   // Added for expand icon
+  faChevronDown,
+  faChevronUp,
 } from '@fortawesome/free-solid-svg-icons';
-import "@fontsource/fira-code";
+import '@fontsource/fira-code';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { convertNeo4jToGraph, convertNeo4jToTable } from './graphconvertor';
+import { convertNeo4jToGraph, convertNeo4jToTable } from './ResultTransformer';
 import ChatInput from './input';
 import { useTranslation } from 'react-i18next';
-import {URI,USER,PASSWORD}  from '../../../Platforme/Urls'
-
+import { URI, USER, PASSWORD } from '../../../Platforme/Urls';
 
 const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const { t } = useTranslation();
@@ -38,13 +36,20 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   const [maxCorrections, setMaxCorrections] = useState(1);
   const [hedeaerreponse, setheader] = useState('');
   const [selectedModel, setSelectedModel] = useState('llama3.2:latest');
-  const [collapsedTables, setCollapsedTables] = useState({}); // New state for tracking collapsed tables
+  const [collapsedTables, setCollapsedTables] = useState({});
+  const chatWindowRef = useRef(null);
 
-  // Toggle collapse state for a specific table
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const toggleTableCollapse = (messageId) => {
     setCollapsedTables((prev) => ({
       ...prev,
-      [messageId]: !prev[messageId], // Toggle between true (collapsed) and false (expanded)
+      [messageId]: !prev[messageId],
     }));
   };
 
@@ -63,7 +68,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
         )
       );
 
-      const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
+      const driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD));
       const nvlResult = await driver.executeQuery(
         editedQuery,
         {},
@@ -74,11 +79,9 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       if (originalResponseType === 'Graph') {
         try {
           const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlResult.records);
-
           if (newNodes.length > 0 || newEdges.length > 0) {
             setNodes([...nodes.filter((n) => !newNodes.some((nn) => nn.id === n.id)), ...newNodes]);
             setEdges([...edges.filter((e) => !newEdges.some((ne) => ne.id === e.id)), ...newEdges]);
-
             setMessages((prevMessages) =>
               prevMessages.map((msg) =>
                 msg.id === messageId
@@ -92,7 +95,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
               )
             );
           } else {
-            throw new Error("No valid graph data returned");
+            throw new Error('No valid graph data returned');
           }
         } catch (conversionError) {
           setMessages((prevMessages) =>
@@ -220,7 +223,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       }
 
       if (responseType === 'Graph') {
-       const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
+        const driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD));
         const nvlGraph = await driver.executeQuery(
           response.data.cypher,
           {},
@@ -229,20 +232,16 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
 
         try {
           const { nodes: newNodes, edges: newEdges } = convertNeo4jToGraph(nvlGraph.records);
-
           if (newNodes.length > 0 || newEdges.length > 0) {
             const uniqueNewNodes = newNodes.filter(
               (newNode) => !nodes.some((existingNode) => existingNode.id === newNode.id)
             );
-
             const uniqueNewEdges = newEdges.filter(
               (newEdge) => !edges.some((existingEdge) => existingEdge.id === newEdge.id)
             );
-
             if (uniqueNewNodes.length > 0 || uniqueNewEdges.length > 0) {
               setNodes([...nodes, ...uniqueNewNodes]);
               setEdges([...edges, ...uniqueNewEdges]);
-
               const botMessage = {
                 id: messages.length + 2,
                 text: 'تم تحديث الرسم البياني بالعقد والحواف الجديدة.',
@@ -271,13 +270,11 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           setMessages((prevMessages) => [...prevMessages, botMessage]);
         }
       } else if (responseType === 'Table') {
-       const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
+        const driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD));
         const nvlTable = await driver.executeQuery(
           response.data.cypher,
           {},
-          { 
-            database:'dab',
-            resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
+          { database: 'dab', resultTransformer: neo4j.resultTransformers.eagerResultTransformer() }
         );
         try {
           const { columns, rows } = convertNeo4jToTable(nvlTable.records);
@@ -377,7 +374,7 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
       };
 
       if (resumedResponse.cypher && (botMessage.type === 'Graph' || botMessage.type === 'Table')) {
-        const driver = neo4j.driver(URI, neo4j.auth.basic(USER,PASSWORD));
+        const driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD));
         const nvlResult = await driver.executeQuery(
           resumedResponse.cypher,
           {},
@@ -454,114 +451,123 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
   };
 
   return (
-    <div className="chat-container">
-      <div className="chat-window">
+    <div className="flex flex-col h-screen overflow-hidden bg-white rounded-lg shadow-chat p-3">
+      <div
+        ref={chatWindowRef}
+        className="h-[400px] sm:max-h-[calc(100vh-200px)] overflow-y-auto p-4 bg-chat-gray border border-gray-200 rounded-lg mb-5"
+      >
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`message ${message.sender === 'user' ? 'user-message' : 'bot-message'}`}
+            className={`mb-4 p-3 rounded-lg max-w-[70%] w-full ${
+              message.sender === 'user'
+                ? 'bg-chat-user-bg ml-auto text-right'
+                : 'bg-chat-bot-bg mr-auto text-left'
+            }`}
           >
             {editingMessageId === message.id ? (
-              <div className="edit-message">
+              <div className="flex flex-col gap-2.5">
                 <textarea
                   value={editedText}
                   onChange={(e) => setEditedText(e.target.value)}
-                  className="edit-textarea"
+                  className="w-full p-2 text-sm border border-gray-300 rounded-md resize-y"
                 />
-                <div className="edit-actions">
+                <div className="flex gap-2.5">
                   <button
-                    className="save-button"
+                    className="bg-chat-success text-white px-3 py-1.5 rounded-md hover:bg-chat-success-hover flex items-center gap-1 text-sm"
                     onClick={() => handleSaveEdit(message.id)}
                   >
                     <FontAwesomeIcon icon={faCheck} /> Save
                   </button>
-                  <button className="cancel-button" onClick={handleCancelEdit}>
+                  <button
+                    className="bg-chat-error text-white px-3 py-1.5 rounded-md hover:bg-chat-error-hover flex items-center gap-1 text-sm"
+                    onClick={handleCancelEdit}
+                  >
                     <FontAwesomeIcon icon={faTimes} /> Cancel
                   </button>
                 </div>
               </div>
             ) : (
               <>
-<strong>{message.sender === 'user' ? 'Question posée:' :hedeaerreponse}</strong>{' '}
+                <strong>{message.sender === 'user' ? 'Question posée:' : hedeaerreponse}</strong>{' '}
                 {message.type === 'Table' ? (
-  <div className="table-container">
-    <div className="table-header">
-      <span>Résultat:</span>
-      <button
-        className="toggle-table-button"
-        onClick={() => toggleTableCollapse(message.id)}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: '#4a90e2',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '5px',
-        }}
-      >
-        <FontAwesomeIcon
-          icon={collapsedTables[message.id] ? faChevronDown : faChevronUp}
-        />
-        {collapsedTables[message.id] ? 'Afficher' : 'Masquer'}
-      </button>
-    </div>
-    {!collapsedTables[message.id] && (
-      (() => {
-        try {
-          const { columns, rows } = JSON.parse(message.text);
-          return (
-            <div className="table-wrapper">
-              <table className="styled-table">
-                <thead>
-                  <tr>
-                    {columns.map((col) => (
-                      <th key={col.key}>{col.label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {columns.map((col) => (
-                        <td key={col.key}>{row[col.key]}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-        } catch (error) {
-          return (
-            <span
-              className="message-text"
-              dangerouslySetInnerHTML={{ __html: message.text }}
-            />
-          );
-        }
-      })()
-    )}
-  </div>
-) : message.type === 'Text' ? (
-  <div className="resumed-container">
-    <div className="resumed-header">
-      <span>Résumé</span>
-    </div>
-    <span
-      className="message-text"
-      dangerouslySetInnerHTML={{ __html: message.text }}
-    />
-  </div>
-) : (
-  <span
-    className="message-text"
-    dangerouslySetInnerHTML={{ __html: message.text }}
-  />
-)}
+                  <div className="mt-2.5">
+                    <div className="flex justify-between items-center">
+                      <span>Résultat:</span>
+                      <button
+                        className="flex items-center gap-1 text-chat-blue hover:text-chat-blue-hover bg-transparent border-none cursor-pointer"
+                        onClick={() => toggleTableCollapse(message.id)}
+                      >
+                        <FontAwesomeIcon icon={collapsedTables[message.id] ? faChevronDown : faChevronUp} />
+                        {collapsedTables[message.id] ? 'Afficher' : 'Masquer'}
+                      </button>
+                    </div>
+                    {!collapsedTables[message.id] && (
+                      (() => {
+                        try {
+                          const { columns, rows } = JSON.parse(message.text);
+                          return (
+                            <div className="w-full overflow-x-auto my-3.5 rounded-lg shadow-chat bg-white">
+                              <table className="w-full border-collapse font-code text-sm text-gray-700">
+                                <thead>
+                                  <tr>
+                                    {columns.map((col) => (
+                                      <th
+                                        key={col.key}
+                                        className="bg-chat-dark text-gray-300 p-3 text-left font-medium uppercase tracking-wide border-b-2 border-chat-dark-border"
+                                      >
+                                        {col.label}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rows.map((row, rowIndex) => (
+                                    <tr
+                                      key={rowIndex}
+                                      className="hover:bg-gray-200 transition-colors even:bg-gray-50"
+                                    >
+                                      {columns.map((col) => (
+                                        <td key={col.key} className="p-2.5 border-b border-gray-200">
+                                          {row[col.key]}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          );
+                        } catch (error) {
+                          return (
+                            <span
+                              className="inline-block p-2 rounded-md text-sm text-gray-700"
+                              dangerouslySetInnerHTML={{ __html: message.text }}
+                            />
+                          );
+                        }
+                      })()
+                    )}
+                  </div>
+                ) : message.type === 'Text' ? (
+                  <div className="mt-2.5">
+                    <div className="flex justify-between items-center">
+                      <span>Résumé</span>
+                    </div>
+                    <span
+                      className="inline-block p-2 rounded-md text-sm text-gray-700"
+                      dangerouslySetInnerHTML={{ __html: message.text }}
+                    />
+                  </div>
+                ) : (
+                  <span
+                    className="inline-block p-2 rounded-md text-sm text-gray-700"
+                    dangerouslySetInnerHTML={{ __html: message.text }}
+                  />
+                )}
                 {message.cypherQuery && (
                   <button
-                    className="toggle-query-button"
+                    className="text-chat-blue hover:text-chat-blue-hover bg-transparent border-none cursor-pointer ml-2.5 flex items-center gap-1 text-sm"
                     onClick={() => handleShowQueryModal(message.id)}
                   >
                     <FontAwesomeIcon icon={faEye} /> Afficher la requête Cypher
@@ -569,40 +575,26 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                 )}
                 {message.sender === 'bot' && message.rawResponse && !message.isResumed && (
                   <button
-                    className="resume-button"
+                    className="bg-chat-resume text-white px-2.5 py-1 rounded-md hover:bg-yellow-600 flex items-center gap-1 text-sm ml-1.5"
                     onClick={() => handleResumeResponse(message.id)}
-                    style={{
-                      background: '#f1c40f',
-                      color: 'white',
-                      border: 'none',
-                      padding: '5px 10px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      marginLeft: '5px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                    }}
                   >
                     <FontAwesomeIcon icon={faRedo} /> Résumer la réponse
                   </button>
                 )}
-                <div className="message-actions">
+                <div className="flex gap-2 mt-2">
                   {message.sender === 'user' && (
                     <button
-                      className="edit-button"
+                      className="text-gray-600 hover:text-chat-blue bg-transparent border-none cursor-pointer text-sm"
                       onClick={() => handleEditMessage(message.id, message.text)}
                     >
                       <FontAwesomeIcon icon={faEdit} />
                     </button>
                   )}
                   <button
-                    className="copy-button"
+                    className="text-gray-600 hover:text-chat-blue bg-transparent border-none cursor-pointer text-sm"
                     onClick={() => handleCopyMessage(message.text)}
                   >
-                    <FontAwesomeIcon
-                      icon={copiedMessageId === message.text ? faCheck : faCopy}
-                    />
+                    <FontAwesomeIcon icon={copiedMessageId === message.text ? faCheck : faCopy} />
                   </button>
                 </div>
               </>
@@ -610,22 +602,25 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
           </div>
         ))}
         {isLoading && (
-          <div className="loading-spinner">
-            <div className="spinner"></div>
+          <div className="flex justify-center items-center mt-2.5">
+            <div className="w-6 h-6 border-4 border-gray-200 border-t-chat-blue rounded-full animate-spin"></div>
           </div>
         )}
       </div>
 
       {showQueryModal && (
-        <div className="query-modal-overlay" onClick={handleCloseQueryModal}>
+        <div
+          className="fixed inset-0 bg-black/50 flex justify-center items-center z-[1000] backdrop-blur-sm"
+          onClick={handleCloseQueryModal}
+        >
           <div
-            className="query-modal"
+            className="bg-white rounded-lg p-5 w-full max-w-[600px] max-h-[90vh] overflow-y-auto shadow-modal relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="query-modal-header">
-              <h4>Requête Cypher </h4>
+            <div className="flex justify-between items-center mb-3.5 pb-2.5 border-b border-gray-200">
+              <h4 className="text-gray-800 text-lg font-semibold">Requête Cypher</h4>
               <button
-                className="close-modal-button"
+                className="text-gray-600 hover:text-gray-800 bg-transparent border-none cursor-pointer text-lg"
                 onClick={handleCloseQueryModal}
               >
                 <FontAwesomeIcon icon={faTimes} />
@@ -633,65 +628,31 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
             </div>
 
             {editingQueryId === showQueryModal ? (
-              <div className="query-edit-container">
+              <div className="p-2.5">
                 <textarea
-                  className="query-edit-textarea"
+                  className="w-full p-2.5 rounded-md bg-chat-dark border border-gray-300 text-gray-300 font-code text-sm resize-y mb-3.5"
                   value={editedQuery}
                   onChange={(e) => setEditedQuery(e.target.value)}
                   rows="6"
                   autoFocus
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    background: '#2d2d2d',
-                    color: '#d4d4d4',
-                    fontFamily: "'Fira Code', Consolas, Monaco, monospace",
-                    fontSize: '14px',
-                    resize: 'vertical',
-                    marginBottom: '15px',
-                    border: '1px solid #3e3e3e',
-                  }}
                 />
-                <div className="query-edit-actions">
+                <div className="flex gap-2.5 justify-end">
                   <button
-                    className="save-query-button"
+                    className="bg-chat-success text-white px-4 py-2 rounded-md hover:bg-chat-success-hover flex items-center gap-1.5"
                     onClick={() => handleSaveQueryEdit(showQueryModal)}
-                    style={{
-                      background: '#2ecc71',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                    }}
                   >
                     <FontAwesomeIcon icon={faCheck} /> Sauvegarder et Exécuter
                   </button>
                   <button
-                    className="cancel-query-button"
+                    className="bg-chat-error text-white px-4 py-2 rounded-md hover:bg-chat-error-hover flex items-center gap-1.5"
                     onClick={handleCancelQueryEdit}
-                    style={{
-                      background: '#e74c3c',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                    }}
                   >
                     <FontAwesomeIcon icon={faTimes} /> Annuler
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="query-view-container">
+              <div className="p-2.5">
                 <SyntaxHighlighter
                   language="cypher"
                   style={dracula}
@@ -710,24 +671,13 @@ const Chat = ({ nodes, edges, setNodes, setEdges, selectedNodes }) => {
                   {messages.find((msg) => msg.id === showQueryModal)?.cypherQuery || ''}
                 </SyntaxHighlighter>
                 <button
-                  className="edit-query-button"
+                  className="bg-chat-blue text-white px-4 py-2 rounded-md hover:bg-chat-blue-hover flex items-center gap-1.5"
                   onClick={() =>
                     handleEditQuery(
                       showQueryModal,
                       messages.find((msg) => msg.id === showQueryModal)?.cypherQuery
                     )
                   }
-                  style={{
-                    background: '#4a90e2',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                  }}
                 >
                   <FontAwesomeIcon icon={faEdit} /> Edit Query
                 </button>

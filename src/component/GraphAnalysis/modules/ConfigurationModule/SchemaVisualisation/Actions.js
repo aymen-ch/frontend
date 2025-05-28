@@ -12,9 +12,6 @@ import { getNodeColor, getNodeIcon } from '../../Parser';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import globalWindowState from '../../globalWindowState';
 
-// Styles
-import './Actions.css';
-
 const Actions = ({ selectedItem }) => {
   const { t } = useTranslation();
 
@@ -66,7 +63,6 @@ const Actions = ({ selectedItem }) => {
     const itemWithoutId = { ...selectedItem, id: null }; // or node_id: null if applicable
     globalWindowState.setWindow('add_action', itemWithoutId);
   };
-  
 
   const handleCloseWindow = () => {
     globalWindowState.clearWindow();
@@ -86,26 +82,26 @@ const Actions = ({ selectedItem }) => {
 
   // Render Components
   const NodeBadge = () => (
-    <div className="node-type-badge" style={{ backgroundColor: getNodeColor(selectedItem.group) }}>
+    <div className={`flex items-center px-2.5 py-1 rounded-full text-white text-sm gap-1.5`} style={{ backgroundColor: getNodeColor(selectedItem.group) }}>
       <img
         src={getNodeIcon(selectedItem.group)}
         alt={selectedItem.group}
-        className="node-icon-img"
+        className="w-4 h-4"
       />
       <span className="node-type-label">{selectedItem.group}</span>
     </div>
   );
 
   const ActionItem = ({ action, index }) => (
-    <li className="action-item" key={index}>
+    <li className="flex justify-between items-center py-2 border-b border-gray-100" key={index}>
       <div className="action-info">
-        <span className="action-name">{action.name}</span>
+        <span className="font-medium">{action.name}</span>
         {action.description && (
           <span className="action-description">{action.description}</span>
         )}
       </div>
       <button
-        className="view-details-btn"
+        className="bg-gray-500 hover:bg-gray-600 text-white border-none rounded px-2.5 py-1 flex items-center gap-1.5 text-sm disabled:opacity-50"
         onClick={() => handleViewActionDetails(action)}
         disabled={loadingActions}
       >
@@ -115,32 +111,32 @@ const Actions = ({ selectedItem }) => {
   );
 
   const ActionDetailsModal = () => (
-    <div className="action-details-modal">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h3>{selectedAction.name}</h3>
-          <button className="close-btn" onClick={handleCloseActionDetails}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1000]">
+      <div className="bg-white rounded-lg w-full max-w-xl max-h-[80vh] overflow-y-auto shadow-xl">
+        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+          <h3 className="m-0 text-lg">{selectedAction.name}</h3>
+          <button className="bg-transparent border-none text-xl cursor-pointer text-gray-600" onClick={handleCloseActionDetails}>
             {t('sidebar.close')}
           </button>
         </div>
-        <div className="modal-body">
+        <div className="p-5">
           {selectedAction.description && (
-            <div className="detail-item">
-              <span className="detail-label">{t('sidebar.description')}:</span>
-              <span className="detail-value">{selectedAction.description}</span>
+            <div className="mb-4">
+              <span className="block font-bold mb-1 text-gray-700">{t('sidebar.description')}:</span>
+              <span className="block text-gray-900">{selectedAction.description}</span>
             </div>
           )}
-          <div className="detail-item">
-            <span className="detail-label">{t('sidebar.nodeType')}:</span>
-            <span className="detail-value">{selectedAction.node_type}</span>
+          <div className="mb-4">
+            <span className="block font-bold mb-1 text-gray-700">{t('sidebar.nodeType')}:</span>
+            <span className="block text-gray-900">{selectedAction.node_type}</span>
           </div>
-          <div className="detail-item">
-            <span className="detail-label">{t('sidebar.cypherQuery')}:</span>
-            <pre className="query-preview">{selectedAction.query}</pre>
+          <div className="mb-4">
+            <span className="block font-bold mb-1 text-gray-700">{t('sidebar.cypherQuery')}:</span>
+            <pre className="bg-gray-50 p-2.5 rounded whitespace-pre-wrap break-words font-mono text-sm">{selectedAction.query}</pre>
           </div>
         </div>
-        <div className="modal-footer">
-          <button className="close-modal-btn" onClick={handleCloseActionDetails}>
+        <div className="p-4 border-t border-gray-200 flex justify-end">
+          <button className="bg-gray-500 hover:bg-gray-600 text-white border-none rounded px-3 py-2 cursor-pointer" onClick={handleCloseActionDetails}>
             {t('sidebar.close')}
           </button>
         </div>
@@ -151,41 +147,41 @@ const Actions = ({ selectedItem }) => {
   // Conditional Rendering
   if (!selectedItem) {
     return (
-      <div className="sidebar-container">
-        <h3 className="sidebar-title">{t('sidebar.actionsTitle')}</h3>
-        <p className="sidebar-placeholder">{t('sidebar.selectNode')}</p>
+      <div className="p-4 h-full overflow-y-auto">
+        <h3 className="m-0 text-lg">{t('sidebar.actionsTitle')}</h3>
+        <p className="text-gray-600 italic py-2.5">{t('sidebar.selectNode')}</p>
       </div>
     );
   }
 
   if (!selectedItem.isnode) {
     return (
-      <div className="sidebar-container">
-        <h3 className="sidebar-title">{t('sidebar.actionsTitle')}</h3>
-        <p className="sidebar-placeholder">{t('sidebar.actionsOnlyNodes')}</p>
+      <div className="p-4 h-full overflow-y-auto">
+        <h3 className="m-0 text-lg">{t('sidebar.actionsTitle')}</h3>
+        <p className="text-gray-600 italic py-2.5">{t('sidebar.actionsOnlyNodes')}</p>
       </div>
     );
   }
 
   return (
-    <div className="sidebar-container">
+    <div className="p-4 h-full overflow-y-auto">
       {/* Add Action Window */}
       {activeWindow === 'add_action' && (
         <AddActionWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
 
       {/* Header */}
-      <div className="actions-header">
+      <div className="flex items-center gap-2.5 mb-4">
         <NodeBadge />
-        <h3 className="sidebar-title">{t('sidebar.actionsTitle')}</h3>
+        <h3 className="m-0 text-lg">{t('sidebar.actionsTitle')}</h3>
       </div>
 
       {/* Actions Section */}
-      <div className="actions-section">
-        <div className="section-header">
+      <div className="mt-2.5">
+        <div className="flex justify-between items-center mb-2.5">
           <h4>{t('sidebar.availableActions')}</h4>
           <button
-            className="add-action-btn"
+            className="bg-green-500 hover:bg-green-600 text-white border-none px-2.5 py-1 rounded flex items-center gap-1.5 text-sm disabled:opacity-50"
             onClick={handleAddActionClick}
             disabled={loadingActions}
           >
@@ -194,18 +190,18 @@ const Actions = ({ selectedItem }) => {
         </div>
 
         {loadingActions ? (
-          <div className="loading-actions">{t('sidebar.loadingActions')}</div>
+          <div className="text-gray-600 italic py-2.5">{t('sidebar.loadingActions')}</div>
         ) : availableActions.length > 0 ? (
-          <ul className="actions-list">
+          <ul className="list-none p-0 m-0">
             {availableActions.map((action, index) => (
               <ActionItem action={action} index={index} key={index} />
             ))}
           </ul>
         ) : (
-          <div className="no-actions">{t('sidebar.noActionsAvailable')}</div>
+          <div className="text-gray-600 italic py-2.5">{t('sidebar.noActionsAvailable')}</div>
         )}
 
-        {actionError && <div className="action-error">{actionError}</div>}
+        {actionError && <div className="text-red-500 mt-2.5 text-sm">{actionError}</div>}
       </div>
 
       {/* Action Details Modal */}

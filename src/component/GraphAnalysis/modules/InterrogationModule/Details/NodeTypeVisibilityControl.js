@@ -1,7 +1,7 @@
 import React from 'react';
 import { getNodeIcon,getNodeColor } from '../../Parser';
 
-export const NodeTypeVisibilityControl = ({ visibleNodeTypes, toggleNodeTypeVisibility }) => {
+export const NodeTypeVisibilityControl = ({ visibleNodeTypes }) => {
   return (
     <div
       style={{

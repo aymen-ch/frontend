@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { FaChevronUp, FaChevronDown } from 'react-icons/fa';
 import axios from 'axios';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
-import './analysisAttribut.css';
 
 const AnalysisAttributeForm = ({ selectedItem }) => {
   const { t } = useTranslation();
@@ -134,25 +133,16 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
     }
   };
 
-   if (!selectedItem) {
-    return (
-      <div className="sidebar-container">
-        <h3 className="sidebar-title">{t('sidebar.analysisProperties')}</h3>
-        <p className="sidebar-placeholder">{t('sidebar.placeholder')}</p>
-      </div>
-    );
-  }
-
   // Render analysis properties, removing leading underscore
   const renderAnalysisProperties = () => {
     if (!analysisProperties.length) {
-      return <p className="no-properties">{t('sidebar.noAnalysisProperties')}</p>;
+      return <p className="text-sm text-gray-600 m-0">{t('sidebar.noAnalysisProperties')}</p>;
     }
 
     return (
-      <ul className="analysis-properties-list">
+      <ul className="list-none p-0 m-0">
         {analysisProperties.map((prop, index) => (
-          <li key={index} className="analysis-property-item">
+          <li key={index} className="py-1 text-sm text-gray-700">
             • {prop.startsWith('_') ? prop.substring(1) : prop}
           </li>
         ))}
@@ -161,15 +151,18 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
   };
 
   return (
-    <div className="attribute-form-container">
+    <div className="mt-4">
       {/* Analysis Properties Section */}
-      <div className="analysis-properties-section">
-        <div className="analysis-properties-header" onClick={toggleAnalysisProperties}>
-          <span className="analysis-properties-title">{t('sidebar.analysisProperties')}</span>
+      <div className="mb-4">
+        <div
+          className="flex items-center justify-between p-2 bg-gray-100 rounded cursor-pointer text-gray-700 hover:bg-gray-200 transition-colors duration-200"
+          onClick={toggleAnalysisProperties}
+        >
+          <span className="font-bold">{t('sidebar.analysisProperties')}</span>
           {showAnalysisProperties ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         {showAnalysisProperties && (
-          <div className="analysis-properties-content">
+          <div className="mt-2 p-2 bg-white border border-gray-300 rounded">
             {renderAnalysisProperties()}
           </div>
         )}
@@ -177,7 +170,7 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
 
       {/* Attribute Form Section */}
       <button
-        className="toggle-form-btn"
+        className="flex items-center justify-between w-full p-2 bg-gray-100 border-none rounded text-gray-700 hover:bg-gray-200 transition-colors duration-200 text-base"
         onClick={toggleAttributeForm}
         aria-expanded={showAttributeForm}
       >
@@ -187,10 +180,10 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
         {showAttributeForm ? <FaChevronUp /> : <FaChevronDown />}
       </button>
       {showAttributeForm && (
-        <div className="attribute-form">
-          <div className="form-grid">
-            <div className="form-field">
-              <label>
+        <div className="mt-4 p-4 bg-white border border-gray-300 rounded">
+          <div className="grid gap-4">
+            <div className="flex flex-col">
+              <label className="font-bold mb-1">
                 {t('sidebar.direction')}
                 <select
                   value={direction}
@@ -201,19 +194,21 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
                     setAggregation('sum');
                   }}
                   disabled={isLoading}
+                  className="p-2 border border-gray-300 rounded text-base disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   <option value="in">{t('sidebar.incoming')}</option>
                   <option value="out">{t('sidebar.outgoing')}</option>
                 </select>
               </label>
             </div>
-            <div className="form-field">
-              <label>
+            <div className="flex flex-col">
+              <label className="font-bold mb-1">
                 {t('sidebar.calcType')}
                 <select
                   value={calcType}
                   onChange={(e) => setCalcType(e.target.value)}
                   disabled={isLoading}
+                  className="p-2 border border-gray-300 rounded text-base disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   {direction === 'in' ? (
                     <>
@@ -231,13 +226,14 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
             </div>
             {(calcType === 'sum_degree_in' || calcType === 'sum_degree_out') && (
               <>
-                <div className="form-field">
-                  <label>
+                <div className="flex flex-col">
+                  <label className="font-bold mb-1">
                     {t('sidebar.relAttribute')}
                     <select
                       value={selectedRelAttribute}
                       onChange={(e) => setSelectedRelAttribute(e.target.value)}
                       disabled={isLoading}
+                      className="p-2 border border-gray-300 rounded text-base disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                       {relAttributes.map((attr) => (
                         <option key={attr} value={attr}>
@@ -247,13 +243,14 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
                     </select>
                   </label>
                 </div>
-                <div className="form-field">
-                  <label>
+                <div className="flex flex-col">
+                  <label className="font-bold mb-1">
                     {t('sidebar.aggregation')}
                     <select
                       value={aggregation}
                       onChange={(e) => setAggregation(e.target.value)}
                       disabled={isLoading}
+                      className="p-2 border border-gray-300 rounded text-base disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                       <option value="sum">{t('sidebar.sum')}</option>
                       <option value="multiplication">{t('sidebar.multiplication')}</option>
@@ -262,8 +259,8 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
                 </div>
               </>
             )}
-            <div className="form-field">
-              <label>
+            <div className="flex flex-col">
+              <label className="font-bold mb-1">
                 {t('sidebar.attributeName')}
                 <input
                   type="text"
@@ -279,12 +276,13 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
                       ? 'sum_degree_in'
                       : 'sum_degree_out'
                   }
+                  className="p-2 border border-gray-300 rounded text-base disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </label>
             </div>
           </div>
           <button
-            className="insert-attributes-btn"
+            className="mt-4 p-2 bg-blue-500 text-white border-none rounded flex items-center justify-center text-base disabled:bg-gray-500 disabled:cursor-not-allowed"
             onClick={handleInsertAttributes}
             disabled={isLoading || !attributeName.trim()}
             aria-busy={isLoading}
@@ -295,13 +293,16 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
             }
           >
             {isLoading ? (
-              <span className="loading-spinner" aria-hidden="true"></span>
+              <span
+                className="inline-block w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin"
+                aria-hidden="true"
+              ></span>
             ) : (
               t('sidebar.insertNewAttribute')
             )}
           </button>
           {analysisMessage && (
-            <p className="analysis-message">{analysisMessage}</p>
+            <p className="mt-4 p-2 bg-gray-200 rounded text-sm">{analysisMessage}</p>
           )}
         </div>
       )}

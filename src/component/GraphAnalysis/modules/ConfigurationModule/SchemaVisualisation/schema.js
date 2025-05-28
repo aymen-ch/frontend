@@ -501,7 +501,7 @@ const SchemaVisualizer = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col">
-      <h2 className="my-2.5 text-center h-10">
+      <h2 className="my-7.5 text-center h-10">
         {t('Schema visualization')}
       </h2>
       <div className="flex-1 flex min-h-0 relative">
@@ -560,12 +560,12 @@ const SchemaVisualizer = () => {
                   { label: t('Actions'), icon: <FaPlusCircle /> },
                 ].map(({ label, icon }) => (
                   <div
-  key={label}
-  className={`side-nav-item flex items-center gap-2 p-2.5 cursor-pointer rounded-md transition-all duration-200
-    ${activeModule === label
-      ? 'bg-blue-500 text-white font-semibold shadow-md hover:bg-blue-600'
-      : 'bg-transparent text-gray-700 hover:bg-gray-100'}`}
->
+                    key={label}
+                    className={`side-nav-item flex items-center gap-2 p-2.5 cursor-pointer ${
+                      activeModule === label ? 'bg-[#E6F0FA] border-l-4 border-cyan-500 text-blue-800 transform scale-105 shadow-md' : 'bg-transparent'
+                    }`}
+                    onClick={() => handleModuleClick(label)}
+                  >
                     <span className="nav-icon text-base">{icon}</span>
                     <span>{label}</span>
                   </div>

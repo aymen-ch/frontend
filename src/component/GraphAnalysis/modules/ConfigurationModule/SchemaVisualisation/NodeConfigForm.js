@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { updateNodeConfig, getNodeColor, getNodeIcon, NODE_CONFIG } from '../../Parser';
 import { fetchNodeProperties } from '../../../Platforme/Urls';
-import './nodeconfig.css';
 import { useTranslation } from 'react-i18next';
 
 const NodeConfigForm = ({ selectedNode, onUpdate }) => {
@@ -96,87 +95,92 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
 
   if (!selectedNode) {
     return (
-      <div className="sidebar-container">
-        <h3 className="sidebar-title">{t('NodeConfig')}</h3>
-        <p className="sidebar-placeholder">{t('Select a node to change its color or icon')}</p>
+      <div className="p-4 h-full overflow-y-auto">
+        <h3 className="m-0 text-lg">{t('NodeConfig')}</h3>
+        <p className="text-gray-600 italic py-2.5">{t('Select a node to change its color or icon')}</p>
       </div>
     );
   }
 
   return (
-    <div className="node-config-container">
-      <h3 className="sidebar-title">{t('Node Configuration')}</h3>
+    <div className="bg-white p-6 rounded-xl shadow-md max-w-full mt-2.5">
+      <h3 className="m-0 text-lg">{t('Node Configuration')}</h3>
 
-      {error && <div className="error-alert">{t(error)}</div>}
+      {error && (
+        <div className="bg-red-100 text-red-800 p-2.5 rounded border border-red-300 mb-4 text-sm">
+          {t(error)}
+        </div>
+      )}
 
-      <form className="node-config-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>{t('Node Type')}</label>
+      <form className="mt-4" onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className="block font-semibold text-gray-800 mb-1.5">{t('Node Type')}</label>
           <input
             type="text"
             value={nodeType}
             onChange={(e) => setNodeType(e.target.value)}
             placeholder={t('Enter node type')}
-            className="form-control"
+            className="w-full p-2.5 text-base rounded-lg border border-gray-300 focus:border-blue-500 focus:shadow-[0_0_6px_rgba(13,110,253,0.15)] outline-none transition-all duration-300"
           />
         </div>
 
-        <div className="form-group">
-          <label>{t('Color')}</label>
+        <div className="mb-4">
+          <label className="block font-semibold text-gray-800 mb-1.5">{t('Color')}</label>
           <input
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="form-control"
-            style={{ height: '40px', padding: 0 }}
+            className="w-full h-10 p-0 text-base rounded-lg border border-gray-300 focus:border-blue-500 focus:shadow-[0_0_6px_rgba(13,110,253,0.15)] outline-none transition-all duration-300"
           />
         </div>
 
-        <div className="form-group">
-          <label>{t('Size')}</label>
+        <div className="mb-4">
+          <label className="block font-semibold text-gray-800 mb-1.5">{t('Size')}</label>
           <input
             type="number"
             value={size}
             onChange={(e) => setSize(e.target.value)}
             placeholder={t('Node size')}
-            className="form-control"
+            className="w-full p-2.5 text-base rounded-lg border border-gray-300 focus:border-blue-500 focus:shadow-[0_0_6px_rgba(13,110,253,0.15)] outline-none transition-all duration-300"
           />
         </div>
 
-        <div className="form-group">
-          <label>{t('Icon')}</label>
-          <div className="icon-selector">
+        <div className="mb-4">
+          <label className="block font-semibold text-gray-800 mb-1.5">{t('Icon')}</label>
+          <div className="flex gap-2 items-center">
             <input
               type="text"
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
               placeholder={t('Enter icon path')}
-              className="form-control"
+              className="flex-1 p-2.5 text-base rounded-lg border border-gray-300 focus:border-blue-500 focus:shadow-[0_0_6px_rgba(13,110,253,0.15)] outline-none transition-all duration-300"
             />
-            <label className="icon-upload-btn">
+            <label className="bg-blue-500 text-white px-3.5 py-2 rounded-md font-semibold cursor-pointer hover:bg-blue-600 transition-colors duration-300 text-sm">
               {t('Browse')}
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleIconSelect}
-                style={{ display: 'none' }}
+                className="hidden"
               />
             </label>
           </div>
         </div>
 
-        <div className="form-group">
-          <label>{t('Label Property Key')}</label>
-          <div className="label-tags-container">
-            {/* Display selected labels as tags */}
+        <div className="mb-4">
+          <label className="block font-semibold text-gray-800 mb-1.5">{t('Label Property Key')}</label>
+          <div className="mt-2">
             {labelKey.length > 0 ? (
-              <div className="label-tags">
+              <div className="flex flex-wrap gap-2 mb-2">
                 {labelKey.map((label) => (
-                  <span key={label} className="label-tag">
+                  <span
+                    key={label}
+                    className="inline-flex items-center bg-indigo-100 text-indigo-900 px-2 py-1 rounded-full text-sm"
+                  >
                     {label}
                     <button
                       type="button"
-                      className="label-remove-btn"
+                      className="bg-transparent border-none text-indigo-900 text-base ml-1 hover:text-red-600 cursor-pointer leading-none"
                       onClick={() => handleRemoveLabel(label)}
                     >
                       &times;
@@ -185,13 +189,12 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
                 ))}
               </div>
             ) : (
-              <p className="no-labels">{t('No labels selected')}</p>
+              <p className="text-gray-500 text-sm mb-2">{t('No labels selected')}</p>
             )}
 
-            {/* Dropdown to add new labels */}
             <select
               onChange={handleAddLabel}
-              className="form-control"
+              className="w-full p-2.5 text-base rounded-lg border border-gray-300 focus:border-blue-500 focus:shadow-[0_0_6px_rgba(13,110,253,0.15)] outline-none transition-all duration-300"
               disabled={!nodeType || availableProperties.length === 0}
             >
               <option value="">{t('Select a property to add')}</option>
@@ -204,7 +207,12 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
           </div>
         </div>
 
-        <button type="submit" className="apply-btn">{t('Apply')}</button>
+        <button
+          type="submit"
+          className="w-full p-2.5 bg-blue-500 text-white border-none rounded-lg font-semibold text-base hover:bg-blue-600 transition-colors duration-300"
+        >
+          {t('Apply')}
+        </button>
       </form>
     </div>
   );

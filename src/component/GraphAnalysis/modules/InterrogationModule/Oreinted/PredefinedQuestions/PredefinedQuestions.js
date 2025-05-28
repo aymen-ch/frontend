@@ -3,7 +3,7 @@ import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-sql';
 import 'ace-builds/src-noconflict/theme-monokai';
 import './Predifinedquestions.css';
-import { convertNeo4jToGraph } from '../../LLM/graphconvertor';
+import { convertNeo4jToGraph } from '../../LLM/ResultTransformer';
 import neo4j from 'neo4j-driver';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';

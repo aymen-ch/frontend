@@ -246,12 +246,12 @@ const GraphVisualization = React.memo(({
   return (
     <div className={`w-full h-full ${isFullscreen ? 'fixed inset-0 z-[20000] bg-white' : 'relative border border-gray-300'}`}>
       {/* Search Bar - Hidden on small screens, visible on md and above */}
-     <div
+  <div
   ref={searchRef}
-  className="hidden 2xl:flex absolute top-2 left-1/2 transform -translate-x-1/2 z-[100] items-center bg-white/95 rounded-full px-4 py-2 shadow-md border border-gray-200/30 hover:shadow-lg hover:scale-[1.02] transition-all max-w-md w-full"
+  className="hidden 2xl:flex absolute top-2 left-1/2 transform -translate-x-1/2 z-[100] items-center bg-white/95 rounded-full px-4 py-2 shadow-md border border-gray-200/30 hover:shadow-lg hover:scale-[1.02] transition-all max-w-sm w-[400px]"
 >
   <FaSearch
-    className="mr-2 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+    className="min-w-[20px] mr-2 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
     onClick={handleSearchClick}
   />
   <input
@@ -259,7 +259,7 @@ const GraphVisualization = React.memo(({
     value={inputValue}
     onChange={handleInputChange}
     placeholder={t("Search nodes by any property")}
-    className="flex-1 border-none outline-none bg-transparent text-gray-800 text-sm placeholder-gray-500"
+    className="flex-grow min-w-0 border-none outline-none bg-transparent text-gray-800 text-sm placeholder-gray-500"
   />
   {isLoading ? (
     <FaSpinner className="mr-2 text-gray-600 animate-spin" />
@@ -272,15 +272,19 @@ const GraphVisualization = React.memo(({
       />
     )
   )}
-  <select
-    value={searchtype}
-    onChange={handleSearchTypeChange}
-    className="ml-2 p-1 border border-gray-200 rounded bg-white/90 text-sm cursor-pointer hover:bg-white hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-  >
-    <option value="current_graph">{t('Current Graph')}</option>
-    <option value="database">{t('Database')}</option>
-  </select>
+  <div className="ml-2 max-w-[150px]">
+    <select
+      value={searchtype}
+      onChange={handleSearchTypeChange}
+      className="w-full p-1 border border-gray-200 rounded bg-white/90 text-sm cursor-pointer hover:bg-white hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+    >
+      <option value="current_graph">{t('Current Graph')}</option>
+      <option value="database">{t('Database')}</option>
+    </select>
+  </div>
 </div>
+
+
 
       {/* Search Results */}
       {searchResults.length > 0 && (

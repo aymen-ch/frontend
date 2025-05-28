@@ -63,7 +63,7 @@ const AddActionWindow = ({ node, onClose }) => {
     try {
       const defaultQuestion = t('add_action_window.default_question', { nodeType: formData.node_type });
       const response = await axios.post(
-        `${BASE_URL_Backend}/generate_cypher/`,
+        `${BASE_URL_Backend}/generate_action/`,
         {
           question: defaultQuestion,
           node_type: formData.node_type,

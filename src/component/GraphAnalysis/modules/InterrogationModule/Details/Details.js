@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NodeTypeVisibilityControl } from './NodeTypeVisibilityControl';
-import { getNodeColor, getNodeIcon, NODE_CONFIG } from '../../Parser';
-import './detail.css';
+import { getNodeColor, getNodeIcon } from '../../Parser';
+
 
 const DetailsModule = ({
   visibleNodeTypes,
@@ -13,25 +13,11 @@ const DetailsModule = ({
   combinedEdges,
   relationtoshow,
   SelectecRelationData,
-  onNodeConfigChange,
 }) => {
   const { t } = useTranslation();
-  const [nodeColors, setNodeColors] = useState(NODE_CONFIG.nodeColors);
   const [showDetails, setShowDetails] = useState(false);
   const [expandedDetails, setExpandedDetails] = useState({});
 
-  const handleColorChange = (nodeType, newColor) => {
-    const updatedColors = { ...nodeColors, [nodeType]: newColor };
-    setNodeColors(updatedColors);
-    NODE_CONFIG.nodeColors[nodeType] = newColor;
-    if (onNodeConfigChange) {
-      onNodeConfigChange({
-        type: 'color',
-        nodeType,
-        value: newColor,
-      });
-    }
-  };
 
   const toggleDetail = (detailKey) => {
     setExpandedDetails(prev => ({
@@ -44,8 +30,7 @@ const DetailsModule = ({
     <>
       <NodeTypeVisibilityControl
         visibleNodeTypes={visibleNodeTypes}
-        toggleNodeTypeVisibility={toggleNodeTypeVisibility}
-      />
+              />
 
       {relationtoshow && SelectecRelationData && (
         <div className="properties-container">

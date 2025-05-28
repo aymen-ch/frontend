@@ -14,6 +14,7 @@ import { useAggregation, fetchNodeProperties, drawCirclesOnPersonneNodes, ColorP
 import { NODE_CONFIG } from './Parser';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
+import { FaInfoCircle, FaCogs, FaPlusCircle ,FaSpinner} from 'react-icons/fa';
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
@@ -259,7 +260,7 @@ const Container_AlgorithmicAnalysis = () => {
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
                   onClick={() => handleModuleClick(module)}
                 >
-                  {module}
+                 {module}
                 </div>
               ))}
             </div>
@@ -326,7 +327,6 @@ const Container_AlgorithmicAnalysis = () => {
                   relationtoshow={relationtoshow}
                   SelectecRelationData={SelectecRelationData}
                   combinedEdges={combinedEdges}
-                  onNodeConfigChange={handleNodeConfigChange}
                 />
               )}
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import './Chat.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 
@@ -33,9 +32,9 @@ const ChatInput = ({
   };
 
   return (
-    <div className="chat-container">
+    <div className="flex flex-col gap-2 p-3 bg-white rounded-lg shadow-chat">
       <textarea
-        className="chat-input-area"
+        className="w-full p-2.5 rounded-md border border-gray-300 text-sm resize-none min-h-[60px] leading-relaxed disabled:bg-gray-200 disabled:cursor-not-allowed focus:border-chat-blue focus:outline-none"
         placeholder="Tapez un message..."
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
@@ -49,11 +48,11 @@ const ChatInput = ({
         rows="3"
       />
 
-      <div className="chat-toolbar">
-        <div className="toolbar-group">
-          <label className="toolbar-label">Vue :</label>
+      <div className="flex flex-wrap items-center gap-3 justify-between">
+        <div className="flex items-center gap-1.5">
+          <label className="text-sm text-gray-600">Vue :</label>
           <select
-            className="toolbar-select"
+            className="p-1 text-sm border border-gray-300 rounded-md bg-white disabled:bg-gray-200 disabled:cursor-not-allowed focus:border-chat-blue focus:outline-none"
             value={responseType}
             onChange={(e) => setResponseType(e.target.value)}
             disabled={isLoading}
@@ -63,12 +62,10 @@ const ChatInput = ({
           </select>
         </div>
 
-
-
-        <div className="toolbar-group">
-          <label className="toolbar-label">Modèle:</label>
+        <div className="flex items-center gap-1.5">
+          <label className="text-sm text-gray-600">Modèle:</label>
           <select
-            className="toolbar-select"
+            className="p-1 text-sm border border-gray-300 rounded-md bg-white disabled:bg-gray-200 disabled:cursor-not-allowed focus:border-chat-blue focus:outline-none"
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value)}
             disabled={isLoading}
@@ -81,8 +78,12 @@ const ChatInput = ({
           </select>
         </div>
 
-        <button className="send-button" onClick={handleSendMessage} disabled={isLoading}>
-        Envoyer
+        <button
+          className="bg-chat-blue text-white px-3.5 py-2 rounded-md font-medium hover:bg-chat-blue-hover disabled:bg-chat-disabled disabled:cursor-not-allowed transition-colors"
+          onClick={handleSendMessage}
+          disabled={isLoading}
+        >
+          Envoyer
         </button>
       </div>
     </div>
