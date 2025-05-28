@@ -44,6 +44,16 @@ const Container_AlgorithmicAnalysis = () => {
   const [activeAggregations, setActiveAggregations] = useState({});
   const [visibleNodeTypes, setVisibleNodeTypes] = useState({});
   const [selectedEdges, setselectedEdges] = useState(new Set());
+  const [pathFindingParams, setPathFindingParams] = useState(null);
+  const [shortestPathParams, setShortestPathParams] = useState(null);
+  // Callback functions to pass to PathFinder
+  const handleStartPathFinding = (params) => {
+    setPathFindingParams(params);
+  };
+
+  const handleStartShortestPath = (params) => {
+    setShortestPathParams(params);
+  };
 
   useEffect(() => {
     const nodeTypes = {};
@@ -180,34 +190,36 @@ const Container_AlgorithmicAnalysis = () => {
             setselectedEdges={setselectedEdges}
             setSubGrapgTable={setSubGrapgTable}
           />
-          {isBoxPath > 0 && (
-            <div className="path-visualization-overlay">
-              <div className="path-visualization-content">
-                <PathVisualization
-                  setEdges={setEdges}
-                  edges={pathEdges}
-                  setNodes={setNodes}
-                  nodes={pathNodes}
-                  nvlRef={nvlRefPath}
-                  nodetoshow={nodetoshow}
-                  setnodetoshow={setnodetoshow}
-                  setPathEdges={setPathEdges}
-                  setPathNodes={setPathNodes}
-                  setIsBoxPath={setIsBoxPath}
-                  allPaths={allPaths}
-                  currentPathIndex={currentPathIndex}
-                  setCurrentPathIndex={setCurrentPathIndex}
-                  selectednodes={selectedNodes}
-                  setSelectedNodes={setSelectedNodes}
-                  ispath={false}
-                  setAllPaths={setAllPaths}
-                  setPathisempty={setPathisempty}
-                  pathisempty={pathisempty}
-                  setrelationtoshow={setrelationtoshow}
-                />
-              </div>
-            </div>
-          )}
+                {isBoxPath && (
+        <div className="path-visualization-overlay">
+          <div className="path-visualization-content">
+            <PathVisualization
+              setEdges={setEdges}
+              edges={pathEdges}
+              setNodes={setNodes}
+              nodes={pathNodes}
+              nvlRef={nvlRefPath}
+              nodetoshow={nodetoshow}
+              setnodetoshow={setnodetoshow}
+              setPathEdges={setPathEdges}
+              setPathNodes={setPathNodes}
+              setIsBoxPath={setIsBoxPath}
+              allPaths={allPaths}
+              currentPathIndex={currentPathIndex}
+              setCurrentPathIndex={setCurrentPathIndex}
+              selectednodes={selectedNodes}
+              setSelectedNodes={setSelectedNodes}
+              ispath={false}
+              setAllPaths={setAllPaths}
+              setPathisempty={setPathisempty}
+              pathisempty={pathisempty}
+              setrelationtoshow={setrelationtoshow}
+              onStartPathFinding={pathFindingParams}
+              onStartShortestPath={shortestPathParams}
+            />
+          </div>
+        </div>
+      )}
         </div>
 
         {true && (
@@ -254,7 +266,7 @@ const Container_AlgorithmicAnalysis = () => {
                 />
               )}
 
-              {activeModule === t('Detection de Chemin') && (
+             {activeModule === t('Detection de Chemin') && (
                 <PathFinder
                   nvlRef={nvlRef}
                   setPathisempty={setPathisempty}
@@ -264,6 +276,8 @@ const Container_AlgorithmicAnalysis = () => {
                   setCurrentPathIndex={setCurrentPathIndex}
                   setIsBoxPath={setIsBoxPath}
                   selectednodes={selectedNodes}
+                  onStartPathFinding={handleStartPathFinding}
+                  onStartShortestPath={handleStartShortestPath}
                 />
               )}
 
