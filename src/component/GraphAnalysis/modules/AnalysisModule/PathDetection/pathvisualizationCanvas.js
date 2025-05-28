@@ -38,7 +38,7 @@ const PathVisualization = React.memo(({
   const [contextMenu, setContextMenu] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPathList, setShowPathList] = useState(false);
-  const [layoutType, setLayoutType] = useState(FreeLayoutType);
+  const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [position, setPosition] = useState({ x: 500, y: 50 });
   const [size, setSize] = useState({ width: 1300, height: 800 });
   const [isDragging, setIsDragging] = useState(false);
@@ -50,7 +50,13 @@ const PathVisualization = React.memo(({
   const [isSearching, setIsSearching] = useState(false);
   const [accumulatedPaths, setAccumulatedPaths] = useState([]);
 
-  const { pathFindingParams, shortestPathParams } = useAlgorithm();
+    const { 
+    pathFindingParams, 
+    shortestPathParams,
+    startPathfinding,
+    startShortestPathFinding
+  } = useAlgorithm();
+
   // Handle path-finding API call for a specific depth
   const fetchPathsForDepth = async (ids, depth) => {
     console.log("Fetching paths for depth:", depth);
@@ -164,26 +170,28 @@ const PathVisualization = React.memo(({
 
   // Initialize path finding when parameters are received
   useEffect(() => {
-    if (pathFindingParams) {
+       
+   if (pathFindingParams && startPathfinding) {
       console.log("Initializing path finding with params:", pathFindingParams);
-      // setCurrentDepth(1);
-      // setMaxDepth(pathFindingParams.depth);
-      // setIsSearching(true);
-      // setAccumulatedPaths([]);
-      // setAllPaths([]);
-      // setPathNodes([]);
-      // setPathEdges([]);
-      // setPathisempty(false);
+      setCurrentDepth(1);
+      setMaxDepth(pathFindingParams.depth);
+      setIsSearching(true);
+      setAccumulatedPaths([]);
+      setAllPaths([]);
+      setPathNodes([]);
+      setPathEdges([]);
+      setPathisempty(false);
     }
-  }, [pathFindingParams]);
+   }, [pathFindingParams, startPathfinding]);
 
   // Handle shortest path when parameters are received
 useEffect(() => {
-  if (shortestPathParams ) {
-    console.log("Starting shortest path with params:", shortestPathParams);
-    // startShortestPath(shortestPathParams);
+ 
+  if (shortestPathParams && startShortestPathFinding) {
+    console.log("Starting shortest path with params:", startShortestPathFinding);
+    startShortestPath(shortestPathParams);
   }
-}, [shortestPathParams]); // Include startShortestPath if it has dependencies
+ }, [shortestPathParams, startShortestPathFinding]);
 
   // Add paths to main canvas (called manually by user)
   const addPathsToCanvas = (paths) => {

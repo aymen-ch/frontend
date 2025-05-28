@@ -15,7 +15,13 @@ const PathFinder = ({
 }) => {
   const [depth, setDepth] = useState(1);
   const { t } = useTranslation();
-  const { setPathFindingParams, setShortestPathParams } = useAlgorithm();
+    const { 
+    setPathFindingParams, 
+    setShortestPathParams,
+    setStartPathfinding,
+    setStartShortestPathFinding
+  } = useAlgorithm();
+
 
 
   const handleDepthChange = (event) => {
@@ -26,6 +32,9 @@ const PathFinder = ({
     if (selectednodes.size > 0) {
       setIsBoxPath(true); // Show the PathVisualization window
       setPathFindingParams({ ids: Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10)), depth });
+      console.log("H2" ,{ ids: Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10)), depth });
+      setStartPathfinding(true);
+      setStartShortestPathFinding(false); // Ensure only one is running at a time
     }
   };
 
@@ -33,6 +42,8 @@ const PathFinder = ({
     if (selectednodes.size > 0) {
       setIsBoxPath(true); // Show the PathVisualization window
       setShortestPathParams({ ids: Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10)) });
+      setStartShortestPathFinding(true);
+      setStartPathfinding(false); // Ensure only one is running at a time
     }
   };
 

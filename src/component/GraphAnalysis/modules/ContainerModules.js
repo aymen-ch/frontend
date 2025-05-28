@@ -180,6 +180,7 @@ const Container_AlgorithmicAnalysis = () => {
   };
 
   return (
+  <AlgorithmProvider>
   <div className="h-[calc(100vh-50px)] bg-gradient-to-b from-gray-50 to-gray-100 p-0 overflow-hidden relative">
     <div className="flex flex-col min-h-screen p-0">
       <div className="flex flex-grow m-0 p-0">
@@ -210,7 +211,7 @@ const Container_AlgorithmicAnalysis = () => {
           {isBoxPath > 0 && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
               <div className="bg-white p-4 rounded-lg">
-                 <AlgorithmProvider>
+                 
                 <PathVisualization
                   setEdges={setEdges}
                   edges={pathEdges}
@@ -233,7 +234,7 @@ const Container_AlgorithmicAnalysis = () => {
                   pathisempty={pathisempty}
                   setrelationtoshow={setrelationtoshow}
                 />
-                </AlgorithmProvider>
+      
               </div>
             </div>
           )}
@@ -293,7 +294,7 @@ const Container_AlgorithmicAnalysis = () => {
               )}
 
              {activeModule === t('Detection de Chemin') && (
-              <AlgorithmProvider>
+           
                 <PathFinder
                   nvlRef={nvlRef}
                   setPathisempty={setPathisempty}
@@ -307,7 +308,7 @@ const Container_AlgorithmicAnalysis = () => {
                   // setShortestPathParams={setShortestPathParams}
             
                 />
-                </AlgorithmProvider>
+                
               )}
 
               {activeModule === t('Aggregation') && (
@@ -386,6 +387,7 @@ const Container_AlgorithmicAnalysis = () => {
       </div>
     </div>
   </div>
+  </AlgorithmProvider>
 );
 };
 
