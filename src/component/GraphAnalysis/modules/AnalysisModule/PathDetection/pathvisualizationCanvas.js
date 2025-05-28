@@ -8,6 +8,8 @@ import { computeLinearLayout } from '../../VisualisationModule/layout/layout';
 import { ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType, GridLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../../function_container';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
+import { useAlgorithm } from '../../Context'
+
 
 const PathVisualization = React.memo(({
   edges,
@@ -30,8 +32,8 @@ const PathVisualization = React.memo(({
   setAllPaths,
   setNodes,
   setEdges,
-  onStartPathFinding, // Contains { ids, depth }
-  onStartShortestPath, // Contains { ids }
+  // onStartPathFinding, // Contains { ids, depth }
+  // onStartShortestPath, // Contains { ids }
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +50,7 @@ const PathVisualization = React.memo(({
   const [isSearching, setIsSearching] = useState(false);
   const [accumulatedPaths, setAccumulatedPaths] = useState([]);
 
+  const { pathFindingParams, shortestPathParams } = useAlgorithm();
   // Handle path-finding API call for a specific depth
   const fetchPathsForDepth = async (ids, depth) => {
     console.log("Fetching paths for depth:", depth);
@@ -143,12 +146,12 @@ const PathVisualization = React.memo(({
 
   // Iterative path finding for each depth
   useEffect(() => {
-    if (!isSearching || !onStartPathFinding || currentDepth > maxDepth) return;
+    if (!isSearching || !pathFindingParams || currentDepth > maxDepth) return;
 
     const iterateDepths = async () => {
       for (let depth = currentDepth; depth <= maxDepth && isSearching; depth++) {
         setCurrentDepth(depth);
-        await fetchPathsForDepth(onStartPathFinding.ids, depth);
+        await fetchPathsForDepth(pathFindingParams.ids, depth);
         if (!isSearching) break;
       }
       if (isSearching) {
@@ -157,30 +160,30 @@ const PathVisualization = React.memo(({
     };
 
     iterateDepths();
-  }, [isSearching, currentDepth, maxDepth, onStartPathFinding]);
+  }, [isSearching, currentDepth, maxDepth, pathFindingParams]);
 
   // Initialize path finding when parameters are received
   useEffect(() => {
-    if (onStartPathFinding) {
-      console.log("Initializing path finding with params:", onStartPathFinding);
-      setCurrentDepth(1);
-      setMaxDepth(onStartPathFinding.depth);
-      setIsSearching(true);
-      setAccumulatedPaths([]);
-      setAllPaths([]);
-      setPathNodes([]);
-      setPathEdges([]);
-      setPathisempty(false);
+    if (pathFindingParams) {
+      console.log("Initializing path finding with params:", pathFindingParams);
+      // setCurrentDepth(1);
+      // setMaxDepth(pathFindingParams.depth);
+      // setIsSearching(true);
+      // setAccumulatedPaths([]);
+      // setAllPaths([]);
+      // setPathNodes([]);
+      // setPathEdges([]);
+      // setPathisempty(false);
     }
-  }, [onStartPathFinding]);
+  }, [pathFindingParams]);
 
   // Handle shortest path when parameters are received
-  useEffect(() => {
-    console.log("startShortestPath")
-    if (onStartShortestPath) {
-      startShortestPath(onStartShortestPath);
-    }
-  }, [onStartShortestPath]);
+useEffect(() => {
+  if (shortestPathParams ) {
+    console.log("Starting shortest path with params:", shortestPathParams);
+    // startShortestPath(shortestPathParams);
+  }
+}, [shortestPathParams]); // Include startShortestPath if it has dependencies
 
   // Add paths to main canvas (called manually by user)
   const addPathsToCanvas = (paths) => {

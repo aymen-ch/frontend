@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAlgorithm } from '../../Context';
 
 const PathFinder = ({
   setPathEdges,
@@ -9,11 +10,13 @@ const PathFinder = ({
   setIsBoxPath,
   selectednodes,
   setPathisempty,
-  onStartPathFinding, // New callback prop to trigger path finding in PathVisualization
-  onStartShortestPath, // New callback prop for shortest path
+  // setShortestPathParams, // New callback prop to trigger path finding in PathVisualization
+  // setPathFindingParams, // New callback prop for shortest path
 }) => {
   const [depth, setDepth] = useState(1);
   const { t } = useTranslation();
+  const { setPathFindingParams, setShortestPathParams } = useAlgorithm();
+
 
   const handleDepthChange = (event) => {
     setDepth(parseInt(event.target.value, 10));
@@ -22,14 +25,14 @@ const PathFinder = ({
   const handlePathFinding = () => {
     if (selectednodes.size > 0) {
       setIsBoxPath(true); // Show the PathVisualization window
-      onStartPathFinding({ ids: Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10)), depth });
+      setPathFindingParams({ ids: Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10)), depth });
     }
   };
 
   const handleShortestPath = () => {
     if (selectednodes.size > 0) {
       setIsBoxPath(true); // Show the PathVisualization window
-      onStartShortestPath({ ids: Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10)) });
+      setShortestPathParams({ ids: Array.from(selectednodes).map((nodeId) => parseInt(nodeId, 10)) });
     }
   };
 

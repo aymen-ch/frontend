@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, memo, useRef, useEffect,useMemo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './ContainerModules.css';
 import ContextManagerComponent from '../Modules/AnalysisModule/AnalyseTempSpatiale/ContextManager';
@@ -14,6 +14,7 @@ import { useAggregation, fetchNodeProperties, drawCirclesOnPersonneNodes, ColorP
 import { NODE_CONFIG } from './Parser';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
+import { AlgorithmProvider } from './Context';
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
@@ -44,17 +45,16 @@ const Container_AlgorithmicAnalysis = () => {
   const [activeAggregations, setActiveAggregations] = useState({});
   const [visibleNodeTypes, setVisibleNodeTypes] = useState({});
   const [selectedEdges, setselectedEdges] = useState(new Set());
+  
+  // const [pathFindingParams, setPathFindingParams] = useState(null);
+  // const [shortestPathParams, setShortestPathParams] = useState(null);
 
-  const [pathFindingParams, setPathFindingParams] = useState(null);
-  const [shortestPathParams, setShortestPathParams] = useState(null);
+  // // Memoize the props to prevent unnecessary reference changes
+  // const pathFindingProps = useMemo(() => ({ pathFindingParams }), [pathFindingParams]);
+  // const shortestPathProps = useMemo(() => ({ shortestPathParams }), [shortestPathParams]);
   // Callback functions to pass to PathFinder
-  const handleStartPathFinding = (params) => {
-    setPathFindingParams(params);
-  };
 
-  const handleStartShortestPath = (params) => {
-    setShortestPathParams(params);
-  };
+
 
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
@@ -207,6 +207,7 @@ const Container_AlgorithmicAnalysis = () => {
                 {isBoxPath && (
         <div className="path-visualization-overlay">
           <div className="path-visualization-content">
+            <AlgorithmProvider>
             <PathVisualization
               setEdges={setEdges}
               edges={pathEdges}
@@ -228,9 +229,10 @@ const Container_AlgorithmicAnalysis = () => {
               setPathisempty={setPathisempty}
               pathisempty={pathisempty}
               setrelationtoshow={setrelationtoshow}
-              onStartPathFinding={pathFindingParams}
-              onStartShortestPath={shortestPathParams}
+              // onStartPathFinding={pathFindingProps}
+              // onStartShortestPath={shortestPathProps}
             />
+            </AlgorithmProvider>
           </div>
         </div>
       )}
@@ -281,6 +283,7 @@ const Container_AlgorithmicAnalysis = () => {
               )}
 
              {activeModule === t('Detection de Chemin') && (
+              <AlgorithmProvider>
                 <PathFinder
                   nvlRef={nvlRef}
                   setPathisempty={setPathisempty}
@@ -290,9 +293,11 @@ const Container_AlgorithmicAnalysis = () => {
                   setCurrentPathIndex={setCurrentPathIndex}
                   setIsBoxPath={setIsBoxPath}
                   selectednodes={selectedNodes}
-                  onStartPathFinding={handleStartPathFinding}
-                  onStartShortestPath={handleStartShortestPath}
+                  // setPathFindingParams={setPathFindingParams}
+                  // setShortestPathParams={setShortestPathParams}
+            
                 />
+                </AlgorithmProvider>
               )}
 
               {activeModule === t('Aggregation') && (
