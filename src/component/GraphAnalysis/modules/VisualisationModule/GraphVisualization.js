@@ -8,18 +8,12 @@ import AddActionWindow from "../Windows/Actions/PersonProfileWindow/Actions";
 import Analyse_statistique from "../Windows/Actions/PersonProfileWindow/analyse_statistique";
 import Analyse_BackEnd from "../Windows/Actions/PersonProfileWindow/Analyse_BackEnd";
 import Community_BackEnd from "../Windows/Actions/PersonProfileWindow/Community_BackEnd";
-import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaSearch, FaTimes, FaSpinner, FaHome } from 'react-icons/fa';
+import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa';
 import { MdOutlineTabUnselected } from "react-icons/md";
-import {  ForceDirectedLayoutType } from '@neo4j-nvl/base';
+import { ForceDirectedLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../function_container';
 import globalWindowState from '../globalWindowState';
 import { useTranslation } from 'react-i18next';
-import { 
-  buttonStyle, 
-  searchStyle, 
-  containerStyle,
-  searchSelectStyle 
-} from './GraphVisualizationStyles';
 import { filterNodesByQuery } from './GraphVisualizationUtils';
 import { BASE_URL_Backend } from '../../Platforme/Urls';
 import { getNodeColor, getNodeIcon, createNode } from '../Parser';
@@ -55,7 +49,6 @@ const GraphVisualization = React.memo(({
   const [contextMenuRel, setContextMenuRel] = useState(null);
   const [ContextMenucanvass, SetContextMenucanvass] = useState(null);
   const { t } = useTranslation();
-
   const [allPaths, setAllPaths] = useState([]);
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
   const [render, setRenderer] = useState("canvas");
@@ -63,7 +56,6 @@ const GraphVisualization = React.memo(({
   const [searchtype, setsearchtype] = useState("current_graph");
   const [graphHistory, setGraphHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  
   const [showSettings, setShowSettings] = useState(false);
   const [activeWindow, setActiveWindow] = useState(null);
   const [inputValue, setInputValue] = useState('');
@@ -97,11 +89,9 @@ const GraphVisualization = React.memo(({
         edges: JSON.parse(JSON.stringify(edges)),
         timestamp: Date.now()
       };
-      
       if (historyIndex < graphHistory.length - 1) {
         setGraphHistory(prev => prev.slice(0, historyIndex + 1));
       }
-      
       setGraphHistory(prev => [...prev, newState]);
       setHistoryIndex(prev => prev + 1);
     }
@@ -139,9 +129,7 @@ const GraphVisualization = React.memo(({
             'Content-Type': 'application/json',
           }
         });
-
         const limitedResults = response.data.slice(0, 50);
-        console.log(limitedResults);
         setSearchResults(limitedResults);
       } catch (error) {
         console.error('Error searching database:', error);
@@ -152,7 +140,6 @@ const GraphVisualization = React.memo(({
   };
 
   const handleAddNodeToCanvas = (result) => {
-    console.log(result);
     setNodes(prevNodes => {
       const node = createNode(result.id, result.properties.type, result.properties);
       if (prevNodes.some(n => n.id === node.id)) {
@@ -185,14 +172,12 @@ const GraphVisualization = React.memo(({
       alert(t('Please enter a file name'));
       return;
     }
-
     if (saveType === 'png') {
       nvlRef.current.saveFullGraphToLargeFile({
         backgroundColor: "white",
         filename: `${fileName}.png`
       });
-    } 
-
+    }
     setShowSaveModal(false);
     setFileName('');
     setSaveType('png');
@@ -208,14 +193,11 @@ const GraphVisualization = React.memo(({
     if (historyIndex > 0) {
       const previousIndex = historyIndex - 1;
       const previousState = graphHistory[previousIndex];
-      
       setNodes(previousState.nodes);
       setEdges(previousState.edges);
       setHistoryIndex(previousIndex);
-      
       setSelectedNodes([]);
       setselectedEdges([]);
-      
       setTimeout(() => {
         nvlRef.current.fit(
           previousState.nodes.map(n => n.id),
@@ -226,10 +208,6 @@ const GraphVisualization = React.memo(({
           }
         );
       }, 100);
-      
-      console.log(`Reverted to state ${previousIndex + 1} of ${graphHistory.length}`);
-    } else {
-      console.log('No previous state available');
     }
   };
 
@@ -266,59 +244,49 @@ const GraphVisualization = React.memo(({
   };
 
   return (
-    <div style={containerStyle(isFullscreen)}>
-      <div ref={searchRef} style={{ ...searchStyle, display: 'flex', alignItems: 'center' }}>
-        <FaSearch 
-          style={{ marginRight: '5px', cursor: 'pointer', width: '200px' }} 
-          onClick={handleSearchClick}
-        />
-        <input
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}  
-          placeholder={t("Search nodes by any property")}
-          style={{ border: 'none', outline: 'none', background: 'transparent', width: '500px', marginRight: '5px' }}
-        />
-        {isLoading ? (
-          <FaSpinner
-            style={{ marginRight: '5px', color: '#666', animation: 'spin 1s linear infinite',color: '#666', width: '200px' }}
-          />
-        ) : inputValue && (
-          <FaTimes
-            size={16}
-            style={{ marginRight: '5px', cursor: 'pointer', color: '#666', width: '200px' }}
-            onClick={handleClearSearch}
-            title="Clear search"
-          />
-        )}
-        <select
-          value={searchtype}
-          onChange={handleSearchTypeChange}
-          style={searchSelectStyle}
-        >
-          <option value="current_graph">{t('Current Graph')}</option>
-          <option value="database">{t('Database')}</option>
-        </select>
-      </div>
+    <div className={`w-full h-full ${isFullscreen ? 'fixed inset-0 z-[20000] bg-white' : 'relative border border-gray-300'}`}>
+      {/* Search Bar - Hidden on small screens, visible on md and above */}
+     <div
+  ref={searchRef}
+  className="hidden 2xl:flex absolute top-2 left-1/2 transform -translate-x-1/2 z-[100] items-center bg-white/95 rounded-full px-4 py-2 shadow-md border border-gray-200/30 hover:shadow-lg hover:scale-[1.02] transition-all max-w-md w-full"
+>
+  <FaSearch
+    className="mr-2 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+    onClick={handleSearchClick}
+  />
+  <input
+    type="text"
+    value={inputValue}
+    onChange={handleInputChange}
+    placeholder={t("Search nodes by any property")}
+    className="flex-1 border-none outline-none bg-transparent text-gray-800 text-sm placeholder-gray-500"
+  />
+  {isLoading ? (
+    <FaSpinner className="mr-2 text-gray-600 animate-spin" />
+  ) : (
+    inputValue && (
+      <FaTimes
+        className="mr-2 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+        onClick={handleClearSearch}
+        title="Clear search"
+      />
+    )
+  )}
+  <select
+    value={searchtype}
+    onChange={handleSearchTypeChange}
+    className="ml-2 p-1 border border-gray-200 rounded bg-white/90 text-sm cursor-pointer hover:bg-white hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+  >
+    <option value="current_graph">{t('Current Graph')}</option>
+    <option value="database">{t('Database')}</option>
+  </select>
+</div>
 
+      {/* Search Results */}
       {searchResults.length > 0 && (
-        <div 
+        <div
           ref={resultsRef}
-          style={{
-            position: 'absolute',
-            zIndex: 1002,
-            top: '60px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-            borderRadius: '8px',
-            padding: '10px',
-            maxHeight: '300px',
-            overflowY: 'auto',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
-            width: '350px',
-            border: '1px solid rgba(0, 0, 0, 0.05)',
-          }}
+          className="absolute z-[1002] top-14 left-1/2 transform -translate-x-1/2 bg-white/95 rounded-lg p-3 max-h-80 overflow-y-auto shadow-lg border border-gray-100/50 w-80 md:w-96"
         >
           {searchResults.map((result, index) => {
             const nodeType = result.properties.type;
@@ -328,43 +296,25 @@ const GraphVisualization = React.memo(({
             return (
               <div
                 key={result.id || index}
-                style={{
-                  padding: '8px',
-                  cursor: 'pointer',
-                  borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
+                className="p-2 cursor-pointer border-b border-gray-100/50 flex items-center hover:bg-gray-50 transition-colors"
                 onClick={() => handleAddNodeToCanvas(result)}
               >
-                <div style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  backgroundColor,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: '10px',
-                }}>
-                  <img 
-                    src={iconSrc} 
-                    alt={nodeType} 
-                    style={{ width: '20px', height: '20px' }} 
-                  />
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor }}
+                >
+                  <img src={iconSrc} alt={nodeType} className="w-5 h-5" />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
-                    {nodeType}
-                  </div>
-                  <div style={{ fontSize: '12px' }}>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold">{nodeType}</div>
+                  <div className="text-xs">
                     {result.properties && Object.entries(result.properties).map(([key, value]) => (
                       <div key={key}>
                         <strong>{key}:</strong> {value}
                       </div>
                     ))}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>
+                  <div className="text-xs text-gray-600">
                     Score: {result.properties.score.toFixed(2)}
                   </div>
                 </div>
@@ -373,87 +323,64 @@ const GraphVisualization = React.memo(({
           })}
         </div>
       )}
-      <LayoutControl 
-        nvlRef={nvlRef}
-        nodes={nodes}
-        edges={edges}
-        layoutType={layoutType}
-        setLayoutType={setLayoutType} 
-      />
+
+      {/* Controls Container - LayoutControl and Other Buttons Side by Side on md+ */}
+      <div className="absolute top-2 left-2 z-[1000] flex flex-col md:flex-row gap-2 items-start">
+        <LayoutControl
+          nvlRef={nvlRef}
+          nodes={nodes}
+          edges={edges}
+          layoutType={layoutType}
+          setLayoutType={setLayoutType}
+        />
+
+  
 
 
-      <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '390px' }}
-        onClick={handleSave}
-        title={t('Save')}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-      >
-        <FaSave size={16} />
-      </button>
+        <div className="flex flex-col md:flex-row gap-2 bg-white/95 rounded-lg p-2 shadow-md">
+    <button
+      className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
+      onClick={handleSave}
+      title={t('Save')}
+    >
+      <FaSave className="text-gray-600" size={16} />
+    </button>
+    <button
+      className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
+      onClick={toggleFullscreen}
+      title={isFullscreen ? t("Exit Fullscreen") : t("Enter Fullscreen")}
+    >
+      {isFullscreen ? <FaCompress className="text-gray-600" size={16} /> : <FaExpand className="text-gray-600" size={16} />}
+    </button>
+    <button
+      className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
+      onClick={handleDelete}
+      title={t('Delete Selected')}
+    >
+      <FaTrash className="text-gray-600" size={16} />
+    </button>
+    <button
+      className={`border border-gray-200 rounded p-2 hover:scale-105 transition-all ${multiselecte ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-white/80 hover:bg-white'}`}
+      onClick={hanldemultiselecte}
+      title={t('Multi select')}
+    >
+      <MdOutlineTabUnselected className={`${multiselecte ? 'text-white' : 'text-gray-600'}`} size={16} />
+    </button>
+  </div>
+<select
+  value={render}
+  onChange={handlewebgl}
+  className="mt-[2.5px] h-[45px] bg-white/95 border border-gray-200 rounded px-3 py-2 text-sm cursor-pointer hover:bg-white hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all shadow-md"
+  title={t('Select Renderer')}
+>
+  <option value="canvas">{t('Canvas')}</option>
+  <option value="WebGL">{t('WebGL')}</option>
+</select>
 
-      <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '430px' }}
-        onClick={toggleFullscreen}
-        title={isFullscreen ? t("Exit Fullscreen") : t("Enter Fullscreen")}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-      >
-        {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
-      </button>
 
+      </div>
 
-      <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '470px' }}
-        onClick={handleDelete}
-        title={t('Delete Selected')}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-      >
-        <FaTrash size={16} />
-      </button>
-
-      <select
-        value={render}
-        onChange={handlewebgl}
-        style={{
-          ...searchSelectStyle,
-          position: 'absolute',
-          top: '11px',
-          left: '540px',
-          width: '100px',
-          height: '35px',
-          padding: '0 8px',
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
-          borderRadius: '4px',
-          zIndex: 1001,
-          fontSize: '14px',
-          cursor: 'pointer',
-        }}
-        title={t('Select Renderer')}
-      >
-        <option value="canvas">{t('Canvas')}</option>
-        <option value="WebGL">{t('WebGL')}</option>
-      </select>
-
-      <button
-        style={{
-          ...buttonStyle,
-          position: 'absolute',
-          top: '10px',
-          left: '510px',
-          backgroundColor: multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)',
-          cursor: multiselecte ? 'crosshair' : 'pointer',
-        }}
-        onClick={hanldemultiselecte}
-        title={t('Multi select')}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = multiselecte ? 'darkblue' : 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)'}
-      >
-        <MdOutlineTabUnselected size={16} />
-      </button>
-
+      {/* Graph Canvas */}
       <GraphCanvas
         nvlRef={nvlRef}
         nodes={nodes}
@@ -473,8 +400,9 @@ const GraphVisualization = React.memo(({
         layoutType={layoutType}
         multiselecte={multiselecte}
         setmultiselecte={setmultiselecte}
-      /> 
+      />
 
+      {/* Context Menus */}
       {contextMenu && contextMenu.visible && (
         <ContextMenu
           contextMenu={contextMenu}
@@ -494,7 +422,6 @@ const GraphVisualization = React.memo(({
           setActiveAggregations={setActiveAggregations}
         />
       )}
-
       {contextMenuRel && contextMenuRel.visible && (
         <ContextMenuRel
           contextMenuRel={contextMenuRel}
@@ -503,7 +430,6 @@ const GraphVisualization = React.memo(({
           setEdges={setEdges}
         />
       )}
-
       {ContextMenucanvass && ContextMenucanvass.visible && (
         <ContextMenucanvas
           ContextMenucanvas={ContextMenucanvass}
@@ -517,24 +443,24 @@ const GraphVisualization = React.memo(({
         />
       )}
 
+      {/* Windows */}
       {activeWindow === 'PersonProfile' && (
         <PersonProfileWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
       {activeWindow === 'add_action' && (
         <AddActionWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
-
       {activeWindow === 'analyse_statistique' && (
         <Analyse_statistique data={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
       {activeWindow === 'Analyse_BackEnd' && (
         <Analyse_BackEnd selectedGroup={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
-
       {activeWindow === 'Community_BackEnd' && (
         <Community_BackEnd selectedGroup={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
 
+      {/* Save Modal */}
       <Modal show={showSaveModal} onHide={handleSaveCancel} centered>
         <Modal.Header closeButton>
           <Modal.Title>{t('Save Graph')}</Modal.Title>
@@ -598,8 +524,6 @@ GraphVisualization.propTypes = {
   selectedEdges: PropTypes.instanceOf(Set).isRequired,
   setselectedEdges: PropTypes.func.isRequired,
   setSubGrapgTable: PropTypes.func.isRequired,
-  addVisualization: PropTypes.func.isRequired,
-  onBackToList: PropTypes.func.isRequired,
 };
 
 export default GraphVisualization;

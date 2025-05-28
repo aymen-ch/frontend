@@ -1,4 +1,4 @@
-/* Main container styles */
+Main container styles
 .container-fluid.test {
   height: calc(100vh - 50px);
     overflow: hidden;

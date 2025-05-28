@@ -180,9 +180,10 @@ const Container_AlgorithmicAnalysis = () => {
   };
 
   return (
-    <div className="container-fluid test bg-gray-50">
-      <div className="row flex-grow-1 m-0 p-0">
-        <div className={`col ${isFullscreen ? 'p-0' : 'col-lg-12 col-md-12 col-12'} flex-grow-1`}>
+  <div className="h-[calc(100vh-50px)] bg-gradient-to-b from-gray-50 to-gray-100 p-0 overflow-hidden relative">
+    <div className="flex flex-col min-h-screen p-0">
+      <div className="flex flex-grow m-0 p-0">
+        <div className={`flex-grow ${isFullscreen ? 'p-0 h-screen' : 'lg:w-full md:w-full w-full h-[calc(100vh-60px)] overflow-y-auto'} rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.05)] mr-[60px]`}>
           <MemoizedGraphVisualization
             setEdges={setEdges}
             edges={combinedEdges}
@@ -204,46 +205,49 @@ const Container_AlgorithmicAnalysis = () => {
             setselectedEdges={setselectedEdges}
             setSubGrapgTable={setSubGrapgTable}
           />
-                {isBoxPath && (
-        <div className="path-visualization-overlay">
-          <div className="path-visualization-content">
-            <AlgorithmProvider>
-            <PathVisualization
-              setEdges={setEdges}
-              edges={pathEdges}
-              setNodes={setNodes}
-              nodes={pathNodes}
-              nvlRef={nvlRefPath}
-              nodetoshow={nodetoshow}
-              setnodetoshow={setnodetoshow}
-              setPathEdges={setPathEdges}
-              setPathNodes={setPathNodes}
-              setIsBoxPath={setIsBoxPath}
-              allPaths={allPaths}
-              currentPathIndex={currentPathIndex}
-              setCurrentPathIndex={setCurrentPathIndex}
-              selectednodes={selectedNodes}
-              setSelectedNodes={setSelectedNodes}
-              ispath={false}
-              setAllPaths={setAllPaths}
-              setPathisempty={setPathisempty}
-              pathisempty={pathisempty}
-              setrelationtoshow={setrelationtoshow}
-              // onStartPathFinding={pathFindingProps}
-              // onStartShortestPath={shortestPathProps}
-            />
-            </AlgorithmProvider>
-          </div>
-        </div>
-      )}
+
+
+          {isBoxPath > 0 && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+              <div className="bg-white p-4 rounded-lg">
+                 <AlgorithmProvider>
+                <PathVisualization
+                  setEdges={setEdges}
+                  edges={pathEdges}
+                  setNodes={setNodes}
+                  nodes={pathNodes}
+                  nvlRef={nvlRefPath}
+                  nodetoshow={nodetoshow}
+                  setnodetoshow={setnodetoshow}
+                  setPathEdges={setPathEdges}
+                  setPathNodes={setPathNodes}
+                  setIsBoxPath={setIsBoxPath}
+                  allPaths={allPaths}
+                  currentPathIndex={currentPathIndex}
+                  setCurrentPathIndex={setCurrentPathIndex}
+                  selectednodes={selectedNodes}
+                  setSelectedNodes={setSelectedNodes}
+                  ispath={false}
+                  setAllPaths={setAllPaths}
+                  setPathisempty={setPathisempty}
+                  pathisempty={pathisempty}
+                  setrelationtoshow={setrelationtoshow}
+                />
+                </AlgorithmProvider>
+              </div>
+            </div>
+          )}
+
+              
+
         </div>
 
         {true && (
-          <div className="side-nav d-flex flex-column">
-            <div className="side-nav-inner">
+          <div className="absolute right-0 top-0 bottom-0 w-[60px] flex flex-col z-50 p-0">
+            <div className="flex flex-col h-full bg-[#E4EFE7] border-l border-black/10 overflow-y-auto justify-start pt-0 mt-0">
               {[
                 t('Details'),
-                t('interogation'),
+                t('Interrogation'),
                 t('Contextualization'),
                 t('Detection de Chemin'),
                 t('Aggregation'),
@@ -251,7 +255,12 @@ const Container_AlgorithmicAnalysis = () => {
               ].map((module) => (
                 <div
                   key={module}
-                  className={`side-nav-item ${activeModule === module ? 'active' : ''}`}
+                  className={`flex items-center justify-center min-h-[100px] border-b border-white/10 text-gray-500 cursor-pointer transition-all writing-mode-vertical-rl px-3 py-4 ${
+                    activeModule === module
+                      ? 'bg-[#E6F0FA] border-l-4 border-cyan-500 text-blue-800 transform scale-105 shadow-md'
+                      : ''
+                  }`}
+                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
                   onClick={() => handleModuleClick(module)}
                 >
                   {module}
@@ -262,15 +271,16 @@ const Container_AlgorithmicAnalysis = () => {
         )}
 
         {activeModule && (
-          <div className="module-panel">
-            <div className="module-header">
-              <h5 className="module-title">{activeModule}</h5>
-              <button className="btn btn-sm module-close-btn" onClick={() => setActiveModule(null)}>
-                ×
-              </button>
-            </div>
-
-            <div className="module-content">
+        <div
+    className="absolute right-[60px] top-0 bottom-0 w-[700px] lg:w-[600px] md:w-[400px] sm:w-[300px] bg-white shadow-[-3px_0_10px_rgba(0,0,0,0.1)] z-20 overflow-y-auto p-5 border-l border-gray-200"
+  >
+    <div className="flex justify-between items-center border-b-2 border-[#3a4a66] pb-2 mb-4 sticky top-0 bg-white pt-1">
+      <h5 className="text-gray-800 font-semibold m-0">{activeModule}</h5>
+      <button className="text-gray-500 text-xl leading-none p-0" onClick={() => setActiveModule(null)}>
+        ×
+      </button>
+    </div>
+            <div className="bg-gray-50 rounded-lg">
               {activeModule === t('Contextualization') && (
                 <Memoizedcontext
                   SubGrapgTable={SubGrapgTable}
@@ -327,7 +337,7 @@ const Container_AlgorithmicAnalysis = () => {
                 />
               )}
 
-              {activeModule === t('interogation') && (
+              {activeModule === t('Interrogation') && (
                 <InterrogationModule
                   selectedOption={selectedOption}
                   setSelectedOption={setSelectedOption}
@@ -340,7 +350,7 @@ const Container_AlgorithmicAnalysis = () => {
               )}
 
               {activeModule === t('Analysis') && (
-                <div className="analysis-module">
+                <div className="p-4">
                   <Analysis
                     setEdges={setEdges}
                     setNodes={setNodes}
@@ -357,25 +367,26 @@ const Container_AlgorithmicAnalysis = () => {
             </div>
           </div>
         )}
-      </div>
 
-      {SubGrapgTable.results.length > 0 && combinedNodes.length > 0 && (
-        <div className="timeline-container">
-          <div className="container-fluid px-2">
-            <div className="row">
-              <div className="col-12">
-                <TimelineBar
-                  data={extractAffaires()}
-                  setItemsInRange={setAffairesInRange}
-                  attributes={['Affaire_date']}
-                />
+        {SubGrapgTable.results.length > 0 && combinedNodes.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 p-2 bg-white/90 border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-[100]">
+            <div className="container mx-auto px-2">
+              <div className="flex">
+                <div className="w-full">
+                  <TimelineBar
+                    data={extractAffaires()}
+                    setItemsInRange={setAffairesInRange}
+                    attributes={['Affaire_date']}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
-  );
+  </div>
+);
 };
 
 Container_AlgorithmicAnalysis.propTypes = {

@@ -134,8 +134,13 @@ const AnalysisAttributeForm = ({ selectedItem }) => {
     }
   };
 
-  if (!selectedItem?.isnode) {
-    return null; // Don't render the form if the selected item is not a node
+   if (!selectedItem) {
+    return (
+      <div className="sidebar-container">
+        <h3 className="sidebar-title">{t('sidebar.analysisProperties')}</h3>
+        <p className="sidebar-placeholder">{t('sidebar.placeholder')}</p>
+      </div>
+    );
   }
 
   // Render analysis properties, removing leading underscore
