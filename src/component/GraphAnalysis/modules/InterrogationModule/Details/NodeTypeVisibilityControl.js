@@ -33,17 +33,6 @@ export const NodeTypeVisibilityControl = ({ visibleNodeTypes, toggleNodeTypeVisi
               minWidth: 'fit-content',
             }}
           >
-            <input
-              type="checkbox"
-              checked={visibleNodeTypes[nodeType]}
-              onChange={() => toggleNodeTypeVisibility(nodeType)}
-              style={{
-                cursor: 'pointer',
-                width: '16px',
-                height: '16px',
-                accentColor: color,
-              }}
-            />
             {iconPath && (
               <div
                 style={{

@@ -1,0 +1,172 @@
+/* GraphVisualization.css */
+/* Styles personnalisés pour compléter Bootstrap */
+
+/* Conteneur principal */
+.graph-visualization-container {
+  border: 1px solid #dee2e6;
+}
+
+/* Barre de recherche */
+.search-bar {
+  min-width: 300px;
+  max-width: 500px;
+  z-index: 100;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.search-icon, .clear-icon {
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.spinner-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.search-select {
+  width: auto;
+}
+
+/* Résultats de recherche */
+.search-results {
+  width: 90%;
+  max-width: 500px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1002;
+}
+
+@media (min-width: 768px) {
+  .search-results {
+    width: 500px;
+  }
+}
+
+.search-result-item {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-result-item:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.node-icon-container {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Barre d'outils à gauche */
+.left-side-toolbar {
+  z-index: 1000;
+  margin: 10px;
+}
+
+/* Boutons d'outils */
+.tool-button {
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  transition: transform 0.1s;
+}
+
+.tool-button:hover {
+  transform: scale(1.05);
+}
+
+.renderer-select {
+  width: 100px;
+  height: 35px;
+}
+
+/* Contrôle de layout */
+.layout-button {
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  transition: transform 0.1s;
+}
+
+.layout-button:hover {
+  transform: scale(1.05);
+}
+
+/* Fenêtres modales */
+.modal-window {
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  z-index: 1100;
+}
+
+@media (min-width: 768px) {
+  .modal-window {
+    max-width: 80%;
+  }
+}
+
+@media (min-width: 992px) {
+  .modal-window {
+    max-width: 70%;
+  }
+}
+
+/* Media queries pour la responsivité */
+@media (max-width: 767.98px) {
+  .search-bar {
+    min-width: 200px;
+    max-width: 90%;
+  }
+  
+  /* Sur petit écran, la barre d'outils reste horizontale mais peut défiler */
+  .left-side-toolbar {
+    overflow-x: auto;
+    white-space: nowrap;
+    max-width: calc(100% - 20px);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .search-bar {
+    min-width: 150px;
+    max-width: 95%;
+  }
+  
+  .search-input {
+    font-size: 12px;
+  }
+  
+  .search-select {
+    font-size: 12px;
+  }
+  
+  .tool-button, .layout-button {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .renderer-select {
+    height: 30px;
+    font-size: 12px;
+    width: 80px;
+  }
+}

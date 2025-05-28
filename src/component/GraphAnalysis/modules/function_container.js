@@ -240,28 +240,7 @@ export const fetchNodeProperties = async (nodeId, setSelectedNodeData) => {
     }
   };
   // Aggregation definitions
-const virtualRelations = [
-  {
-      "name": "Appel_telephone",
-      "path": ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"]
-  },
-  {
-      "name": "memeaffaire",
-      "path": ["Personne", "Impliquer", "Affaire", "Impliquer", "Personne"]
-  },
-  {
-      "name": "impliquer",
-      "path": ["Phone", "Proprietaire", "Personne", "Impliquer", "Affaire"]
-  },
-  {
-      "name": "ProduitDansCommune",
-      "path": ["Affaire", "Traiter", "Unite", "situer", "Commune"]
-  },
-  {
-      "name": "ProduitDansDaira",
-      "path": ["Affaire", "Traiter", "Unite", "situer", "Commune", "appartient", "Daira"]
-  }
-];
+
 
 // Helper to get aggregation path by name
 const getAggregationPath = (relationName) => {

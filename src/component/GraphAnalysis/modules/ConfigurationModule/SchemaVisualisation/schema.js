@@ -499,83 +499,91 @@ const SchemaVisualizer = () => {
   };
 
   return (
-    <div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column' }}>
-      <h2 style={{ margin: '10px 0', textAlign: 'center', height: '40px' }}>
-        {t('Schema visualization')}
-      </h2>
-      <div style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}>
-        <div
-          style={{
-            flex: 1,
-            position: 'relative',
-            marginRight: isSidebarVisible ? '400px' : '0',
-            transition: 'margin-right 0.3s ease-in-out',
-          }}
-        >
-          <GraphCanvas
+  <div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column' }}>
+    <h2 style={{ margin: '10px 0', textAlign: 'center', height: '40px' }}>
+      {t('Schema visualization')}
+    </h2>
+    <div style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}>
+      <div
+        style={{
+          flex: 1,
+          position: 'relative',
+          marginRight: isSidebarVisible
+            ? activeModule
+              ? '630px' // Full sidebar width when a module is active
+              : '0px' // Narrower width for navigation-only
+            : '0', // No margin when sidebar is hidden
+         
+        }}
+      >
+        <GraphCanvas
+          nvlRef={nvlRef}
+          nodes={nodes}
+          edges={edges}
+          selectedNodes={selectedNodes}
+          setSelectedNodes={setSelectedNodes}
+          setContextMenu={setContextMenu}
+          setnodetoshow={() => {}}
+          ispath={false}
+          setrelationtoshow={() => {}}
+          setEdges={setEdges}
+          setNodes={setNodes}
+          selectedEdges={selectedEdges}
+          setselectedEdges={setSelectedEdges}
+        />
+        <div>
+          <LayoutControl
             nvlRef={nvlRef}
             nodes={nodes}
             edges={edges}
-            selectedNodes={selectedNodes}
-            setSelectedNodes={setSelectedNodes}
-            setContextMenu={setContextMenu}
-            setnodetoshow={() => {}}
-            ispath={false}
-            setrelationtoshow={() => {}}
-            setEdges={setEdges}
-            setNodes={setNodes}
-            selectedEdges={selectedEdges}
-            setselectedEdges={setSelectedEdges}
+            layoutType={layoutType}
+            setLayoutType={setLayoutType}
           />
-          <div>
-            <LayoutControl
-              nvlRef={nvlRef}
-              nodes={nodes}
-              edges={edges}
-              layoutType={layoutType}
-              setLayoutType={setLayoutType}
-            />
-          </div>
         </div>
+      </div>
 
+      {isSidebarVisible && (
         <div
           style={{
             position: 'fixed',
-            right: isSidebarVisible ? '0' : '-400px',
-            width: '530px',
+            right: '0',
+            top:'120px',///// here use logique to make it start  with the parent of it
+            width: activeModule ? '630px' : '60px', // Full width for active module, narrow for navigation
             height: 'calc(100vh - 40px)',
             background: '#f0f0f0',
             borderLeft: '1px solid #ccc',
             overflowY: 'auto',
-            padding: '15px',
+            padding: activeModule ? '15px' : '15px 5px', // Adjust padding for navigation-only
             zIndex: 1000,
             boxSizing: 'border-box',
-            transition: 'right 0.3s ease-in-out',
+            transition: 'width 0.3s ease-in-out, padding 0.3s ease-in-out',
           }}
         >
-          {true && (
-            <div className="side-nav">
-              <div className="side-nav-inner">
-                {[
-                  { label: t('Detail'), icon: <FaInfoCircle /> },
-                  { label: t('Attribue danalyse') , icon: <FaSpinner /> },
-                  { label: t('NodeConfig'), icon: <FaCogs /> },
-                  { label: t('Aggregation'), icon: <FaPlusCircle /> },
-                  { label: t('Actions'), icon: <FaPlusCircle /> },
-              
-                ].map(({ label, icon }) => (
-                  <div
-                    key={label}
-                    className={`side-nav-item ${activeModule === label ? 'active' : ''}`}
-                    onClick={() => handleModuleClick(label)}
-                  >
-                    <span className="nav-icon">{icon}</span>
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
+          <div className="side-nav">
+            <div className="side-nav-inner">
+              {[
+                { label: t('Detail'), icon: <FaInfoCircle /> },
+                { label: t('Attribue danalyse'), icon: <FaSpinner /> },
+                { label: t('NodeConfig'), icon: <FaCogs /> },
+                { label: t('Aggregation'), icon: <FaPlusCircle /> },
+                { label: t('Actions'), icon: <FaPlusCircle /> },
+              ].map(({ label, icon }) => (
+                <div
+                  key={label}
+                  className={`side-nav-item ${activeModule === label ? 'active' : ''}`}
+                  onClick={() => handleModuleClick(label)}
+                  style={{
+                    padding: '10px',
+                    cursor: 'pointer',
+                    background: activeModule === label ? '#ddd' : 'transparent',
+                  }}
+                >
+                  <span className="nav-icon">{icon}</span>
+                  <span>{label}</span>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
 
           {activeModule && (
             <div className="module-panel">
@@ -615,20 +623,18 @@ const SchemaVisualizer = () => {
                     setLayoutType={setLayoutType}
                   />
                 )}
-                {activeModule === t('Actions') && (
-                  <Actions selectedItem={selectedItem} />
-                )}
-
-               {activeModule === t('Attribue danalyse') && (
-                  <AnalysisAttributeForm selectedItem={selectedItem}   />
+                {activeModule === t('Actions') && <Actions selectedItem={selectedItem} />}
+                {activeModule === t('Attribue danalyse') && (
+                  <AnalysisAttributeForm selectedItem={selectedItem} />
                 )}
               </div>
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default SchemaVisualizer;
