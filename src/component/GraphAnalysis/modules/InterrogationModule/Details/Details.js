@@ -207,16 +207,7 @@ const DetailsModule = ({
                         </span>
                       </li>
                     ))}
-                  {/* <h4>{t('analysis_attributes')}</h4>
-                  {matchedNode?.properties_analyse &&
-                    Object.entries(matchedNode.properties_analyse).map(([key, value]) => (
-                      <li key={key} className="list-group-item property-item">
-                        <strong className="property-key">{key}:</strong>
-                        <span className="property-value">
-                          {typeof value === 'object' ? JSON.stringify(value) : value}
-                        </span>
-                      </li>
-                    ))} */}
+
                 </ul>
               </>
             );

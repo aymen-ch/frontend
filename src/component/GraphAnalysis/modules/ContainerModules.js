@@ -44,6 +44,18 @@ const Container_AlgorithmicAnalysis = () => {
   const [activeAggregations, setActiveAggregations] = useState({});
   const [visibleNodeTypes, setVisibleNodeTypes] = useState({});
   const [selectedEdges, setselectedEdges] = useState(new Set());
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     const nodeTypes = {};
@@ -155,8 +167,7 @@ const Container_AlgorithmicAnalysis = () => {
   };
 
   return (
-    <div className="container-fluid test bg-gray-50 min-h-screen">
-
+    <div className="container-fluid test bg-gray-50">
       <div className="row flex-grow-1 m-0 p-0">
         <div className={`col ${isFullscreen ? 'p-0' : 'col-lg-12 col-md-12 col-12'} flex-grow-1`}>
           <MemoizedGraphVisualization
@@ -211,7 +222,7 @@ const Container_AlgorithmicAnalysis = () => {
         </div>
 
         {true && (
-          <div className="side-nav">
+          <div className="side-nav d-flex flex-column">
             <div className="side-nav-inner">
               {[
                 t('Details'),
@@ -328,11 +339,17 @@ const Container_AlgorithmicAnalysis = () => {
 
       {SubGrapgTable.results.length > 0 && combinedNodes.length > 0 && (
         <div className="timeline-container">
-          <TimelineBar
-            data={extractAffaires()}
-            setItemsInRange={setAffairesInRange}
-            attributes={['Affaire_date']}
-          />
+          <div className="container-fluid px-2">
+            <div className="row">
+              <div className="col-12">
+                <TimelineBar
+                  data={extractAffaires()}
+                  setItemsInRange={setAffairesInRange}
+                  attributes={['Affaire_date']}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -281,7 +281,7 @@ const GraphVisualization = React.memo(({
         />
         {isLoading ? (
           <FaSpinner
-            style={{ marginRight: '5px', color: '#666', animation: 'spin 1s linear infinite' }}
+            style={{ marginRight: '5px', color: '#666', animation: 'spin 1s linear infinite',color: '#666', width: '200px' }}
           />
         ) : inputValue && (
           <FaTimes
@@ -383,7 +383,7 @@ const GraphVisualization = React.memo(({
 
 
       <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '380px' }}
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '390px' }}
         onClick={handleSave}
         title={t('Save')}
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -393,7 +393,7 @@ const GraphVisualization = React.memo(({
       </button>
 
       <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '420px' }}
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '430px' }}
         onClick={toggleFullscreen}
         title={isFullscreen ? t("Exit Fullscreen") : t("Enter Fullscreen")}
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -402,18 +402,9 @@ const GraphVisualization = React.memo(({
         {isFullscreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
       </button>
 
-      <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '460px' }}
-        onClick={handleBack}
-        title={t('Back')}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-      >
-        <FaUndo size={16} />
-      </button>
 
       <button
-        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '500px' }}
+        style={{ ...buttonStyle, position: 'absolute', top: '10px', left: '470px' }}
         onClick={handleDelete}
         title={t('Delete Selected')}
         onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
@@ -428,8 +419,8 @@ const GraphVisualization = React.memo(({
         style={{
           ...searchSelectStyle,
           position: 'absolute',
-          top: '10px',
-          left: '580px',
+          top: '11px',
+          left: '540px',
           width: '100px',
           height: '35px',
           padding: '0 8px',
@@ -451,7 +442,7 @@ const GraphVisualization = React.memo(({
           ...buttonStyle,
           position: 'absolute',
           top: '10px',
-          left: '540px',
+          left: '510px',
           backgroundColor: multiselecte ? 'blue' : 'rgba(255, 255, 255, 0.8)',
           cursor: multiselecte ? 'crosshair' : 'pointer',
         }}

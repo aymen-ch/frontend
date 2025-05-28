@@ -37,7 +37,7 @@ export const buttonStyle = {
     position: 'absolute',
     zIndex: 100, // Increased from 50 to ensure it’s above other elements (e.g., graph nodes)
     top: '5px', // Slightly increased for better spacing from the top edge
-    left: '50%',
+    left: '53%',
     transform: 'translateX(-50%)',
     display: 'flex',
     alignItems: 'center',
@@ -52,8 +52,8 @@ export const buttonStyle = {
     border: '1px solid rgba(200, 210, 220, 0.3)', // Subtle border with softer color
     transition: 'all 0.3s ease, box-shadow 0.2s ease, transform 0.2s ease', // Smooth transitions
     width: 'auto',
-    minWidth: '720px', // Slightly wider for better usability
-    maxWidth: '500px', // Increased for larger screens
+    minWidth: '420px', // Slightly wider for better usability
+    maxWidth: '400px', // Increased for larger screens
     '&:hover': {
       boxShadow: `
         0 6px 16px rgba(0, 0, 0, 0.1),
