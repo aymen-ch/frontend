@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import axios from 'axios';
 import GraphCanvas from '../../VisualisationModule/GraphCanvas';
-import {  FaArrowLeft, FaArrowRight, FaList, FaTimes, FaProjectDiagram, FaBezierCurve, FaLayerGroup, FaSitemap, FaPlus, FaObjectGroup } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaList, FaTimes, FaProjectDiagram, FaBezierCurve, FaLayerGroup, FaSitemap, FaPlus, FaObjectGroup, FaStop } from 'react-icons/fa';
 import { parsePath } from '../../Parser';
 import './PathVisualization.css';
 import { computeLinearLayout } from '../../VisualisationModule/layout/layout';
-import { ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType,GridLayoutType } from '@neo4j-nvl/base';
+import { ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType, GridLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../../function_container';
+import { BASE_URL_Backend } from '../../../Platforme/Urls';
 
 const PathVisualization = React.memo(({
   edges,
@@ -27,22 +29,185 @@ const PathVisualization = React.memo(({
   setPathisempty,
   setAllPaths,
   setNodes,
-  setEdges
+  setEdges,
+  onStartPathFinding, // Contains { ids, depth }
+  onStartShortestPath, // Contains { ids }
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [showPathList, setShowPathList] = useState(false);
-  const [layoutType, setLayoutType] = useState(FreeLayoutType); // Default layout type
-
-  // State for tracking position, size and interactions
+  const [layoutType, setLayoutType] = useState(FreeLayoutType);
   const [position, setPosition] = useState({ x: 500, y: 50 });
   const [size, setSize] = useState({ width: 1300, height: 800 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [currentDepth, setCurrentDepth] = useState(0);
+  const [maxDepth, setMaxDepth] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
+  const [accumulatedPaths, setAccumulatedPaths] = useState([]);
 
-  // Handle mouse down event to start dragging
+  // Handle path-finding API call for a specific depth
+  const fetchPathsForDepth = async (ids, depth) => {
+    console.log("Fetching paths for depth:", depth);
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        `${BASE_URL_Backend}/get_all_connections/`,
+        { ids, depth },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        const { paths, depth: returnedDepth } = response.data;
+        if (paths.length === 0) {
+          setPathisempty(true);
+          console.log(`No paths found for depth ${depth}`);
+        } else {
+          setPathisempty(false);
+          setAccumulatedPaths((prev) => [...prev, ...paths.map(path => ({ ...path, depth: returnedDepth }))]);
+          // Update path visualization window with the latest path
+          setAllPaths(paths);
+          setCurrentPathIndex(0);
+          if (paths[0]) {
+            updatePathNodesAndEdges(paths[0]);
+          }
+        }
+        console.log(`Response paths for depth ${depth}:`, response.data);
+      } else {
+        console.error(`Failed to fetch paths for depth ${depth}. Status: ${response.status}`);
+        setPathisempty(true);
+      }
+    } catch (error) {
+      console.error(`Error fetching paths for depth ${depth}:`, error);
+      setPathisempty(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle shortest path API call
+  const startShortestPath = async (params) => {
+    console.log("Starting shortest path for IDs:", params.ids);
+    setIsLoading(true);
+    setIsSearching(false);
+    setCurrentDepth(0);
+    setMaxDepth(0);
+    setAccumulatedPaths([]);
+    setAllPaths([]);
+    setPathNodes([]);
+    setPathEdges([]);
+    setPathisempty(false);
+    try {
+      const response = await axios.post(
+        `${BASE_URL_Backend}/shortestpath/`,
+        { ids: params.ids },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        const paths = response.data.paths;
+        if (paths.length === 0) {
+          setPathisempty(true);
+          console.log("No shortest paths found");
+        } else {
+          setPathisempty(false);
+          setAllPaths(paths);
+          setAccumulatedPaths(paths.map(path => ({ ...path, depth: 0 })));
+          setCurrentPathIndex(0);
+          if (paths[0]) {
+            updatePathNodesAndEdges(paths[0]);
+          }
+        }
+        console.log("Response shortest paths:", response.data);
+      } else {
+        console.error('Failed to fetch shortest path. Status:', response.status);
+        setPathisempty(true);
+      }
+    } catch (error) {
+      console.error('Error fetching shortest path:', error);
+      setPathisempty(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Iterative path finding for each depth
+  useEffect(() => {
+    if (!isSearching || !onStartPathFinding || currentDepth > maxDepth) return;
+
+    const iterateDepths = async () => {
+      for (let depth = currentDepth; depth <= maxDepth && isSearching; depth++) {
+        setCurrentDepth(depth);
+        await fetchPathsForDepth(onStartPathFinding.ids, depth);
+        if (!isSearching) break;
+      }
+      if (isSearching) {
+        setIsSearching(false);
+      }
+    };
+
+    iterateDepths();
+  }, [isSearching, currentDepth, maxDepth, onStartPathFinding]);
+
+  // Initialize path finding when parameters are received
+  useEffect(() => {
+    if (onStartPathFinding) {
+      console.log("Initializing path finding with params:", onStartPathFinding);
+      setCurrentDepth(1);
+      setMaxDepth(onStartPathFinding.depth);
+      setIsSearching(true);
+      setAccumulatedPaths([]);
+      setAllPaths([]);
+      setPathNodes([]);
+      setPathEdges([]);
+      setPathisempty(false);
+    }
+  }, [onStartPathFinding]);
+
+  // Handle shortest path when parameters are received
+  useEffect(() => {
+    console.log("startShortestPath")
+    if (onStartShortestPath) {
+      startShortestPath(onStartShortestPath);
+    }
+  }, [onStartShortestPath]);
+
+  // Add paths to main canvas (called manually by user)
+  const addPathsToCanvas = (paths) => {
+    let nodesToAdd = [];
+    let edgesToAdd = [];
+
+    paths.forEach((path) => {
+      const { nodes: pathNodes, edges: pathEdges } = parsePath(path, selectednodes);
+      nodesToAdd = [...nodesToAdd, ...pathNodes];
+      edgesToAdd = [...edgesToAdd, ...pathEdges];
+    });
+
+    nodesToAdd = Array.from(new Map(nodesToAdd.map(node => [node.id, node])).values());
+    edgesToAdd = Array.from(new Map(edgesToAdd.map(edge => [`${edge.from}-${edge.to}`, edge])).values());
+
+    setNodes((prevNodes) => {
+      const existingNodeIds = new Set(prevNodes.map(node => node.id));
+      const newNodes = nodesToAdd.filter(node => !existingNodeIds.has(node.id));
+      return [...prevNodes, ...newNodes];
+    });
+
+    setEdges((prevEdges) => {
+      const newEdges = edgesToAdd.map(edge => ({ ...edge, selected: true }));
+      return [...prevEdges, ...newEdges];
+    });
+  };
+
   const handleMouseDown = useCallback((e) => {
     if (e.target.closest('[data-draggable="true"]')) {
       setIsDragging(true);
@@ -54,7 +219,6 @@ const PathVisualization = React.memo(({
     }
   }, []);
 
-  // Handle resize start
   const handleResizeStart = useCallback((e) => {
     e.stopPropagation();
     setIsResizing(true);
@@ -66,7 +230,6 @@ const PathVisualization = React.memo(({
     });
   }, [size]);
 
-  // Handle mouse move event for both dragging and resizing
   const handleMouseMove = useCallback((e) => {
     if (isDragging) {
       setPosition({
@@ -80,13 +243,11 @@ const PathVisualization = React.memo(({
     }
   }, [isDragging, isResizing, dragOffset, resizeStart]);
 
-  // Handle mouse up event to stop dragging and resizing
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
   }, []);
 
-  // Add event listeners when component mounts
   useEffect(() => {
     if (isDragging || isResizing) {
       window.addEventListener('mousemove', handleMouseMove);
@@ -98,16 +259,6 @@ const PathVisualization = React.memo(({
     };
   }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
 
-  // Update loading state when allPaths changes
-  useEffect(() => {
-    if (allPaths.length > 0) {
-      setIsLoading(false);
-    } else {
-      setIsLoading(true);
-    }
-  }, [allPaths]);
-
-  // Apply layout when nodes, edges, or layoutType changes
   useEffect(() => {
     if (nvlRef && nvlRef.current && nodes.length > 0) {
       applyLayout(layoutType);
@@ -115,10 +266,10 @@ const PathVisualization = React.memo(({
   }, [nodes, edges, nvlRef, layoutType]);
 
   const handleNextPath = () => {
-    if (currentPathIndex < allPaths.length - 1) {
+    if (currentPathIndex < accumulatedPaths.length - 1) {
       const nextIndex = currentPathIndex + 1;
       setCurrentPathIndex(nextIndex);
-      updatePathNodesAndEdges(allPaths[nextIndex]);
+      updatePathNodesAndEdges(accumulatedPaths[nextIndex]);
       applyLayout(layoutType);
     }
   };
@@ -127,13 +278,12 @@ const PathVisualization = React.memo(({
     if (currentPathIndex > 0) {
       const prevIndex = currentPathIndex - 1;
       setCurrentPathIndex(prevIndex);
-      updatePathNodesAndEdges(allPaths[prevIndex]);
+      updatePathNodesAndEdges(accumulatedPaths[prevIndex]);
       applyLayout(layoutType);
     }
   };
 
   const updatePathNodesAndEdges = (path) => {
-    console.log(selectednodes)
     const { nodes: formattedNodes, edges: formattedEdges } = parsePath(path, selectednodes);
     setPathNodes([]);
     setPathEdges([]);
@@ -167,37 +317,30 @@ const PathVisualization = React.memo(({
 
   const selectPath = (index) => {
     setCurrentPathIndex(index);
-    updatePathNodesAndEdges(allPaths[index]);
+    updatePathNodesAndEdges(accumulatedPaths[index]);
   };
 
   const showAllPathsAsSubgraph = () => {
-    if (allPaths.length > 0) {
+    if (accumulatedPaths.length > 0) {
       let allNodes = [];
       let allEdges = [];
 
-      // Combine all paths into one subgraph
-      allPaths.forEach((path) => {
+      accumulatedPaths.forEach((path) => {
         const { nodes: pathNodes, edges: pathEdges } = parsePath(path, selectednodes);
         allNodes = [...allNodes, ...pathNodes];
         allEdges = [...allEdges, ...pathEdges];
       });
 
-      // Remove duplicate nodes based on id
       const uniqueNodes = Array.from(new Map(allNodes.map(node => [node.id, node])).values());
+      const uniqueEdges = Array.from(new Map(allEdges.map(edge => [edge.id, edge])).values());
 
-      // Remove duplicate edges based on id (or another unique identifier)
-      const uniqueEdges = Array.from(
-        new Map(allEdges.map(edge => [edge.id, edge])).values()
-      );
-
-      // Update the visualization
       setPathNodes([]);
       setPathEdges([]);
       setTimeout(() => {
         setPathNodes(uniqueNodes);
         setPathEdges(uniqueEdges);
         applyLayout(layoutType);
-        setCurrentPathIndex(-1); // Indicate no single path is selected
+        setCurrentPathIndex(-1);
       }, 50);
 
       console.log('Displayed all paths as a single subgraph with unique edges:', uniqueEdges);
@@ -209,8 +352,16 @@ const PathVisualization = React.memo(({
     setPathNodes([]);
     setPathEdges([]);
     setAllPaths([]);
+    setAccumulatedPaths([]);
     setCurrentPathIndex(0);
     setPathisempty(false);
+    setCurrentDepth(0);
+    setMaxDepth(0);
+    setIsSearching(false);
+  };
+
+  const stopSearching = () => {
+    setIsSearching(false);
   };
 
   const addCurrentPathToVisualization = () => {
@@ -218,49 +369,42 @@ const PathVisualization = React.memo(({
     let edgesToAdd = [];
 
     if (currentPathIndex === -1) {
-      // Handle the subgraph case
-      if (allPaths.length > 0) {
-        allPaths.forEach((path) => {
+      if (accumulatedPaths.length > 0) {
+        accumulatedPaths.forEach((path) => {
           const { nodes: pathNodes, edges: pathEdges } = parsePath(path, selectednodes);
           nodesToAdd = [...nodesToAdd, ...pathNodes];
           edgesToAdd = [...edgesToAdd, ...pathEdges];
         });
 
-        // Remove duplicates from the combined subgraph
         nodesToAdd = Array.from(new Map(nodesToAdd.map(node => [node.id, node])).values());
         edgesToAdd = Array.from(new Map(edgesToAdd.map(edge => [`${edge.from}-${edge.to}`, edge])).values());
 
         console.log('Adding all paths subgraph to main visualization');
       }
-    } else if (allPaths[currentPathIndex]) {
-      // Handle single path case
-      const { nodes: currentNodes, edges: currentEdges } = parsePath(allPaths[currentPathIndex], selectednodes);
+    } else if (accumulatedPaths[currentPathIndex]) {
+      const { nodes: currentNodes, edges: currentEdges } = parsePath(accumulatedPaths[currentPathIndex], selectednodes);
       nodesToAdd = currentNodes;
       edgesToAdd = currentEdges;
       console.log(`Adding Path ${currentPathIndex + 1} to main visualization`);
     }
 
     if (nodesToAdd.length > 0 || edgesToAdd.length > 0) {
-      // Append nodes, avoiding duplicates by checking IDs
       setNodes((prevNodes) => {
         const existingNodeIds = new Set(prevNodes.map(node => node.id));
         const newNodes = nodesToAdd.filter(node => !existingNodeIds.has(node.id));
         return [...prevNodes, ...newNodes];
       });
 
-      // Append edges, avoiding duplicates by checking from and to
       setEdges((prevEdges) => {
-
-        const newed = edgesToAdd
-          .map(edge => ({ ...edge, selected: true }));
-        return [...prevEdges, ...newed];
+        const newEdges = edgesToAdd.map(edge => ({ ...edge, selected: true }));
+        return [...prevEdges, ...newEdges];
       });
     }
   };
 
   const getPathSummary = (path) => {
-    if (!path || path.length === 0) return "Empty path";
-    return `(${path["nodes"].length} nodes)`;
+    if (!path || !path.nodes || path.nodes.length === 0) return "Empty path";
+    return `(${path.nodes.length} nodes, Depth ${path.depth})`;
   };
 
   const buttonStyle = {
@@ -280,7 +424,7 @@ const PathVisualization = React.memo(({
 
   const activeButtonStyle = {
     ...buttonStyle,
-    backgroundColor: 'rgba(66, 153, 225, 0.8)', // Highlight active layout
+    backgroundColor: 'rgba(66, 153, 225, 0.8)',
     color: '#fff',
   };
 
@@ -302,6 +446,14 @@ const PathVisualization = React.memo(({
     marginLeft: '0',
   };
 
+  const stopButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: 'rgba(255, 99, 71, 0.8)',
+    color: '#fff',
+    width: '100px',
+    height: '40px',
+  };
+
   const layouts = [
     { type: 'computeLinearLayout', icon: <FaProjectDiagram size={14} />, title: 'Linear Layout' },
     { type: ForceDirectedLayoutType, icon: <FaBezierCurve size={14} />, title: 'Force Directed' },
@@ -321,9 +473,8 @@ const PathVisualization = React.memo(({
       onMouseDown={handleMouseDown}
       onMouseOver={() => document.body.style.cursor = isDragging ? 'grabbing' : 'auto'}
     >
-      {/* Title Bar - Made draggable */}
       <div className="path-title-bar" data-draggable="true">
-        <h5 className="path-title">Path Visualization</h5>
+        <h5 className="path-title">Path Visualization (Depth {currentDepth}/{maxDepth})</h5>
         <div className="path-controls">
           <button
             className="control-button"
@@ -342,10 +493,9 @@ const PathVisualization = React.memo(({
         </div>
       </div>
 
-      {/* Path Navigation and Count */}
       <div className="path-navigation">
         <div className="path-counter">
-          <span className="path-number">Path {currentPathIndex + 1}</span> of {allPaths.length}
+          <span className="path-number">Path {currentPathIndex + 1}</span> of {accumulatedPaths.length}
         </div>
         <div className="navigation-buttons">
           <button
@@ -358,28 +508,36 @@ const PathVisualization = React.memo(({
           <button
             className="nav-button"
             onClick={handleNextPath}
-            disabled={currentPathIndex === allPaths.length - 1 || isLoading}
+            disabled={currentPathIndex === accumulatedPaths.length - 1 || isLoading}
           >
             Next <FaArrowRight size={12} />
           </button>
+          {isSearching && (
+            <button
+              style={stopButtonStyle}
+              onClick={stopSearching}
+              title="Stop Searching"
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 99, 71, 1)'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 99, 71, 0.8)'}
+            >
+              <FaStop size={14} /> Stop
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Path details bar */}
-      {!isLoading && allPaths[currentPathIndex] && (
+      {!isLoading && accumulatedPaths[currentPathIndex] && (
         <div className="path-details">
           {/* Content for path details if needed */}
         </div>
       )}
 
-      {/* Path List Sidebar - conditionally rendered */}
       {showPathList && (
         <div className="path-list-sidebar">
           <div className="path-list-header">
-            <h6 className="path-list-title">All Paths ({allPaths.length})</h6>
+            <h6 className="path-list-title">All Paths ({accumulatedPaths.length})</h6>
           </div>
           <div className="path-list-content">
-            {/* "Show All Paths as Subgraph" as the first item */}
             <div
               onClick={showAllPathsAsSubgraph}
               className={`path-list-item ${currentPathIndex === -1 ? 'active' : ''}`}
@@ -388,18 +546,17 @@ const PathVisualization = React.memo(({
                 <FaObjectGroup style={{ marginRight: '5px', verticalAlign: 'middle' }} /> All Paths Subgraph
               </div>
               <div className="path-list-item-summary">
-                ({allPaths.reduce((sum, path) => sum + (path["nodes"]?.length || 0), 0)} nodes)
+                ({accumulatedPaths.reduce((sum, path) => sum + (path.nodes?.length || 0), 0)} nodes)
               </div>
             </div>
-            {/* Individual paths */}
-            {allPaths.map((path, index) => (
+            {accumulatedPaths.map((path, index) => (
               <div
                 key={index}
                 onClick={() => selectPath(index)}
                 className={`path-list-item ${currentPathIndex === index ? 'active' : ''}`}
               >
                 <div className={`path-list-item-title ${currentPathIndex === index ? 'active' : 'inactive'}`}>
-                  Path {index + 1}
+                  Path {index + 1} (Depth {path.depth})
                 </div>
                 <div className="path-list-item-summary">
                   {getPathSummary(path)}
@@ -410,29 +567,26 @@ const PathVisualization = React.memo(({
         </div>
       )}
 
-      {/* Loading State */}
       {isLoading && !pathisempty && (
         <div className="loading-container">
           <div className="loading-spinner" />
-          <div>Loading paths...</div>
+          <div>Loading paths for depth {currentDepth}...</div>
         </div>
       )}
 
-        {pathisempty && (
-          <div className="empty-path-container">
-            <div className="empty-path-message">
-              No paths available to display.
-            </div>
+      {pathisempty && (
+        <div className="empty-path-container">
+          <div className="empty-path-message">
+            No paths available to display for depth {currentDepth}.
           </div>
-        )}
+        </div>
+      )}
 
-      {/* Path Visualization Content */}
       {!isLoading && (
         <div
           className="visualization-content"
           style={{ marginLeft: showPathList ? '250px' : '0', position: 'relative' }}
         >
-          {/* Layout Control */}
           <div style={layoutControlStyle}>
             {layouts.map((layout) => (
               <button
@@ -448,22 +602,21 @@ const PathVisualization = React.memo(({
             ))}
           </div>
 
-          {/* Add Current Path Button */}
           <button
-  style={{
-    ...addButtonStyle,
-    width: '200px',
-    height: '40px',
-    color: 'white',
-    backgroundColor: 'black'
-  }}
-  onClick={addCurrentPathToVisualization}
-  title="Add Current Path to Visualization"
-  onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(33, 77, 108, 0.9)'}
-  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(7, 4, 4, 0.8)'}
->
-  <FaPlus size={14} /> Add to Canvas
-</button>
+            style={{
+              ...addButtonStyle,
+              width: '200px',
+              height: '40px',
+              color: 'white',
+              backgroundColor: 'black'
+            }}
+            onClick={addCurrentPathToVisualization}
+            title="Add Current Path to Visualization"
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(33, 77, 108, 0.9)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(7, 4, 4, 0.8)'}
+          >
+            <FaPlus size={14} /> Add to Canvas
+          </button>
 
           <GraphCanvas
             nvlRef={nvlRef}
@@ -480,7 +633,6 @@ const PathVisualization = React.memo(({
         </div>
       )}
 
-      {/* Footer with path information */}
       {!isLoading && (
         <div className="path-footer">
           <div>Use the navigation buttons to explore all paths</div>
@@ -488,7 +640,6 @@ const PathVisualization = React.memo(({
         </div>
       )}
 
-      {/* Resize Handle */}
       <div className="resize-handle" onMouseDown={handleResizeStart}>
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
           <path d="M1 9L9 1M5 9L9 5M9 9L9 9" stroke="#666" strokeWidth="1.5" strokeLinecap="round" />

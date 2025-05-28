@@ -44,6 +44,18 @@ const Container_AlgorithmicAnalysis = () => {
   const [activeAggregations, setActiveAggregations] = useState({});
   const [visibleNodeTypes, setVisibleNodeTypes] = useState({});
   const [selectedEdges, setselectedEdges] = useState(new Set());
+
+  const [pathFindingParams, setPathFindingParams] = useState(null);
+  const [shortestPathParams, setShortestPathParams] = useState(null);
+  // Callback functions to pass to PathFinder
+  const handleStartPathFinding = (params) => {
+    setPathFindingParams(params);
+  };
+
+  const handleStartShortestPath = (params) => {
+    setShortestPathParams(params);
+  };
+
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -56,6 +68,7 @@ const Container_AlgorithmicAnalysis = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
 
   useEffect(() => {
     const nodeTypes = {};
@@ -192,6 +205,7 @@ const Container_AlgorithmicAnalysis = () => {
             setselectedEdges={setselectedEdges}
             setSubGrapgTable={setSubGrapgTable}
           />
+
           {isBoxPath > 0 && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
               <div className="bg-white p-4 rounded-lg">
@@ -220,6 +234,8 @@ const Container_AlgorithmicAnalysis = () => {
               </div>
             </div>
           )}
+
+              
         </div>
 
         {true && (
@@ -272,7 +288,7 @@ const Container_AlgorithmicAnalysis = () => {
                 />
               )}
 
-              {activeModule === t('Detection de Chemin') && (
+             {activeModule === t('Detection de Chemin') && (
                 <PathFinder
                   nvlRef={nvlRef}
                   setPathisempty={setPathisempty}
@@ -282,6 +298,8 @@ const Container_AlgorithmicAnalysis = () => {
                   setCurrentPathIndex={setCurrentPathIndex}
                   setIsBoxPath={setIsBoxPath}
                   selectednodes={selectedNodes}
+                  onStartPathFinding={handleStartPathFinding}
+                  onStartShortestPath={handleStartShortestPath}
                 />
               )}
 
