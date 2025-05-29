@@ -45,8 +45,6 @@ const PathVisualization = React.memo(({
   const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [currentDepth, setCurrentDepth] = useState(0);
-  const [maxDepth, setMaxDepth] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [accumulatedPaths, setAccumulatedPaths] = useState([]);
 
@@ -74,6 +72,7 @@ const PathVisualization = React.memo(({
 
       if (response.status === 200) {
         const { paths, depth: returnedDepth } = response.data;
+        console.log('paths2',paths)
         if (paths.length === 0) {
           setPathisempty(true);
           console.log(`No paths found for depth ${depth}`);
@@ -105,8 +104,6 @@ const PathVisualization = React.memo(({
     console.log("Starting shortest path for IDs:", params.ids);
     setIsLoading(true);
     setIsSearching(false);
-    setCurrentDepth(0);
-    setMaxDepth(0);
     setAccumulatedPaths([]);
     setAllPaths([]);
     setPathNodes([]);
@@ -150,39 +147,27 @@ const PathVisualization = React.memo(({
     }
   };
 
-  // Iterative path finding for each depth
-  useEffect(() => {
-    if (!isSearching || !pathFindingParams || currentDepth > maxDepth) return;
+ 
+useEffect(() => {
+  if (pathFindingParams && startPathfinding) {
+    console.log("Initializing path finding with params:", pathFindingParams);
+    setIsSearching(true);
+    setAccumulatedPaths([]);
+    setAllPaths([]);
+    setPathNodes([]);
+    setPathEdges([]);
+    setPathisempty(false);
 
     const iterateDepths = async () => {
-      for (let depth = currentDepth; depth <= maxDepth && isSearching; depth++) {
-        setCurrentDepth(depth);
+      for (let depth = 1; depth <= pathFindingParams.depth; depth++) {
         await fetchPathsForDepth(pathFindingParams.ids, depth);
-        if (!isSearching) break;
       }
-      if (isSearching) {
-        setIsSearching(false);
-      }
+      setIsSearching(false);
     };
 
     iterateDepths();
-  }, [isSearching, currentDepth, maxDepth, pathFindingParams]);
-
-  // Initialize path finding when parameters are received
-  useEffect(() => {
-       
-   if (pathFindingParams && startPathfinding) {
-      console.log("Initializing path finding with params:", pathFindingParams);
-      setCurrentDepth(1);
-      setMaxDepth(pathFindingParams.depth);
-      setIsSearching(true);
-      setAccumulatedPaths([]);
-      setAllPaths([]);
-      setPathNodes([]);
-      setPathEdges([]);
-      setPathisempty(false);
-    }
-   }, [pathFindingParams, startPathfinding]);
+  }
+}, [pathFindingParams, startPathfinding]);
 
   // Handle shortest path when parameters are received
 useEffect(() => {
@@ -366,8 +351,6 @@ useEffect(() => {
     setAccumulatedPaths([]);
     setCurrentPathIndex(0);
     setPathisempty(false);
-    setCurrentDepth(0);
-    setMaxDepth(0);
     setIsSearching(false);
   };
 
@@ -485,7 +468,7 @@ useEffect(() => {
       onMouseOver={() => document.body.style.cursor = isDragging ? 'grabbing' : 'auto'}
     >
       <div className="path-title-bar" data-draggable="true">
-        <h5 className="path-title">Path Visualization (Depth {currentDepth}/{maxDepth})</h5>
+        <h5 className="path-title">Path Visualization (Depth )</h5>
         <div className="path-controls">
           <button
             className="control-button"
@@ -581,14 +564,14 @@ useEffect(() => {
       {isLoading && !pathisempty && (
         <div className="loading-container">
           <div className="loading-spinner" />
-          <div>Loading paths for depth {currentDepth}...</div>
+          <div>Loading paths for depth ...</div>
         </div>
       )}
 
       {pathisempty && (
         <div className="empty-path-container">
           <div className="empty-path-message">
-            No paths available to display for depth {currentDepth}.
+            No paths available to display for depth .
           </div>
         </div>
       )}
