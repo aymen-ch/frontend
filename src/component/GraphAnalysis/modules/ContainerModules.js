@@ -14,11 +14,9 @@ import { useAggregation, fetchNodeProperties, drawCirclesOnPersonneNodes, ColorP
 import { NODE_CONFIG } from './Parser';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
-<<<<<<< HEAD
 import { FaInfoCircle, FaCogs, FaPlusCircle ,FaSpinner} from 'react-icons/fa';
-=======
+
 import { AlgorithmProvider } from './Context';
->>>>>>> 0ad7d041e300e48dd2575127cc9bc79725eace94
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
