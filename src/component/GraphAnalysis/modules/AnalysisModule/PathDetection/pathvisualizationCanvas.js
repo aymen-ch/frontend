@@ -32,8 +32,6 @@ const PathVisualization = React.memo(({
   setAllPaths,
   setNodes,
   setEdges,
-  // onStartPathFinding, // Contains { ids, depth }
-  // onStartShortestPath, // Contains { ids }
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,8 +43,9 @@ const PathVisualization = React.memo(({
   const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [isSearching, setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(true);
   const [accumulatedPaths, setAccumulatedPaths] = useState([]);
+  const [currentDepth, setCurrentDepth] = useState(0);
 
     const { 
     pathFindingParams, 
@@ -56,54 +55,54 @@ const PathVisualization = React.memo(({
   } = useAlgorithm();
 
   // Handle path-finding API call for a specific depth
-  const fetchPathsForDepth = async (ids, depth) => {
-    console.log("Fetching paths for depth:", depth);
-    setIsLoading(true);
-    try {
-      const response = await axios.post(
-        `${BASE_URL_Backend}/get_all_connections/`,
-        { ids, depth },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        const { paths, depth: returnedDepth } = response.data;
-        console.log('paths2',paths)
-        if (paths.length === 0) {
-          setPathisempty(true);
-          console.log(`No paths found for depth ${depth}`);
-        } else {
-          setPathisempty(false);
-          setAccumulatedPaths((prev) => [...prev, ...paths.map(path => ({ ...path, depth: returnedDepth }))]);
-          // Update path visualization window with the latest path
-          setAllPaths(paths);
-          setCurrentPathIndex(0);
-          if (paths[0]) {
-            updatePathNodesAndEdges(paths[0]);
-          }
-        }
-        console.log(`Response paths for depth ${depth}:`, response.data);
-      } else {
-        console.error(`Failed to fetch paths for depth ${depth}. Status: ${response.status}`);
-        setPathisempty(true);
+ const fetchPathsForDepth = async (ids, depth) => {
+  console.log("Fetching paths for depth:", depth);
+  setIsLoading(true);
+  try {
+    const response = await axios.post(
+      `${BASE_URL_Backend}/get_all_connections/`,
+      { ids, depth },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    } catch (error) {
-      console.error(`Error fetching paths for depth ${depth}:`, error);
-      setPathisempty(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    );
 
+    if (response.status === 200) {
+      const { paths, depth: returnedDepth } = response.data;
+      console.log('paths2', paths);
+      if (paths.length === 0) {
+        setPathisempty(true);
+        console.log(`No paths found for depth ${depth}`);
+      } else {
+        setPathisempty(false);
+        setAccumulatedPaths((prev) => [...prev, ...paths.map(path => ({ ...path, depth: returnedDepth }))]);
+        setAllPaths(paths);
+        setCurrentPathIndex(0);
+        if (paths[0]) {
+          updatePathNodesAndEdges(paths[0]);
+        }
+      }
+      console.log(`Response paths for depth ${depth}:`, response.data);
+      return paths.length; // Return the number of paths found
+    } else {
+      console.error(`Failed to fetch paths for depth ${depth}. Status: ${response.status}`);
+      setPathisempty(true);
+      return 0;
+    }
+  } catch (error) {
+    console.error(`Error fetching paths for depth ${depth}:`, error);
+    setPathisempty(true);
+    return 0;
+  } finally {
+    setIsLoading(false);
+  }
+};
   // Handle shortest path API call
   const startShortestPath = async (params) => {
     console.log("Starting shortest path for IDs:", params.ids);
     setIsLoading(true);
-    setIsSearching(false);
     setAccumulatedPaths([]);
     setAllPaths([]);
     setPathNodes([]);
@@ -157,17 +156,47 @@ useEffect(() => {
     setPathNodes([]);
     setPathEdges([]);
     setPathisempty(false);
+    setCurrentDepth(0);
 
     const iterateDepths = async () => {
-      for (let depth = 1; depth <= pathFindingParams.depth; depth++) {
-        await fetchPathsForDepth(pathFindingParams.ids, depth);
+      let depth = 1;
+      while (depth <= pathFindingParams.depth && isSearching) {
+        setCurrentDepth(depth); // Update current depth
+        setIsSearching(true);
+        const pathCount = await fetchPathsForDepth(pathFindingParams.ids, depth);
+        if (pathCount > 0) {
+          setIsSearching(false); // Stop searching if paths are found
+          break; // Exit the loop
+        }
+        depth++;
       }
-      setIsSearching(false);
+      if (depth > pathFindingParams.depth) {
+        setIsSearching(false);
+        setCurrentDepth(0); // Reset depth when max depth is reached
+      }
     };
 
     iterateDepths();
   }
 }, [pathFindingParams, startPathfinding]);
+
+const fetchNextDepth = () => {
+  if (currentDepth < pathFindingParams.depth) {
+    // setIsSearching(true);
+     setCurrentDepth(currentDepth+1);
+    fetchPathsForDepth(pathFindingParams.ids, currentDepth ).then((pathCount) => {
+      if (pathCount === 0 && currentDepth  >= pathFindingParams.depth) {
+        setIsSearching(false);
+        // setCurrentDepth(0);
+      }
+    });
+  }
+};
+
+const stopSearching = () => {
+  setIsSearching(false);
+  setCurrentDepth(0);
+};
 
   // Handle shortest path when parameters are received
 useEffect(() => {
@@ -354,9 +383,6 @@ useEffect(() => {
     setIsSearching(false);
   };
 
-  const stopSearching = () => {
-    setIsSearching(false);
-  };
 
   const addCurrentPathToVisualization = () => {
     let nodesToAdd = [];
@@ -456,191 +482,221 @@ useEffect(() => {
   ];
 
   return (
-    <div
-      className="path-visualization"
-      style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        width: `${size.width}px`,
-        height: `${size.height}px`,
-        cursor: isDragging ? 'grabbing' : 'auto',
-      }}
-      onMouseDown={handleMouseDown}
-      onMouseOver={() => document.body.style.cursor = isDragging ? 'grabbing' : 'auto'}
-    >
-      <div className="path-title-bar" data-draggable="true">
-        <h5 className="path-title">Path Visualization (Depth )</h5>
-        <div className="path-controls">
-          <button
-            className="control-button"
-            onClick={() => setShowPathList(!showPathList)}
-            title="Show Path List"
-          >
-            <FaList size={14} />
-          </button>
-          <button
-            className="control-button close-button"
-            onClick={closePathBox}
-            title="Close"
-          >
-            <FaTimes size={14} />
-          </button>
-        </div>
-      </div>
-
-      <div className="path-navigation">
-        <div className="path-counter">
-          <span className="path-number">Path {currentPathIndex + 1}</span> of {accumulatedPaths.length}
-        </div>
-        <div className="navigation-buttons">
-          <button
-            className="nav-button"
-            onClick={handlePreviousPath}
-            disabled={currentPathIndex === 0 || isLoading}
-          >
-            <FaArrowLeft size={12} /> Previous
-          </button>
-          <button
-            className="nav-button"
-            onClick={handleNextPath}
-            disabled={currentPathIndex === accumulatedPaths.length - 1 || isLoading}
-          >
-            Next <FaArrowRight size={12} />
-          </button>
-          {isSearching && (
-            <button
-              style={stopButtonStyle}
-              onClick={stopSearching}
-              title="Stop Searching"
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 99, 71, 1)'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 99, 71, 0.8)'}
-            >
-              <FaStop size={14} /> Stop
-            </button>
-          )}
-        </div>
-      </div>
-
-      {!isLoading && accumulatedPaths[currentPathIndex] && (
-        <div className="path-details">
-          {/* Content for path details if needed */}
-        </div>
-      )}
-
-      {showPathList && (
-        <div className="path-list-sidebar">
-          <div className="path-list-header">
-            <h6 className="path-list-title">All Paths ({accumulatedPaths.length})</h6>
-          </div>
-          <div className="path-list-content">
-            <div
-              onClick={showAllPathsAsSubgraph}
-              className={`path-list-item ${currentPathIndex === -1 ? 'active' : ''}`}
-            >
-              <div className={`path-list-item-title ${currentPathIndex === -1 ? 'active' : 'inactive'}`}>
-                <FaObjectGroup style={{ marginRight: '5px', verticalAlign: 'middle' }} /> All Paths Subgraph
-              </div>
-              <div className="path-list-item-summary">
-                ({accumulatedPaths.reduce((sum, path) => sum + (path.nodes?.length || 0), 0)} nodes)
-              </div>
-            </div>
-            {accumulatedPaths.map((path, index) => (
-              <div
-                key={index}
-                onClick={() => selectPath(index)}
-                className={`path-list-item ${currentPathIndex === index ? 'active' : ''}`}
-              >
-                <div className={`path-list-item-title ${currentPathIndex === index ? 'active' : 'inactive'}`}>
-                  Path {index + 1} (Depth {path.depth})
-                </div>
-                <div className="path-list-item-summary">
-                  {getPathSummary(path)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {isLoading && !pathisempty && (
-        <div className="loading-container">
-          <div className="loading-spinner" />
-          <div>Loading paths for depth ...</div>
-        </div>
-      )}
-
-      {pathisempty && (
-        <div className="empty-path-container">
-          <div className="empty-path-message">
-            No paths available to display for depth .
-          </div>
-        </div>
-      )}
-
-      {!isLoading && (
-        <div
-          className="visualization-content"
-          style={{ marginLeft: showPathList ? '250px' : '0', position: 'relative' }}
+  <div
+    className="path-visualization"
+    style={{
+      transform: `translate(${position.x}px, ${position.y}px)`,
+      width: `${size.width}px`,
+      height: `${size.height}px`,
+      cursor: isDragging ? 'grabbing' : 'auto',
+    }}
+    onMouseDown={handleMouseDown}
+    onMouseOver={() => (document.body.style.cursor = isDragging ? 'grabbing' : 'auto')}
+  >
+    <div className="path-title-bar" data-draggable="true">
+      <h5 className="path-title">Path Visualization (Depth {currentDepth})</h5>
+      <div className="path-controls">
+        <button
+          className="control-button"
+          onClick={() => setShowPathList(!showPathList)}
+          title="Show Path List"
         >
-          <div style={layoutControlStyle}>
-            {layouts.map((layout) => (
-              <button
-                key={layout.type}
-                style={layoutType === layout.type ? activeButtonStyle : buttonStyle}
-                onClick={() => handleLayoutSelect(layout.type)}
-                title={layout.title}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = layoutType === layout.type ? 'rgba(66, 153, 225, 0.8)' : 'rgba(255, 255, 255, 0.8)'}
-              >
-                {layout.icon}
-              </button>
-            ))}
-          </div>
-
-          <button
-            style={{
-              ...addButtonStyle,
-              width: '200px',
-              height: '40px',
-              color: 'white',
-              backgroundColor: 'black'
-            }}
-            onClick={addCurrentPathToVisualization}
-            title="Add Current Path to Visualization"
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(33, 77, 108, 0.9)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(7, 4, 4, 0.8)'}
-          >
-            <FaPlus size={14} /> Add to Canvas
-          </button>
-
-          <GraphCanvas
-            nvlRef={nvlRef}
-            nodes={nodes}
-            edges={edges}
-            selectedNodes={selectednodes}
-            setSelectedNodes={setSelectedNodes}
-            setContextMenu={setContextMenu}
-            nodetoshow={nodetoshow}
-            setnodetoshow={setnodetoshow}
-            ispath={ispath}
-            setrelationtoshow={setrelationtoshow}
-          />
-        </div>
-      )}
-
-      {!isLoading && (
-        <div className="path-footer">
-          <div>Use the navigation buttons to explore all paths</div>
-          <div>Click <FaList style={{ verticalAlign: 'middle', fontSize: '10px' }} /> to show path list</div>
-        </div>
-      )}
-
-      <div className="resize-handle" onMouseDown={handleResizeStart}>
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M1 9L9 1M5 9L9 5M9 9L9 9" stroke="#666" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+          <FaList size={14} />
+        </button>
+        <button className="control-button close-button" onClick={closePathBox} title="Close">
+          <FaTimes size={14} />
+        </button>
       </div>
     </div>
-  );
+
+    <div className="path-navigation">
+      <div className="path-counter">
+        <span className="path-number">Path {currentPathIndex + 1}</span> of {accumulatedPaths.length}
+        {isSearching && currentDepth > 0 && (
+          <span className="depth-indicator" style={{ marginLeft: '10px' }}>
+            (Searching Depth: {currentDepth})
+          </span>
+        )}
+        {pathisempty && !isLoading && (
+          <div className="empty-path-container">
+            <div className="empty-path-message">No paths available to display for depth {currentDepth || 'N/A'}.</div>
+          </div>
+        )}
+      </div>
+      <div className="navigation-buttons">
+        <button
+          className="nav-button"
+          onClick={handlePreviousPath}
+          disabled={currentPathIndex === 0 || isLoading}
+        >
+          <FaArrowLeft size={12} /> Previous
+        </button>
+        <button
+          className="nav-button"
+          onClick={handleNextPath}
+          disabled={currentPathIndex === accumulatedPaths.length - 1 || isLoading}
+        >
+          Next <FaArrowRight size={12} />
+        </button>
+
+
+        {startPathfinding && (
+          <button
+            style={{
+              ...stopButtonStyle,
+              backgroundColor: isSearching ? 'rgba(255, 99, 71, 0.8)' : 'rgba(200, 200, 200, 0.5)',
+              cursor: isSearching ? 'pointer' : 'not-allowed',
+            }}
+            onClick={stopSearching}
+            disabled={!isSearching}
+            title={isSearching ? 'Stop Searching' : 'Not Searching'}
+            onMouseOver={(e) =>
+              isSearching && (e.currentTarget.style.backgroundColor = 'rgba(255, 99, 71, 1)')
+            }
+            onMouseOut={(e) =>
+              isSearching && (e.currentTarget.style.backgroundColor = 'rgba(255, 99, 71, 0.8)')
+            }
+          >
+            <FaStop size={14} /> Stop
+          </button>
+        )}
+        { startPathfinding && currentDepth < (pathFindingParams?.depth || 0) && (
+          <button
+            style={{
+              ...stopButtonStyle,
+              backgroundColor: 'rgba(66, 153, 225, 0.8)',
+              cursor: 'pointer',
+            }}
+            onClick={fetchNextDepth}
+            title="Fetch Next Depth"
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(66, 153, 225, 1)')}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'rgba(66, 153, 225, 0.8)')}
+          >
+            <FaArrowRight size={14} /> Next Depth
+          </button>
+        )}
+      </div>
+    </div>
+
+    {!isLoading && accumulatedPaths[currentPathIndex] && (
+      <div className="path-details">
+        {/* Content for path details if needed */}
+      </div>
+    )}
+
+    {showPathList && (
+      <div className="path-list-sidebar">
+        <div className="path-list-header">
+          <h6 className="path-list-title">All Paths ({accumulatedPaths.length})</h6>
+        </div>
+        <div className="path-list-content">
+          <div
+            onClick={showAllPathsAsSubgraph}
+            className={`path-list-item ${currentPathIndex === -1 ? 'active' : ''}`}
+          >
+            <div className={`path-list-item-title ${currentPathIndex === -1 ? 'active' : 'inactive'}`}>
+              <FaObjectGroup style={{ marginRight: '5px', verticalAlign: 'middle' }} /> All Paths Subgraph
+            </div>
+            <div className="path-list-item-summary">
+              ({accumulatedPaths.reduce((sum, path) => sum + (path.nodes?.length || 0), 0)} nodes)
+            </div>
+          </div>
+          {accumulatedPaths.map((path, index) => (
+            <div
+              key={index}
+              onClick={() => selectPath(index)}
+              className={`path-list-item ${currentPathIndex === index ? 'active' : ''}`}
+            >
+              <div className={`path-list-item-title ${currentPathIndex === index ? 'active' : 'inactive'}`}>
+                Path {index + 1} (Depth {path.depth})
+              </div>
+              <div className="path-list-item-summary">{getPathSummary(path)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {isLoading && !pathisempty && (
+      <div className="loading-container">
+        <div className="loading-spinner" />
+        <div>Loading paths for depth {currentDepth}...</div>
+      </div>
+    )}
+
+ 
+
+    {!isLoading && (
+      <div
+        className="visualization-content"
+        style={{ marginLeft: showPathList ? '250px' : '0', position: 'relative' }}
+      >
+        <div style={layoutControlStyle}>
+          {layouts.map((layout) => (
+            <button
+              key={layout.type}
+              style={layoutType === layout.type ? activeButtonStyle : buttonStyle}
+              onClick={() => handleLayoutSelect(layout.type)}
+              title={layout.title}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)')}
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor = layoutType === layout.type
+                  ? 'rgba(66, 153, 225, 0.8)'
+                  : 'rgba(255, 255, 255, 0.8)')
+              }
+            >
+              {layout.icon}
+            </button>
+          ))}
+        </div>
+
+        <button
+          style={{
+            ...addButtonStyle,
+            width: '200px',
+            height: '40px',
+            color: 'white',
+            backgroundColor: 'black',
+          }}
+          onClick={addCurrentPathToVisualization}
+          title="Add Current Path to Visualization"
+          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(33, 77, 108, 0.9)')}
+          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'rgba(7, 4, 4, 0.8)')}
+        >
+          <FaPlus size={14} /> Add to Canvas
+        </button>
+
+        <GraphCanvas
+          nvlRef={nvlRef}
+          nodes={nodes}
+          edges={edges}
+          selectedNodes={selectednodes}
+          setSelectedNodes={setSelectedNodes}
+          setContextMenu={setContextMenu}
+          nodetoshow={nodetoshow}
+          setnodetoshow={setnodetoshow}
+          ispath={ispath}
+          setrelationtoshow={setrelationtoshow}
+        />
+      </div>
+    )}
+
+    {!isLoading && (
+      <div className="path-footer">
+        <div>Use the navigation buttons to explore all paths</div>
+        <div>
+          Click <FaList style={{ verticalAlign: 'middle', fontSize: '10px' }} /> to show path list
+        </div>
+      </div>
+    )}
+
+    <div className="resize-handle" onMouseDown={handleResizeStart}>
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M1 9L9 1M5 9L9 5M9 9L9 9" stroke="#666" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    </div>
+  </div>
+);
 });
 
 export default PathVisualization;
