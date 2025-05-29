@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, memo, useRef, useEffect,useMemo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './ContainerModules.css';
 import ContextManagerComponent from '../Modules/AnalysisModule/AnalyseTempSpatiale/ContextManager';
@@ -14,7 +14,11 @@ import { useAggregation, fetchNodeProperties, drawCirclesOnPersonneNodes, ColorP
 import { NODE_CONFIG } from './Parser';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
+<<<<<<< HEAD
 import { FaInfoCircle, FaCogs, FaPlusCircle ,FaSpinner} from 'react-icons/fa';
+=======
+import { AlgorithmProvider } from './Context';
+>>>>>>> 0ad7d041e300e48dd2575127cc9bc79725eace94
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
@@ -45,17 +49,16 @@ const Container_AlgorithmicAnalysis = () => {
   const [activeAggregations, setActiveAggregations] = useState({});
   const [visibleNodeTypes, setVisibleNodeTypes] = useState({});
   const [selectedEdges, setselectedEdges] = useState(new Set());
+  
+  // const [pathFindingParams, setPathFindingParams] = useState(null);
+  // const [shortestPathParams, setShortestPathParams] = useState(null);
 
-  const [pathFindingParams, setPathFindingParams] = useState(null);
-  const [shortestPathParams, setShortestPathParams] = useState(null);
+  // // Memoize the props to prevent unnecessary reference changes
+  // const pathFindingProps = useMemo(() => ({ pathFindingParams }), [pathFindingParams]);
+  // const shortestPathProps = useMemo(() => ({ shortestPathParams }), [shortestPathParams]);
   // Callback functions to pass to PathFinder
-  const handleStartPathFinding = (params) => {
-    setPathFindingParams(params);
-  };
 
-  const handleStartShortestPath = (params) => {
-    setShortestPathParams(params);
-  };
+
 
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
@@ -181,6 +184,7 @@ const Container_AlgorithmicAnalysis = () => {
   };
 
   return (
+  <AlgorithmProvider>
   <div className="h-[calc(100vh-50px)] bg-gradient-to-b from-gray-50 to-gray-100 p-0 overflow-hidden relative">
     <div className="flex flex-col min-h-screen p-0">
       <div className="flex flex-grow m-0 p-0">
@@ -207,9 +211,11 @@ const Container_AlgorithmicAnalysis = () => {
             setSubGrapgTable={setSubGrapgTable}
           />
 
+
           {isBoxPath > 0 && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
               <div className="bg-white p-4 rounded-lg">
+                 
                 <PathVisualization
                   setEdges={setEdges}
                   edges={pathEdges}
@@ -232,11 +238,13 @@ const Container_AlgorithmicAnalysis = () => {
                   pathisempty={pathisempty}
                   setrelationtoshow={setrelationtoshow}
                 />
+      
               </div>
             </div>
           )}
 
               
+
         </div>
 
         {true && (
@@ -290,6 +298,7 @@ const Container_AlgorithmicAnalysis = () => {
               )}
 
              {activeModule === t('Detection de Chemin') && (
+           
                 <PathFinder
                   nvlRef={nvlRef}
                   setPathisempty={setPathisempty}
@@ -299,9 +308,11 @@ const Container_AlgorithmicAnalysis = () => {
                   setCurrentPathIndex={setCurrentPathIndex}
                   setIsBoxPath={setIsBoxPath}
                   selectednodes={selectedNodes}
-                  onStartPathFinding={handleStartPathFinding}
-                  onStartShortestPath={handleStartShortestPath}
+                  // setPathFindingParams={setPathFindingParams}
+                  // setShortestPathParams={setShortestPathParams}
+            
                 />
+                
               )}
 
               {activeModule === t('Aggregation') && (
@@ -379,6 +390,7 @@ const Container_AlgorithmicAnalysis = () => {
       </div>
     </div>
   </div>
+  </AlgorithmProvider>
 );
 };
 
