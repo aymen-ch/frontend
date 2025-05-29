@@ -9,32 +9,10 @@ import {
   HoverInteraction,
 } from '@neo4j-nvl/interaction-handlers';
 import { createNodeHtml } from '../Parser';
-import { useGlobalContext } from '../../Platforme/GlobalVariables';
 import { LabelManager, LabelManagerSchema } from '../Parser';
-import { MapContainer, TileLayer } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
-// Fix Leaflet marker icons
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
 
 // CSS to ensure NVL nodes remain interactive
-const styles = `
-  .nvl-wrapper.geospatial .node, 
-  .nvl-wrapper.geospatial .relationship {
-    pointer-events: auto !important;
-  }
-`;
-
-// Inject styles into the document
-const styleSheet = document.createElement('style');
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
 
 const useNvlVisualization = ({
   nvlRef,
@@ -62,7 +40,6 @@ const useNvlVisualization = ({
   const minimapContainerRef = useRef(null);
   const [isMinimapReady, setIsMinimapReady] = useState(false);
   const [hoverdnode, sethovernode] = useState(null);
-  const { setNodes } = useGlobalContext();
   const layoutoptions = {
     direction: 'up',
     packing: 'bin',
@@ -316,38 +293,11 @@ const useNvlVisualization = ({
       })),
     };
 
-    const validNodes = nodes.filter((node) => {
-      const lat = node.properties?.latitude || node.properties?.lat;
-      const lng = node.properties?.longitude || node.properties?.lng;
-      return lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng);
-    });
-    const centerLat = validNodes.length
-      ? validNodes.reduce((sum, node) => sum + parseFloat(node.properties.latitude || node.properties.lat), 0) / validNodes.length
-      : 0;
-    const centerLng = validNodes.length
-      ? validNodes.reduce((sum, node) => sum + parseFloat(node.properties.longitude || node.properties.lng), 0) / validNodes.length
-      : 0;
-    const mapCenter = validNodes.length ? [centerLat, centerLng] : [0, 0];
 
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        {layoutType === 'geospatial' && (
-          <MapContainer
-            center={mapCenter}
-            zoom={2}
-            style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1, pointerEvents: 'auto' }}
-            boxZoom={true}
-            keyboard={true}
-            touchZoom={true}
-            zoomControl={true}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-          </MapContainer>
-        )}
-        {(isMinimapReady || !ispath) && (
+      
+      {  (isMinimapReady || !ispath) && (
           <InteractiveNvlWrapper
             ref={nvlRef}
             {...nvlProps}

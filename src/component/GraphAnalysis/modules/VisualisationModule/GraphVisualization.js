@@ -69,6 +69,7 @@ const GraphVisualization = React.memo(({
   const searchRef = useRef(null);
   const resultsRef = useRef(null);
 
+
   useEffect(() => {
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
   }, [nodes.length]);
@@ -189,27 +190,7 @@ const GraphVisualization = React.memo(({
     setSaveType('json');
   };
 
-  const handleBack = () => {
-    if (historyIndex > 0) {
-      const previousIndex = historyIndex - 1;
-      const previousState = graphHistory[previousIndex];
-      setNodes(previousState.nodes);
-      setEdges(previousState.edges);
-      setHistoryIndex(previousIndex);
-      setSelectedNodes([]);
-      setselectedEdges([]);
-      setTimeout(() => {
-        nvlRef.current.fit(
-          previousState.nodes.map(n => n.id),
-          {
-            animated: true,
-            maxZoom: 1.0,
-            minZoom: 0.5
-          }
-        );
-      }, 100);
-    }
-  };
+
 
   const handleDelete = () => {
     const selectedNodeIds = Array.from(selectedNodes);
@@ -226,8 +207,14 @@ const GraphVisualization = React.memo(({
 
   const handlewebgl = (e) => {
     const selectedRenderer = e.target.value;
-    setRenderer(selectedRenderer);
-    nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
+    if (selectedRenderer =='Thershold'){
+      nvlRef.current.setRenderer('canvas');
+        nvlRef.current.setLayoutOptions(nvlRef.current.getCurrentOptions());
+    }else{
+             setRenderer(selectedRenderer);
+            nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
+    }
+
   };
 
   const hanldemultiselecte = () => {
@@ -378,7 +365,9 @@ const GraphVisualization = React.memo(({
   title={t('Select Renderer')}
 >
   <option value="canvas">{t('Canvas')}</option>
+  <option value="Thershold">{t('Moyenne')}</option>
   <option value="WebGL">{t('WebGL')}</option>
+
 </select>
 
 
