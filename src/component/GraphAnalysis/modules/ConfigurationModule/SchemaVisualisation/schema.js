@@ -501,7 +501,7 @@ const SchemaVisualizer = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col">
-      <h2 className="my-7.5 text-center h-10">
+      <h2 className="my-7.5 absolute left-1 text-center h-10">
         {t('Schema visualization')}
       </h2>
       <div className="flex-1 flex min-h-0 relative">
