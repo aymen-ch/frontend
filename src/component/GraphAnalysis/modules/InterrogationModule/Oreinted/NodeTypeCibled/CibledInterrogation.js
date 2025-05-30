@@ -3,6 +3,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import RadioBarComoponent from './NodeTypesRadio';
 import SearchComponent from './SearchComponent_introgation';
 
+/// pour linterrogation cible apr type de nodes
+
 const Properties_introgation = ({ nodes, edges, setNodes, setEdges }) => {
   const [selectedNodeType, setSelectedNodeType] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(true); // State to toggle search visibility

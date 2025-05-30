@@ -6,9 +6,10 @@ import axios from 'axios';
 import { computeDagreLayout_1, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout,computeGeospatialLayout } from "../VisualisationModule/layout/layout";
 import { FreeLayoutType } from '@neo4j-nvl/base';
 
+//// ce fichier contient les fonction nessecaire pour le container(visualisation dans le navbar horizontal) de modules  
+/// fonction permetent d'assuer la gestion des nodes et des relation issu des diffrent methodes
 
-
-///// for the scroll bar of affaires///////////////////
+///// pour défilement pour les affaires de la contextualisation ////////
 
 export const handlePrevSubGraph = (currentSubGraphIndex, setCurrentSubGraphIndex) => {
     if (currentSubGraphIndex > 0) {
@@ -22,7 +23,7 @@ export const handlePrevSubGraph = (currentSubGraphIndex, setCurrentSubGraphIndex
     }
   };
 
-  ///////////////////////////////////////////////////////////
+  // Appliquer le layout à l'aide des fonctions implémentées dans le fichier layout
 
  export const handleLayoutChange = async (
     newLayoutType,
@@ -69,6 +70,7 @@ export const handlePrevSubGraph = (currentSubGraphIndex, setCurrentSubGraphIndex
   };
 
   
+// Récupérer les informations d'un noeud et les stocker dans setSelectedNodeData
 
 export const fetchNodeDetail = async (nodeId, setSelectedNodeData) => {
     try {
@@ -89,7 +91,8 @@ export const fetchNodeDetail = async (nodeId, setSelectedNodeData) => {
     }
   };
 
-
+// Récupérer les informations d'un relation et les stocker dans setSelectecRelationData
+   
 export const fetchrelationDetail = async (rel, setSelectecRelationData) => {
     console.log(rel)
     try {
@@ -112,6 +115,7 @@ export const fetchrelationDetail = async (rel, setSelectecRelationData) => {
   };
 
   
+// Récupérer les aggregation possible
 export const fetchAggregations = async (setVirtualRelations) => {
     try {
       const response = await axios.post(`${BASE_URL_Backend}/get_aggregations/`);
@@ -127,15 +131,17 @@ export const fetchAggregations = async (setVirtualRelations) => {
     }
   };
   
-// Helper to get aggregation path by name
+// Fonction utilitaire pour récupérer le chemin d'agrégation par nom , par exemple :  "name": "test","path": ["Commune", "situer", "Unite", "Traiter", "Affaire", "Impliquer", "Personne", "Proprietaire", "Virtuel"]
+ 
 const getAggregationPath = async (relationName,aggregations) => {
   const relation = aggregations.find((rel) => rel.name === relationName);
   console.log("rr:",relation.path)
-  // Return the path or null if not found
   return relation ? relation.path : null;
 };
 
-// Helper to get intermediate types
+// Fonction utilitaire pour récupérer les types intermédiaires à masquer par l'agrégation 
+//// par exemple "path": ["Commune", "situer", "Unite", "Traiter", "Affaire", "Impliquer", "Personne", "Proprietaire", "Virtuel"]  
+//// Unite,Affaire,Personne sorant returner pour les masquer
 const getIntermediateTypes = (aggregationPath) => {
   if (!aggregationPath) return [];
   const intermediateTypes = [];
@@ -146,13 +152,12 @@ const getIntermediateTypes = (aggregationPath) => {
   return intermediateTypes;
 };
 
-// Handle aggregation API call
+// Gérer l'appel API pour l'agrégation 
 const handleAggregation = async (relationName, aggregationPath, nodes) => {
 
   const startType = aggregationPath[0];
   console.log("sta: ",aggregationPath)
   const nodeIds = nodes
- //     .filter((node) => node.group === startType)
       .map((node) => parseInt(node.id, 10));
 
   console.log(`handleAggregation - relationName: ${relationName}, startType: ${startType}, nodeIds:`, nodeIds);
@@ -205,7 +210,7 @@ const handleAggregation = async (relationName, aggregationPath, nodes) => {
       return { nodes: [], edges: [] };
   }
 };
-// Main hook
+/// utiliser lorquer on est dans un mode de contextualisation a chquer difilement des affaires on appliquer l'aggregation qui est activer
 export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges,aggregations) => {
   useEffect(() => {
       console.log('useEffect triggered - affairesInRange:', affairesInRange, 'activeAggregations:', activeAggregations);
@@ -283,6 +288,8 @@ export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTabl
   }, [affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges]);
 };
 
+
+//////  changer la taille de nodes selon leur centrality
 export const CentralityByAttribute = async (combinedNodes, setNodes, attribute, group) => {
   try {
     // Define constants
@@ -320,6 +327,8 @@ export const CentralityByAttribute = async (combinedNodes, setNodes, attribute, 
   }
 };
 
+
+
 export const BetweennessCentrality = async (combinedNodes, setNodes) => {
   try {
 
@@ -355,6 +364,7 @@ export const BetweennessCentrality = async (combinedNodes, setNodes) => {
   }
 };
 
+////changer la color de personne selon leur class , soutein , leader, operationelle
 export const ColorPersonWithClass = async (combinedNodes, setNodes) => {
   const updatedNodes = combinedNodes.map((node) => {
     // Check if the node is of type 'Personne'
