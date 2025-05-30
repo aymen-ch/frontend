@@ -1,8 +1,8 @@
 import React, { useEffect, useState, memo } from 'react';
-import { fetchNodeProperties, submitSearch } from '../../../../Platforme/Urls';
 import { getNodeIcon, getNodeColor, parsergraph } from '../../../Parser';
 import { useTranslation } from 'react-i18next';
-
+import { getAuthToken,BASE_URL_Backend } from '../../../../Platforme/Urls'
+import axios from 'axios';
 const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges }) => {
   const [nodeProperties, setNodeProperties] = useState([]);
   const [formValues, setFormValues] = useState({});
@@ -15,6 +15,65 @@ const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges })
   const [showLoadMore, setShowLoadMore] = useState(false);
 
   const { t } = useTranslation();
+
+
+   const fetchNodeProperties = async (nodeType) => {
+  const token = getAuthToken();
+  try {
+    const response = await axios.get(`${BASE_URL_Backend}/node-types/properties_types/`, {
+      params: { node_type: nodeType },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 200) {
+      return response.data.properties;
+    } else {
+      throw new Error('Error fetching properties');
+    }
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+
+// Utility function to submit search form
+ const submitSearch = async (nodeType, formValues) => {
+  const token = getAuthToken();
+  const filteredFormValues = Object.fromEntries(
+    Object.entries(formValues).filter(([key, value]) => value !== '' && value !== null)
+  );
+
+  const payload = {
+    node_type: nodeType,
+    properties: { ...filteredFormValues },
+  };
+
+  try {
+    const response = await axios.post(
+      `${BASE_URL_Backend}/search-nodes/`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      throw new Error('Submission failed.');
+    }
+  } catch (error) {
+    console.error('Error during submission:', error);
+    throw error;
+  }
+};
+
 
   useEffect(() => {
     setNodeProperties([]);

@@ -1,6 +1,6 @@
-import React, { useState, useCallback, memo, useRef, useEffect,useMemo } from 'react';
+import React, { useState, memo, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './ContainerModules.css';
+
 import ContextManagerComponent from '../Modules/AnalysisModule/AnalyseTempSpatiale/ContextManager';
 import GraphVisualization from '../Modules/VisualisationModule/GraphVisualization';
 import Aggregation from '../Modules/AnalysisModule/Aggregation/aggregation';
@@ -10,13 +10,13 @@ import PathFinder from '../Modules/AnalysisModule/PathDetection/PathInput';
 import Analysis from '../Modules/AnalysisModule/AnalysisAlgorithms/analysis';
 import DetailsModule from '../Modules/InterrogationModule/Details/Details';
 import InterrogationModule from '../Modules/InterrogationModule/interrogation';
-import { useAggregation, fetchNodeProperties, drawCirclesOnPersonneNodes, ColorPersonWithClass, fetchNoderelation } from './function_container';
+import { useAggregation, fetchNodeDetail, ColorPersonWithClass, fetchrelationDetail,fetchAggregations } from './function_container';
 import { NODE_CONFIG } from './Parser';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
-import { FaInfoCircle, FaCogs, FaPlusCircle ,FaSpinner} from 'react-icons/fa';
 
-import { AlgorithmProvider } from './Context';
+import { handleNextSubGraph,handlePrevSubGraph } from './function_container';
+import { PathPrameter } from './PathPrameters';
 
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
@@ -25,7 +25,11 @@ const Container_AlgorithmicAnalysis = () => {
   const { t } = useTranslation();
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
+  
   const [SubGrapgTable, setSubGrapgTable] = useState({ results: [] });
+  const [currentSubGraphIndex, setCurrentSubGraphIndex] = useState(0);
+
+
   const [activeModule, setActiveModule] = useState(null);
   const nvlRef = useRef(null);
   const nvlRefPath = useRef(null);
@@ -38,7 +42,7 @@ const Container_AlgorithmicAnalysis = () => {
   const [pathisempty, setPathisempty] = useState(false);
   const [pathNodes, setPathNodes] = useState([]);
   const [pathEdges, setPathEdges] = useState([]);
-  const [currentSubGraphIndex, setCurrentSubGraphIndex] = useState(0);
+  
   const [isBoxPath, setIsBoxPath] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [affairesInRange, setAffairesInRange] = useState([]);
@@ -47,15 +51,11 @@ const Container_AlgorithmicAnalysis = () => {
   const [activeAggregations, setActiveAggregations] = useState({});
   const [visibleNodeTypes, setVisibleNodeTypes] = useState({});
   const [selectedEdges, setselectedEdges] = useState(new Set());
-  
-  // const [pathFindingParams, setPathFindingParams] = useState(null);
-  // const [shortestPathParams, setShortestPathParams] = useState(null);
+  const [virtualRelations, setVirtualRelations] = useState([]);
 
-  // // Memoize the props to prevent unnecessary reference changes
-  // const pathFindingProps = useMemo(() => ({ pathFindingParams }), [pathFindingParams]);
-  // const shortestPathProps = useMemo(() => ({ shortestPathParams }), [shortestPathParams]);
-  // Callback functions to pass to PathFinder
-
+ useEffect(() => {
+    fetchAggregations(setVirtualRelations);
+  }, []);
 
 
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
@@ -82,12 +82,6 @@ const Container_AlgorithmicAnalysis = () => {
     setVisibleNodeTypes(nodeTypes);
   }, [nodes]);
 
-  const toggleNodeTypeVisibility = (nodeType) => {
-    setVisibleNodeTypes((prev) => ({
-      ...prev,
-      [nodeType]: !prev[nodeType],
-    }));
-  };
 
   const handleModuleClick = (module) => {
     setActiveModule(activeModule === module ? null : module);
@@ -99,13 +93,13 @@ const Container_AlgorithmicAnalysis = () => {
 
   useEffect(() => {
     if (nodetoshow) {
-      fetchNodeProperties(nodetoshow, setSelectedNodeData);
+      fetchNodeDetail(nodetoshow, setSelectedNodeData);
     }
   }, [nodetoshow]);
 
   useEffect(() => {
     if (relationtoshow) {
-      fetchNoderelation(relationtoshow, setSelectecRelationData);
+      fetchrelationDetail(relationtoshow, setSelectecRelationData);
     }
   }, [relationtoshow]);
 
@@ -132,17 +126,6 @@ const Container_AlgorithmicAnalysis = () => {
     });
   };
 
-  const handlePrevSubGraph = () => {
-    if (currentSubGraphIndex > 0) {
-      setCurrentSubGraphIndex(currentSubGraphIndex - 1);
-    }
-  };
-
-  const handleNextSubGraph = () => {
-    if (currentSubGraphIndex < SubGrapgTable.results.length - 1) {
-      setCurrentSubGraphIndex(currentSubGraphIndex + 1);
-    }
-  };
 
   useEffect(() => {
     if (SubGrapgTable.results.length > 0 && affairesInRange.length === 0) {
@@ -151,7 +134,7 @@ const Container_AlgorithmicAnalysis = () => {
     }
   }, [SubGrapgTable]);
 
-  useAggregation(affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges);
+  useAggregation(affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges,virtualRelations);
 
   const combinedNodes = [...nodes].filter((node) => !node.hidden);
   const combinedEdges = [...edges].filter((edge) => !edge.hidden);
@@ -182,7 +165,7 @@ const Container_AlgorithmicAnalysis = () => {
   };
 
   return (
-  <AlgorithmProvider>
+  <PathPrameter>
   <div className="h-[calc(100vh-50px)] bg-gradient-to-b from-gray-50 to-gray-100 p-0 overflow-hidden relative">
     <div className="flex flex-col min-h-screen p-0">
       <div className="flex flex-grow m-0 p-0">
@@ -211,7 +194,7 @@ const Container_AlgorithmicAnalysis = () => {
 
 
           {isBoxPath > 0 && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            <div className="fixed inset-0 z-[300000] bg-black bg-opacity-50  flex items-center justify-center">
               <div className="bg-white p-4 rounded-lg">
                  
                 <PathVisualization
@@ -318,18 +301,15 @@ const Container_AlgorithmicAnalysis = () => {
                   setEdges={setEdges}
                   setNodes={setNodes}
                   nodes={nodes}
-                  edges={edges}
-                  ColorPersonWithClass={ColorPersonWithClass}
-                  drawCirclesOnPersonneNodes={drawCirclesOnPersonneNodes}
                   activeAggregations={activeAggregations}
                   setActiveAggregations={setActiveAggregations}
+                  virtualRelations={virtualRelations}
                 />
               )}
 
               {activeModule === t('Details') && (
                 <DetailsModule
                   visibleNodeTypes={visibleNodeTypes}
-                  toggleNodeTypeVisibility={toggleNodeTypeVisibility}
                   nodetoshow={nodetoshow}
                   selectedNodeData={selectedNodeData}
                   combinedNodes={combinedNodes}
@@ -360,7 +340,6 @@ const Container_AlgorithmicAnalysis = () => {
                     nodes={nodes}
                     edges={edges}
                     ColorPersonWithClass={ColorPersonWithClass}
-                    drawCirclesOnPersonneNodes={drawCirclesOnPersonneNodes}
                     activeAggregations={activeAggregations}
                     setActiveAggregations={setActiveAggregations}
                   />
@@ -388,7 +367,7 @@ const Container_AlgorithmicAnalysis = () => {
       </div>
     </div>
   </div>
-  </AlgorithmProvider>
+  </PathPrameter>
 );
 };
 

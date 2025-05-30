@@ -17,7 +17,6 @@ import {
   FaPlus,
 } from 'react-icons/fa';
 import { FaLocationDot, FaCodeFork } from 'react-icons/fa6';
-import './contextmenu.css';
 import {
   fetchPossibleRelations,
   handleNodeExpansion,
@@ -61,7 +60,7 @@ const ContextMenu = ({
     attribute: '',
     threshold: 0.01,
     maxLevel: 5,
-    direction: 'Both', // New field for direction
+    direction: 'Both',
   });
   const [availableActions, setAvailableActions] = useState([]);
   const actionIcons = {
@@ -74,14 +73,13 @@ const ContextMenu = ({
   const [expandLimit, setExpandLimit] = useState(10);
   const [expandDirection, setExpandDirection] = useState('Both');
 
-  // Fetch numeric node properties
   const fetchNodeProperties = useCallback(async (nodeType) => {
     if (!nodeType) return;
     setLoadingProperties(true);
     setErrorProperties(null);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get(`${BASE_URL_Backend}/node-types/properties/`, {
+      const response = await axios.get(`${BASE_URL_Backend}/node-types/properties_types/`, {
         params: { node_type: nodeType },
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -103,7 +101,6 @@ const ContextMenu = ({
     }
   }, [t]);
 
-  // Get numeric properties
   const getNumericNodeProperties = useCallback(() => {
     return nodeProperties
       .filter((prop) => prop.type === 'int' || prop.type === 'float')
@@ -116,8 +113,6 @@ const ContextMenu = ({
       [index]: !prev[index],
     }));
   };
-
-  // Fetch relations, actions, and properties when context menu is visible
 
   useEffect(() => {
     if (contextMenu?.node && contextMenu.visible) {
@@ -273,9 +268,7 @@ const ContextMenu = ({
       setNodes((prev) => prev.filter((node) => !selectedNodeIds.has(node.id)));
       setEdges((prev) => prev.filter((edge) => !selectedNodeIds.has(edge.from) && !selectedNodeIds.has(edge.to)));
       setSelectedNodes(new Set());
-
     } else if (action === t('View Neighborhood') || action === t('Expand Specific Relation')) {
-
       handleNodeExpansion(contextMenu.node, relationType, setNodes, setEdges, expandLimit, expandDirection);
     } else if (action === t('Select Node')) {
       setSelectedNodes((prev) => new Set([...prev, contextMenu.node.id]));
@@ -341,83 +334,106 @@ const ContextMenu = ({
   return (
     <>
       <div
-        className="context-menu-container"
-        style={{ '--context-menu-y': `${contextMenu.y}px`, '--context-menu-x': `${contextMenu.x}px` }}
+        className="absolute bg-white border border-gray-200 rounded-lg shadow-lg z-[1000] min-w-[220px] overflow-hidden"
+        style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
       >
-        <div className="menu-header">{t('Node Actions')}</div>
-        <div className="menu-items">
+        <div className="px-4 py-2 border-b border-gray-200 bg-gray-100 font-bold text-gray-700 text-sm">
+          {t('Node Actions')}
+        </div>
+        <div className="py-1 flex flex-col">
           <button
-            className="menu-item"
+            className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             onMouseEnter={handleMouseEnterExpand}
             onMouseLeave={handleMouseLeaveExpand}
             ref={expandButtonRef}
           >
-            <FaExpand style={{ marginRight: '10px', color: '#4361ee' }} />
+            <FaExpand className="mr-2 text-blue-600" />
             {t('Expand')}
-            <FaArrowRight style={{ marginLeft: 'auto', fontSize: '12px', color: '#6c757d' }} />
+            <FaArrowRight className="ml-auto text-gray-500 text-xs" />
           </button>
           <button
-            className="menu-item"
+            className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             onMouseEnter={handleMouseEnterActions}
             onMouseLeave={handleMouseLeaveActions}
             ref={actionsButtonRef}
           >
-            <FaCog style={{ marginRight: '10px', color: '#4361ee' }} />
+            <FaCog className="mr-2 text-blue-600" />
             {t('Actions')}
-            <FaArrowRight style={{ marginLeft: 'auto', fontSize: '12px', color: '#6c757d' }} />
+            <FaArrowRight className="ml-auto text-gray-500 text-xs" />
           </button>
           <button
-            className="menu-item"
+            className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             onMouseEnter={handleMouseEnterAdvancedAggregation}
             onMouseLeave={handleMouseLeaveAdvancedAggregation}
             ref={advancedAggregationButtonRef}
           >
-            <FaSlidersH style={{ marginRight: '10px', color: '#4361ee' }} />
+            <FaSlidersH className="mr-2 text-blue-600" />
             {t('Advanced Expention')}
-            <FaArrowRight style={{ marginLeft: 'auto', fontSize: '12px', color: '#6c757d' }} />
+            <FaArrowRight className="ml-auto text-gray-500 text-xs" />
           </button>
           {contextMenu.node?.selected ? (
-            <button className="menu-item" onClick={() => handleContextMenuAction(t('Deselect Node'))}>
-              <FaTimes style={{ marginRight: '10px', color: '#e63946' }} />
+            <button
+              className="flex items-center w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+              onClick={() => handleContextMenuAction(t('Deselect Node'))}
+            >
+              <FaTimes className="mr-2" />
               {t('Deselect Node')}
             </button>
           ) : (
-            <button className="menu-item" onClick={() => handleContextMenuAction(t('Select Node'))}>
-              <FaCheck style={{ marginRight: '10px', color: '#38b000' }} />
+            <button
+              className="flex items-center w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50 transition-colors"
+              onClick={() => handleContextMenuAction(t('Select Node'))}
+            >
+              <FaCheck className="mr-2" />
               {t('Select Node')}
             </button>
           )}
           {contextMenu.node?.activated ? (
-            <button className="menu-item" onClick={() => handleContextMenuAction(t('Deactivated'))}>
-              <FaTimes style={{ marginRight: '10px', color: '#e63946' }} />
+            <button
+              className="flex items-center w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+              onClick={() => handleContextMenuAction(t('Deactivated'))}
+            >
+              <FaTimes className="mr-2" />
               {t('Deactivated')}
             </button>
           ) : (
-            <button className="menu-item" onClick={() => handleContextMenuAction(t('Activated'))}>
-              <FaPlay style={{ marginRight: '10px', color: '#38b000' }} />
+            <button
+              className="flex items-center w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50 transition-colors"
+              onClick={() => handleContextMenuAction(t('Activated'))}
+            >
+              <FaPlay className="mr-2" />
               {t('Activated')}
             </button>
           )}
-          <div className="menu-divider"></div>
-          <button className="menu-item" onClick={() => setContextMenu(null)}>
-            <FaTimesCircle style={{ marginRight: '10px', color: '#6c757d' }} />
+          <hr className="my-1 border-gray-200" />
+          <button
+            className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            onClick={() => setContextMenu(null)}
+          >
+            <FaTimesCircle className="mr-2 text-gray-500" />
             {t('Dismiss')}
           </button>
           {selectedNodes.size > 0 && (
             <button
-              className="menu-item danger"
+              className="flex items-center w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
               onClick={() => handleContextMenuAction(t('Delete Selected Nodes'))}
             >
-              <FaTrash style={{ marginRight: '10px' }} />
+              <FaTrash className="mr-2" />
               {t('Delete Selected Nodes')}
             </button>
           )}
-          <button className="menu-item danger" onClick={() => handleContextMenuAction(t('Delete Node'))}>
-            <FaTrash style={{ marginRight: '10px' }} />
+          <button
+            className="flex items-center w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+            onClick={() => handleContextMenuAction(t('Delete Node'))}
+          >
+            <FaTrash className="mr-2" />
             {t('Delete Node')}
           </button>
-          <button className="menu-item danger" onClick={() => handleContextMenuAction(t('Disable Others'))}>
-            <FaPowerOff style={{ marginRight: '10px' }} />
+          <button
+            className="flex items-center w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+            onClick={() => handleContextMenuAction(t('Disable Others'))}
+          >
+            <FaPowerOff className="mr-2" />
             {t('Disable Others')}
           </button>
         </div>
@@ -425,28 +441,28 @@ const ContextMenu = ({
 
       {subContextMenu?.visible && (
         <div
-          className="sub-context-menu"
-          style={{ '--sub-context-menu-y': `${subContextMenu.y}px`, '--sub-context-menu-x': `${subContextMenu.x}px` }}
+          className="absolute bg-white border border-gray-200 rounded-lg shadow-lg z-[1001] min-w-[220px] overflow-hidden"
+          style={{ top: `${subContextMenu.y}px`, left: `${subContextMenu.x}px` }}
           ref={subContextRef}
           onMouseLeave={() => setSubContextMenu(null)}
         >
-          <div className="expand-options">
-            <label>
+          <div className="flex flex-col gap-2 p-2 bg-white">
+            <label className="flex items-center text-sm text-gray-700">
               {t('Limit')}:
               <input
                 type="number"
                 min="1"
                 value={expandLimit}
                 onChange={(e) => setExpandLimit(Number(e.target.value))}
-                style={{ width: '60px', marginLeft: '8px', marginRight: '16px' }}
+                className="w-16 ml-2 mr-4 p-1 border border-gray-300 rounded"
               />
             </label>
-            <label>
+            <label className="flex items-center text-sm text-gray-700">
               {t('Direction')}:
               <select
                 value={expandDirection}
                 onChange={(e) => setExpandDirection(e.target.value)}
-                style={{ marginLeft: '8px' }}
+                className="ml-2 p-1 border border-gray-300 rounded"
               >
                 <option value="In">{t('In')}</option>
                 <option value="Out">{t('Out')}</option>
@@ -455,68 +471,54 @@ const ContextMenu = ({
             </label>
           </div>
 
-          <div className="menu-header">{t('Expand Options')}</div>
-          <div className="menu-items">
-
+          <div className="px-4 py-2 border-b border-gray-200 bg-gray-100 font-bold text-gray-700 text-sm">
+            {t('Expand Options')}
+          </div>
+          <div className="py-1 flex flex-col">
             <button
-              className="menu-item"
+              className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
               onClick={() => handleContextMenuAction(t('View Neighborhood'))}
             >
-
-              <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
+              <FaProjectDiagram className="mr-2 text-blue-600" />
               {t('Expand All')}
             </button>
 
-            <div className="relations-section">
-              <div className="section-header">{t('Normal Relations')}</div>
-
+            <div className="px-4 py-2">
+              <div className="font-bold text-gray-700 text-sm">{t('Normal Relations')}</div>
               {possibleRelations.filter((relation) => !relation.isVirtual).length > 0 ? (
                 possibleRelations
                   .filter((relation) => !relation.isVirtual)
-
                   .map((relation, index) => {
                     const startIconPath = getNodeIcon(relation.startNode);
                     const endIconPath = getNodeIcon(relation.endNode);
                     return (
                       <button
                         key={`normal-${index}`}
-                        className="menu-item"
+                        className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                         onClick={() => handleContextMenuAction(t('Expand Specific Relation'), relation.name)}
                       >
-
-                        <FaArrowRight
-                          style={{ marginRight: '10px', color: '#4361ee' }}
-                        />
-
-                        <span className="relation-display">
-                          <span className="node-start" style={{ color: getNodeColor(relation.startNode) }}>
+                        <FaArrowRight className="mr-2 text-blue-600" />
+                        <span className="flex items-center gap-2 text-sm">
+                          <span className="flex items-center gap-1 font-medium" style={{ color: getNodeColor(relation.startNode) }}>
                             {startIconPath && (
-                              <span
-                                className="icon-container"
-                                style={{ backgroundColor: getNodeColor(relation.startNode) }}
-                              >
+                              <span className="inline-flex items-center justify-center p-0.5 rounded" style={{ backgroundColor: getNodeColor(relation.startNode) }}>
                                 <img
                                   src={startIconPath}
                                   alt={`${relation.startNode} icon`}
-                                  className="node-icon"
+                                  className="w-4 h-4 object-contain"
                                 />
                               </span>
                             )}
                             {relation.startNode}
                           </span>
-                          <span className="relation-name"> ---- {relation.name} ----</span>
-                          <span className="node-end" style={{ color: getNodeColor(relation.endNode) }}>
+                          <span className="italic"> ---- {relation.name} ----</span>
+                          <span className="flex items-center gap-1 font-medium" style={{ color: getNodeColor(relation.endNode) }}>
                             {endIconPath && (
-                              <span
-                                className="icon-container"
-                                style={{ backgroundColor: getNodeColor(relation.endNode) }}
-                              >
+                              <span className="inline-flex items-center justify-center p-0.5 rounded" style={{ backgroundColor: getNodeColor(relation.endNode) }}>
                                 <img
-
                                   src={endIconPath}
-
                                   alt={`${relation.endNode} icon`}
-                                  className="node-icon"
+                                  className="w-4 h-4 object-contain"
                                 />
                               </span>
                             )}
@@ -528,80 +530,68 @@ const ContextMenu = ({
                     );
                   })
               ) : (
-                <div className="no-relations">{t('No normal relations available')}</div>
+                <div className="px-4 py-2 text-gray-500 text-sm italic">{t('No normal relations available')}</div>
               )}
             </div>
 
-            <div className="relations-section">
-              <div className="section-header">{t('Virtual Relations')}</div>
-
+            <div className="px-4 py-2">
+              <div className="font-bold text-gray-700 text-sm">{t('Virtual Relations')}</div>
               {possibleRelations.filter((relation) => relation.isVirtual).length > 0 ? (
                 possibleRelations
                   .filter((relation) => relation.isVirtual)
-
                   .map((relation, index) => {
                     const startIconPath = getNodeIcon(relation.startNode);
                     const endIconPath = getNodeIcon(relation.endNode);
                     return (
                       <button
                         key={`virtual-${index}`}
-                        className="menu-item virtual-relation"
+                        className="flex items-center w-full px-4 py-2 text-left text-sm text-green-600 font-bold hover:bg-green-50 transition-colors"
                         onClick={() => handleContextMenuAction(t('Expand Specific Relation'), relation.name)}
                       >
-
-                        <FaArrowRight style={{ marginRight: '10px', color: '#38b000' }} />
-
-                        <span className="relation-display">
-                          <span className="node-start" style={{ color: getNodeColor(relation.startNode) }}>
+                        <FaArrowRight className="mr-2 text-green-600" />
+                        <span className="flex items-center gap-2 text-sm">
+                          <span className="flex items-center gap-1 font-medium" style={{ color: getNodeColor(relation.startNode) }}>
                             {startIconPath && (
-                              <span
-                                className="icon-container"
-                                style={{ backgroundColor: getNodeColor(relation.startNode) }}
-                              >
+                              <span className="inline-flex items-center justify-center p-0.5 rounded" style={{ backgroundColor: getNodeColor(relation.startNode) }}>
                                 <img
                                   src={startIconPath}
                                   alt={`${relation.startNode} icon`}
-                                  className="node-icon"
+                                  className="w-4 h-4 object-contain"
                                 />
                               </span>
                             )}
                             {relation.startNode}
                           </span>
-                          <span className="relation-name"> ---- {relation.name} ----</span>
-                          <span className="node-end" style={{ color: getNodeColor(relation.endNode) }}>
+                          <span className="italic"> ---- {relation.name} ----</span>
+                          <span className="flex items-center gap-1 font-medium" style={{ color: getNodeColor(relation.endNode) }}>
                             {endIconPath && (
-                              <span
-                                className="icon-container"
-                                style={{ backgroundColor: getNodeColor(relation.endNode) }}
-                              >
+                              <span className="inline-flex items-center justify-center p-0.5 rounded" style={{ backgroundColor: getNodeColor(relation.endNode) }}>
                                 <img
                                   src={endIconPath}
                                   alt={`${relation.endNode} icon`}
-                                  className="node-icon"
+                                  className="w-4 h-4 object-contain"
                                 />
                               </span>
                             )}
                             {relation.endNode}
                           </span>
-                           x {relation.count}
+                          x {relation.count}
                         </span>
                       </button>
                     );
                   })
               ) : (
-                <div className="no-relations">{t('No virtual relations available')}</div>
+                <div className="px-4 py-2 text-gray-500 text-sm italic">{t('No virtual relations available')}</div>
               )}
             </div>
 
-            <hr />
+            <hr className="my-1 border-gray-200" />
             {selectedNodes.size > 0 && (
-
               <button
-                className="menu-item"
+                className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={() => handleContextMenuAction(t('Expand All seleced nodes'))}
               >
-
-                <FaProjectDiagram style={{ marginRight: '10px', color: '#4361ee' }} />
+                <FaProjectDiagram className="mr-2 text-blue-600" />
                 {t('Expand All seleced nodes')}
               </button>
             )}
@@ -611,24 +601,22 @@ const ContextMenu = ({
 
       {actionsSubMenu?.visible && (
         <div
-          className="sub-context-menu"
-          style={{
-            '--sub-context-menu-y': `${actionsSubMenu.y}px`,
-            '--sub-context-menu-x': `${actionsSubMenu.x}px`,
-            minWidth: '200px',
-          }}
+          className="absolute bg-white border border-gray-200 rounded-lg shadow-lg z-[1001] min-w-[200px] overflow-hidden"
+          style={{ top: `${actionsSubMenu.y}px`, left: `${actionsSubMenu.x}px` }}
           ref={actionsSubRef}
           onMouseLeave={() => setActionsSubMenu(null)}
         >
-          <div className="menu-header">{t('Action Options')}</div>
-          <div className="menu-items">
+          <div className="px-4 py-2 border-b border-gray-200 bg-gray-100 font-bold text-gray-700 text-sm">
+            {t('Action Options')}
+          </div>
+          <div className="py-1 flex flex-col">
             {availableActions.length > 0 ? (
               availableActions.map((action, index) => {
                 const Icon = actionIcons[action.name] || FaCog;
                 return (
-                  <div key={index} className="menu-item-wrapper">
+                  <div key={index} className="mb-1.5">
                     <button
-                      className="menu-item d-flex align-items-center justify-content-between w-100"
+                      className="flex items-center justify-between w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       onClick={() =>
                         handleActionSelect(
                           action.name,
@@ -641,8 +629,8 @@ const ContextMenu = ({
                         )
                       }
                     >
-                      <div className="d-flex align-items-center">
-                        <Icon style={{ marginRight: '10px', color: '#4361ee' }} />
+                      <div className="flex items-center">
+                        <Icon className="mr-2 text-blue-600" />
                         {action.name}
                       </div>
                       <FaInfoCircle
@@ -651,13 +639,12 @@ const ContextMenu = ({
                           e.stopPropagation();
                           toggleDescription(index);
                         }}
-                        style={{ color: '#888', cursor: 'pointer' }}
+                        className="text-gray-500 cursor-pointer"
                       />
                     </button>
                     {visibleDescriptions[index] && (
-
                       <div
-                        className="action-description text-muted small px-3 pb-2"
+                        className="px-3 pb-2 text-gray-500 text-xs"
                         style={{
                           whiteSpace: 'normal',
                           wordWrap: 'break-word',
@@ -665,7 +652,6 @@ const ContextMenu = ({
                           lineHeight: '1.4',
                         }}
                       >
-
                         {action.description}
                       </div>
                     )}
@@ -673,11 +659,11 @@ const ContextMenu = ({
                 );
               })
             ) : (
-              <div className="no-relations">{t('No actions available')}</div>
+              <div className="px-4 py-2 text-gray-500 text-sm italic">{t('No actions available')}</div>
             )}
-            <div className="menu-divider"></div>
+            <hr className="my-1 border-gray-200" />
             <button
-              className="menu-item"
+              className="flex items-center w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50 transition-colors"
               onClick={() =>
                 handleActionSelect(
                   'add_action',
@@ -690,7 +676,7 @@ const ContextMenu = ({
                 )
               }
             >
-              <FaPlus style={{ marginRight: '10px', color: '#38b000' }} />
+              <FaPlus className="mr-2" />
               {t('Add New Action')}
             </button>
           </div>
@@ -699,33 +685,32 @@ const ContextMenu = ({
 
       {advancedAggregationSubMenu?.visible && (
         <div
-          className="sub-context-menu"
-          style={{
-            '--sub-context-menu-y': `${advancedAggregationSubMenu.y}px`,
-            '--sub-context-menu-x': `${advancedAggregationSubMenu.x}px`,
-          }}
+          className="absolute bg-white border border-gray-200 rounded-lg shadow-lg z-[1001] min-w-[220px] overflow-hidden"
+          style={{ top: `${advancedAggregationSubMenu.y}px`, left: `${advancedAggregationSubMenu.x}px` }}
           ref={advancedAggregationSubRef}
           onMouseLeave={() => setAdvancedAggregationSubMenu(null)}
         >
-          <div className="menu-header">{t('Advanced Expention')}</div>
-          <div className="menu-items" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="px-4 py-2 border-b border-gray-200 bg-gray-100 font-bold text-gray-700 text-sm">
+            {t('Advanced Expention')}
+          </div>
+          <div className="p-2.5 flex flex-col gap-2.5">
             {loadingProperties ? (
               <div className="text-center">
-                <FaCog className="fa-spin" />
-                <span className="ms-2">{t('Loading properties...')}</span>
+                <FaCog className="animate-spin inline-block mr-2" />
+                <span>{t('Loading properties...')}</span>
               </div>
             ) : errorProperties ? (
-              <div className="text-danger">{errorProperties}</div>
+              <div className="text-red-500">{errorProperties}</div>
             ) : (
               <>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>{t('Attribute')}:</label>
+                  <label className="block mb-1 text-sm">{t('Attribute')}:</label>
                   <select
                     value={advancedExpandParams.attribute}
                     onChange={(e) =>
                       setAdvancedExpandParams({ ...advancedExpandParams, attribute: e.target.value })
                     }
-                    style={{ width: '100%', padding: '5px' }}
+                    className="w-full p-1.5 border border-gray-300 rounded"
                     disabled={centralityAttributes.length === 0}
                   >
                     {centralityAttributes.length === 0 ? (
@@ -740,7 +725,7 @@ const ContextMenu = ({
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>{t('Threshold')}:</label>
+                  <label className="block mb-1 text-sm">{t('Threshold')}:</label>
                   <input
                     type="number"
                     step="0.001"
@@ -751,11 +736,11 @@ const ContextMenu = ({
                         threshold: parseFloat(e.target.value),
                       })
                     }
-                    style={{ width: '100%', padding: '5px' }}
+                    className="w-full p-1.5 border border-gray-300 rounded"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>{t('Max Level')}:</label>
+                  <label className="block mb-1 text-sm">{t('Max Level')}:</label>
                   <input
                     type="number"
                     value={advancedExpandParams.maxLevel}
@@ -765,18 +750,18 @@ const ContextMenu = ({
                         maxLevel: parseInt(e.target.value),
                       })
                     }
-                    style={{ width: '100%', padding: '5px' }}
+                    className="w-full p-1.5 border border-gray-300 rounded"
                   />
                 </div>
                 {advancedExpandParams.maxLevel === 1 && (
                   <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{t('Direction')}:</label>
+                    <label className="block mb-1 text-sm">{t('Direction')}:</label>
                     <select
                       value={advancedExpandParams.direction}
                       onChange={(e) =>
                         setAdvancedExpandParams({ ...advancedExpandParams, direction: e.target.value })
                       }
-                      style={{ width: '100%', padding: '5px' }}
+                      className="w-full p-1.5 border border-gray-300 rounded"
                     >
                       <option value="In">{t('In')}</option>
                       <option value="Out">{t('Out')}</option>
@@ -785,15 +770,8 @@ const ContextMenu = ({
                   </div>
                 )}
                 <button
-                  className="menu-item"
+                  className="mt-2.5 bg-blue-600 text-white px-2 py-1.5 rounded hover:bg-blue-700 transition-colors"
                   onClick={handleAdvancedExpandSubmit}
-                  style={{
-                    marginTop: '10px',
-                    background: '#4361ee',
-                    color: 'white',
-                    padding: '8px',
-                    borderRadius: '4px',
-                  }}
                 >
                   {t('Apply')}
                 </button>

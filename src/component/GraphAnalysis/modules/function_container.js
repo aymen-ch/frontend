@@ -1,41 +1,35 @@
 
 import { useEffect } from 'react';
 import { BASE_URL_Backend } from '../Platforme/Urls';
-import { parseAggregationResponse,SubGraphParser } from './Parser';
+import { parseAggregationResponse,ContextualizationGraphParser } from './Parser';
 import axios from 'axios';
-import { computeDagreLayout_1, computeCytoscapeLayout, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout,computeGeospatialLayout } from "../Modules/VisualisationModule/layout/layout";
+import { computeDagreLayout_1, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout,computeGeospatialLayout } from "../Modules/VisualisationModule/layout/layout";
 import { FreeLayoutType } from '@neo4j-nvl/base';
 
-export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
-    setVisibleNodeTypes((prev) => ({
-      ...prev,
-      [nodeType]: !prev[nodeType],
-    }));
-  };
-  export const handlePrevSubGraph = (currentSubGraphIndex, setCurrentSubGraphIndex) => {
+
+
+///// for the scroll bar of affaires///////////////////
+
+export const handlePrevSubGraph = (currentSubGraphIndex, setCurrentSubGraphIndex) => {
     if (currentSubGraphIndex > 0) {
       setCurrentSubGraphIndex(currentSubGraphIndex - 1);
     }
   };
   
-  export const handleNextSubGraph = (currentSubGraphIndex, setCurrentSubGraphIndex, SubGrapgTable) => {
+ export const handleNextSubGraph = (currentSubGraphIndex, setCurrentSubGraphIndex, SubGrapgTable) => {
     if (currentSubGraphIndex < SubGrapgTable.results.length - 1) {
       setCurrentSubGraphIndex(currentSubGraphIndex + 1);
     }
-  };;
+  };
 
+  ///////////////////////////////////////////////////////////
 
-
- 
- 
-
-  export const handleLayoutChange = async (
+ export const handleLayoutChange = async (
     newLayoutType,
     graphRef,
     combinedNodes,
     combinedEdges,
     setLayoutType,
-    library_type = 'nvl'
   ) => {
     if (!graphRef.current) {
       console.error('Graph reference not found');
@@ -43,110 +37,6 @@ export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
     }
   
     try {
-      if (library_type === 'cytoscape') {
-        // Base options for all Cytoscape layouts
-        let baseOptions = {
-          fit: true,
-          padding: 30,
-          avoidOverlap: true,
-          nodeDimensionsIncludeLabels: false,
-          animate: true,
-          animationDuration: 500,
-        };
-  
-        let options;
-  
-        switch (newLayoutType) {
-          case 'dagre':
-            options = {
-              ...baseOptions,
-              name: 'dagre',
-              rankDir: 'TB', // Top-to-bottom for hierarchical layout
-              nodeSep: 50,
-              edgeSep: 10,
-              rankSep: 50,
-            };
-            break;
-  
-          case 'Operationnelle_Soutien_Leader':
-            // Approximate with a concentric layout to emphasize leadership/support hierarchy
-            options = {
-              ...baseOptions,
-              name: 'concentric',
-              levelWidth: (nodes) => 1, // Customize based on node hierarchy if needed
-              minNodeSpacing: 60,
-              concentric: (node) => {
-                // Define hierarchy: e.g., 'leader' nodes at center
-                const nodeData = node.data();
-                return nodeData.type === 'leader' ? 3 : nodeData.type === 'soutien' ? 2 : 1;
-              },
-              equidistant: false,
-            };
-            break;
-  
-          case 'elk':
-            // Map to 'cose' or 'fcose' for force-directed layout similar to ELK
-            options = {
-              ...baseOptions,
-              name: 'fcose', // Fast Compound Spring Embedder
-              quality: 'default',
-              randomize: true,
-              nodeSeparation: 75,
-              idealEdgeLength: (edge) => 50,
-            };
-            break;
-  
-          case 'computeLinearLayout':
-            // Use 'grid' or 'circle' for linear arrangement
-            options = {
-              ...baseOptions,
-              name: 'grid',
-              rows: 1, // Single row for linear layout
-              condense: true,
-              sort: (a, b) => a.data('id').localeCompare(b.data('id')), // Sort nodes by ID
-            };
-            break;
-  
-          case 'geospatial':
-            // Compute positions externally and apply them (since Cytoscape doesn't have a geospatial layout)
-            const nodesWithPositions = computeGeospatialLayout(combinedNodes, 800, 800);
-            console.log(combinedNodes)
-            combinedNodes.forEach((node) => {
-              const nodeId = node?.id;
-              if (!nodeId) {
-                console.warn('Node missing id:', node);
-                return;
-              }
-            
-              const pos = nodesWithPositions.find((n) => n.id === nodeId);
-              if (pos) {
-                node.position = { x: pos.x, y: pos.y };
-              } else {
-                console.warn(`Position not found for node with id: ${nodeId}`);
-              }
-            });
-            
-            options = {
-              ...baseOptions,
-              name: 'preset', // Use preset positions
-            };
-            break;
-  
-          default:
-            // Fallback to breadthfirst
-            options = {
-              ...baseOptions,
-              name: 'breadthfirst',
-              directed: false,
-              spacingFactor: 1.75,
-            };
-            break;
-        }
-  
-        const layout = graphRef.current.layout(options);
-        layout.run();
-      } else {
-        // Non-Cytoscape (nvl) branch remains unchanged
         let nodesWithPositions;
   
         if (newLayoutType === 'dagre') {
@@ -170,21 +60,17 @@ export const toggleNodeTypeVisibility = (nodeType, setVisibleNodeTypes) => {
 
           return;
         }
-  
         graphRef.current.setNodePositions(nodesWithPositions);
-        // nodesWithPositions.forEach((node) => {
-        //   console.log(`Pinning node ${node.id} at position x:${node.x}, y:${node.y}`);
-        //   graphRef.current.pinNode(node.id);
-        // });
-      }
-      // console.log("ne layout",newLayoutType)
-      setLayoutType(newLayoutType); // Update the layout type state
+      setLayoutType(newLayoutType);
     } catch (error) {
       console.error('Error in handleLayoutChange:', error);
       throw error;
     }
   };
-export const fetchNodeProperties = async (nodeId, setSelectedNodeData) => {
+
+  
+
+export const fetchNodeDetail = async (nodeId, setSelectedNodeData) => {
     try {
       const response = await axios.post(
         BASE_URL_Backend + "/getdata/",
@@ -202,24 +88,9 @@ export const fetchNodeProperties = async (nodeId, setSelectedNodeData) => {
       return null;
     }
   };
-  export const fetchNodeProperties2= async (nodeId) => {
-    try {
-      const response = await axios.post(
-        BASE_URL_Backend + "/getdata/",
-        { "identity": parseInt(nodeId, 10) },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching node properties:", error.response?.data || error.message);
-      return null;
-    }
-  };
-  export const fetchNoderelation = async (rel, setSelectecRelationData) => {
+
+
+export const fetchrelationDetail = async (rel, setSelectecRelationData) => {
     console.log(rel)
     try {
       const response = await axios.post(
@@ -239,31 +110,27 @@ export const fetchNodeProperties = async (nodeId, setSelectedNodeData) => {
       return null;
     }
   };
-  // Aggregation definitions
 
-
-// Helper to get aggregation path by name
-const getAggregationPath = (relationName) => {
-  // Retrieve virtualRelations from local storage
-  const virtualRelationsString = localStorage.getItem('virtualRelations');
   
-  // Parse the stored data or return null if not found/invalid
-  let virtualRelations = [];
-  try {
-    if (virtualRelationsString) {
-      virtualRelations = JSON.parse(virtualRelationsString);
+export const fetchAggregations = async (setVirtualRelations) => {
+    try {
+      const response = await axios.post(`${BASE_URL_Backend}/get_aggregations/`);
+      if (response.status === 200) {
+        setVirtualRelations(response.data);
+      } else {
+        console.error('Failed to fetch aggregations:', response.data.error);
+        setVirtualRelations([]);
+      }
+    } catch (error) {
+      console.error('Error fetching aggregations:', error);
+      setVirtualRelations([]);
     }
-  } catch (error) {
-    console.error('Error parsing virtualRelations from local storage:', error);
-    return null;
-  }
+  };
   
-  // Find the relation by name
-  const relation = virtualRelations.find((rel) => rel.name === relationName);
-  
-  // Log the result for debugging
-  console.log(`getAggregationPath for ${relationName}:`, relation ? relation.path : null);
-  
+// Helper to get aggregation path by name
+const getAggregationPath = async (relationName,aggregations) => {
+  const relation = aggregations.find((rel) => rel.name === relationName);
+  console.log("rr:",relation.path)
   // Return the path or null if not found
   return relation ? relation.path : null;
 };
@@ -281,7 +148,9 @@ const getIntermediateTypes = (aggregationPath) => {
 
 // Handle aggregation API call
 const handleAggregation = async (relationName, aggregationPath, nodes) => {
+
   const startType = aggregationPath[0];
+  console.log("sta: ",aggregationPath)
   const nodeIds = nodes
  //     .filter((node) => node.group === startType)
       .map((node) => parseInt(node.id, 10));
@@ -336,9 +205,8 @@ const handleAggregation = async (relationName, aggregationPath, nodes) => {
       return { nodes: [], edges: [] };
   }
 };
-
 // Main hook
-export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges) => {
+export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges,aggregations) => {
   useEffect(() => {
       console.log('useEffect triggered - affairesInRange:', affairesInRange, 'activeAggregations:', activeAggregations);
 
@@ -357,7 +225,7 @@ export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTabl
       );
       console.log('Filtered results:', filteredResults);
 
-      const { nodes: parsedNodes, edges: parsedEdges } = SubGraphParser(filteredResults);
+      const { nodes: parsedNodes, edges: parsedEdges } = ContextualizationGraphParser(filteredResults);
       console.log('Initial parsed nodes:', parsedNodes, 'edges:', parsedEdges);
 
       const applyAggregations = async () => {
@@ -368,7 +236,7 @@ export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTabl
               console.log(`Processing aggregation: ${relationName}, isActive: ${isActive}`);
               if (!isActive) continue;
 
-              const aggregationPath = getAggregationPath(relationName);
+              const aggregationPath = await getAggregationPath(relationName,aggregations);
               if (!aggregationPath) {
                   console.warn(`No aggregation path found for ${relationName}`);
                   continue;
@@ -415,81 +283,6 @@ export const useAggregation = (affairesInRange, activeAggregations, SubGrapgTabl
   }, [affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges]);
 };
 
-export const fetchPersonneCrimes = async (combinedNodes) => {
-  try {
-    const response = await axios.post(
-      BASE_URL_Backend + "/getPersonneCrimes/",
-      { nodeIds: combinedNodes.filter(node => node.group === 'Personne').map(node => parseInt(node.id, 10)) },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const personneCrimes = Object.entries(response.data).map(([nodeId, crimeCount]) => ({
-      nodeId: nodeId,
-      crimeCount,
-    }));
-    return personneCrimes;
-  } catch (error) {
-    console.error("Error fetching personne crimes:", error.response?.data || error.message);
-    return [];
-  }
-};
-
-export const filterPersonneNodesWithCrimes = (personneCrimes) => {
-  return personneCrimes.filter(personne => personne.crimeCount >= 1).map(personne => personne.nodeId);
-};
-
-export const drawCirclesOnPersonneNodes = async (combinedNodes, setNodes) => {
-  const personneCrimes = await fetchPersonneCrimes(combinedNodes);
-  const personneNodesWithCrimes = filterPersonneNodesWithCrimes(personneCrimes);
-  const crimeCountMap = new Map(personneCrimes.map(pc => [pc.nodeId, pc.crimeCount]));
-  const updatedNodes = combinedNodes.map(node => {
-    if (personneNodesWithCrimes.includes(node.id)) {
-      const wrapper = document.createElement("div");
-      wrapper.style.position = "relative";
-      wrapper.style.display = "inline-block";
-      if (node.html) {
-        wrapper.appendChild(node.html);
-      }
-      const nodeElement = document.createElement("div");
-      nodeElement.style.width = "140px";
-      nodeElement.style.height = "140px";
-      nodeElement.style.border = "6px solid red";
-      nodeElement.style.borderRadius = "50%";
-      nodeElement.style.position = "absolute";
-      nodeElement.style.top = "0";
-      nodeElement.style.left = "0";
-      const crimeBadge = document.createElement("div");
-      crimeBadge.innerText = crimeCountMap.get(node.id) || "0";
-      crimeBadge.style.position = "absolute";
-      crimeBadge.style.top = "-5px";
-      crimeBadge.style.right = "-5px";
-      crimeBadge.style.background = "red";
-      crimeBadge.style.color = "white";
-      crimeBadge.style.fontSize = "20px";
-      crimeBadge.style.fontWeight = "bold";
-      crimeBadge.style.padding = "2px 5px";
-      crimeBadge.style.borderRadius = "10px";
-      crimeBadge.style.boxShadow = "0 0 3px rgba(0,0,0,0.3)";
-      wrapper.appendChild(nodeElement);
-      wrapper.appendChild(crimeBadge);
-      return {
-        ...node,
-        pinned: true,
-        html: wrapper,
-        data: {
-          ...node.data,
-          crimeCount: crimeCountMap.get(node.id),
-        },
-      };
-    }
-    return node;
-  });
-  setNodes(updatedNodes);
-};
-
 export const CentralityByAttribute = async (combinedNodes, setNodes, attribute, group) => {
   try {
     // Define constants
@@ -527,7 +320,6 @@ export const CentralityByAttribute = async (combinedNodes, setNodes, attribute, 
   }
 };
 
-
 export const BetweennessCentrality = async (combinedNodes, setNodes) => {
   try {
 
@@ -562,8 +354,6 @@ export const BetweennessCentrality = async (combinedNodes, setNodes) => {
     throw error;  // Re-throw to allow caller to handle
   }
 };
-
-
 
 export const ColorPersonWithClass = async (combinedNodes, setNodes) => {
   const updatedNodes = combinedNodes.map((node) => {

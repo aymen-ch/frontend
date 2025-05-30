@@ -1,16 +1,12 @@
-// src/AddActionWindow.js
 import React, { useState, useRef } from 'react';
-import { Button, Card, Container, Form, Alert } from 'react-bootstrap';
 import { XLg, Dash, Fullscreen, FullscreenExit, PlusCircle } from 'react-bootstrap-icons';
 import Draggable from 'react-draggable';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Controlled as CodeMirror } from 'react-codemirror2';
 import 'codemirror/lib/codemirror.css';
-import 'codemirror/theme/dracula.css'; // Dark theme similar to Neo4j Browser
-import './cyphermode'; // Import custom Cypher mode
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './AddActionWindow.css';
+import 'codemirror/theme/dracula.css';
+import './cyphermode';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls';
 
 const AddActionWindow = ({ node, onClose }) => {
@@ -33,7 +29,7 @@ const AddActionWindow = ({ node, onClose }) => {
   const nodeRef = useRef(null);
   const token = localStorage.getItem('authToken');
 
-  // List of available models
+  // Re-added available models and handler based on previous version
   const availableModels = ['llama3', 'mistral', 'grok'];
 
   if (!node) return null;
@@ -156,12 +152,11 @@ const AddActionWindow = ({ node, onClose }) => {
         `${BASE_URL_Backend}/add_action/`,
         formData,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (response.status === 201) {
         setSuccess(t('add_action_window.success_added'));
@@ -183,64 +178,90 @@ const AddActionWindow = ({ node, onClose }) => {
   };
 
   const windowContent = (
-    <Card className={`action-window ${isMaximized ? 'maximized' : ''} shadow`}>
-      <Card.Header className="window-header d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">
-          <PlusCircle size={20} className="me-2" />
-          <span className="window-title">{t('add_action_window.title')}</span>
+    <div
+      className={`w-[500px] h-auto rounded-lg bg-white shadow-lg transition-all duration-300 flex flex-col ${
+        isMaximized ? 'w-[95vw] h-[90vh]' : ''
+      }`}
+    >
+      <div
+        className={`flex justify-between items-center p-[10px_15px] bg-gradient-to-r from-[#3a66db] to-[#1e45b9] text-white ${
+          isMaximized ? 'cursor-default' : 'cursor-move'
+        }`}
+      >
+        <div className="flex items-center">
+          <PlusCircle size={20} className="mr-2" />
+          <span className="text-sm font-medium">{t('add_action_window.title')}</span>
         </div>
-        <div className="window-controls">
-          <Button variant="link" className="control-button p-0 me-2" title={t('add_action_window.minimize')}>
-            <Dash size={16} color="white" />
-          </Button>
-          <Button
-            variant="link"
-            className="control-button p-0 me-2"
+        <div className="flex items-center">
+          <button
+            className="w-[30px] h-[30px] flex items-center justify-center rounded text-white hover:bg-white/10 transition-colors"
+            title={t('add_action_window.minimize')}
+          >
+            <Dash size={16} />
+          </button>
+          <button
+            className="w-[30px] h-[30px] flex items-center justify-center rounded text-white hover:bg-white/10 transition-colors mx-2"
             onClick={toggleMaximize}
             title={isMaximized ? t('add_action_window.restore') : t('add_action_window.maximize')}
           >
-            {isMaximized ? <FullscreenExit size={16} color="white" /> : <Fullscreen size={16} color="white" />}
-          </Button>
-          <Button variant="link" className="control-button p-0" onClick={onClose} title={t('add_action_window.close')}>
-            <XLg size={16} color="white" />
-          </Button>
+            {isMaximized ? <FullscreenExit size={16} /> : <Fullscreen size={16} />}
+          </button>
+          <button
+            className="w-[30px] h-[30px] flex items-center justify-center rounded text-white hover:bg-white/10 transition-colors"
+            onClick={onClose}
+            title={t('add_action_window.close')}
+          >
+            <XLg size={16} />
+          </button>
         </div>
-      </Card.Header>
-      <Card.Body className="window-content p-3">
-        <Container>
-          <h4 className="mb-4">{t('add_action_window.header')}{node.group}</h4>
-          <Form onSubmit={handleSubmit}>
-            <Form.Control type="hidden" name="node_type" value={formData.node_type} />
-            <Form.Control type="hidden" name="node_id" value={formData.node_id} />
-            <Form.Control type="hidden" name="id_field" value={formData.id_field} />
+      </div>
+      <div className="flex-1 p-3 bg-gray-100 overflow-y-auto">
+        <div className="max-w-4xl mx-auto">
+          <h4 className="mb-4 text-[#3a66db] font-medium">{t('add_action_window.header')}{node.group}</h4>
+          <form onSubmit={handleSubmit}>
+            <input type="hidden" name="node_type" value={formData.node_type} />
+            <input type="hidden" name="node_id" value={formData.node_id} />
+            <input type="hidden" name="id_field" value={formData.id_field} />
             {error && (
-              <Alert variant="danger" onClose={() => setError(null)} dismissible>
+              <div className="mb-3 p-3 bg-red-100 text-red-700 rounded-lg flex justify-between items-center">
                 {error}
-              </Alert>
+                <button className="text-red-700 hover:text-red-900" onClick={() => setError(null)}>×</button>
+              </div>
             )}
             {success && (
-              <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
+              <div className="mb-3 p-3 bg-green-100 text-green-700 rounded-lg flex justify-between items-center">
                 {success}
-              </Alert>
+                <button className="text-green-700 hover:text-green-900" onClick={() => setSuccess(null)}>×</button>
+              </div>
             )}
             {validationResult && (
-              <Alert
-                variant={validationResult.isValid ? 'success' : 'warning'}
-                onClose={() => setValidationResult(null)}
-                dismissible
+              <div
+                className={`mb-3 p-3 rounded-lg flex justify-between items-start ${
+                  validationResult.isValid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                }`}
               >
-                {validationResult.message}
-                {validationResult.correctedQuery &&
-                  validationResult.correctedQuery !== formData.query && (
-                    <div>
-                      <strong>{t('add_action_window.corrected_query')}:</strong> {validationResult.correctedQuery}
-                    </div>
-                  )}
-              </Alert>
+                <div>
+                  {validationResult.message}
+                  {validationResult.correctedQuery &&
+                    validationResult.correctedQuery !== formData.query && (
+                      <div>
+                        <strong>{t('add_action_window.corrected_query')}:</strong> {validationResult.correctedQuery}
+                      </div>
+                    )}
+                </div>
+                <button
+                  className={`${
+                    validationResult.isValid ? 'text-green-700 hover:text-green-900' : 'text-yellow-700 hover:text-yellow-900'
+                  }`}
+                  onClick={() => setValidationResult(null)}
+                >
+                  ×
+                </button>
+              </div>
             )}
-            <Form.Group className="mb-3" controlId="actionName">
-              <Form.Label>{t('add_action_window.action_name_label')}</Form.Label>
-              <Form.Control
+            <div className="mb-3">
+              <label className="block mb-1 font-medium">{t('add_action_window.action_name_label')}</label>
+              <input
                 type="text"
                 name="name"
                 value={formData.name}
@@ -248,37 +269,50 @@ const AddActionWindow = ({ node, onClose }) => {
                 placeholder={t('add_action_window.action_name_placeholder')}
                 maxLength={50}
                 required
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
-              <Form.Text className="text-muted">
+              <p className="text-sm text-gray-500 mt-1">
                 {t('add_action_window.name_length_info', { remaining: 50 - formData.name.length })}
-              </Form.Text>
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="actionDescription">
-              <Form.Label>{t('add_action_window.action_description_label')}</Form.Label>
-              <Form.Control
-                as="textarea"
+              </p>
+            </div>
+            <div className="mb-3">
+              <label className="block mb-1 font-medium">{t('add_action_window.action_description_label')}</label>
+              <textarea
                 rows={3}
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 placeholder={t('add_action_window.action_description_placeholder')}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="llmGenerate">
-              <Form.Label>{t('add_action_window.llm_generate_label')}</Form.Label>
-              <div className="d-flex align-items-center">
-          
-                <Button
-                  variant="outline-primary"
+            </div>
+            <div className="mb-3">
+              <label className="block mb-1 font-medium">{t('add_action_window.llm_generate_label')}</label>
+              <div className="flex items-center space-x-2">
+                <select
+                  value={selectedModel}
+                  onChange={(e) => handleModelSelect(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  <option value="">Select a model</option>
+                  {availableModels.map((model) => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
                   onClick={generateCypherQuery}
                   disabled={isGenerating || !selectedModel}
+                  className="px-4 py-2 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isGenerating ? t('add_action_window.generating') : t('add_action_window.generate_button')}
-                </Button>
+                </button>
               </div>
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="query">
-              <Form.Label>{t('add_action_window.query_label')}</Form.Label>
+            </div>
+            <div className="mb-3">
+              <label className="block mb-1 font-medium">{t('add_action_window.query_label')}</label>
               <CodeMirror
                 value={formData.query}
                 options={{
@@ -295,31 +329,38 @@ const AddActionWindow = ({ node, onClose }) => {
                   setFormData({ ...formData, query: value });
                 }}
                 editorDidMount={(editor) => {
-                  editor.setSize('100%', '150px'); // Set editor height
+                  editor.setSize('100%', '150px');
                 }}
+                className="codemirror-custom"
               />
- 
-            </Form.Group>
-            <div className="d-flex justify-content-end">
-              <Button variant="secondary" onClick={onClose} className="me-2">
-                {t('add_action_window.cancel_button')}
-              </Button>
-              <Button variant="primary" type="submit">
-                {t('add_action_window.save_button')}
-              </Button>
             </div>
-          </Form>
-        </Container>
-      </Card.Body>
-    </Card>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              >
+                {t('add_action_window.cancel_button')}
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                {t('add_action_window.save_button')}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 
   return (
-    <div className="action-window-overlay">
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[1050] backdrop-blur-sm">
       {isMaximized ? (
         windowContent
       ) : (
-        <Draggable nodeRef={nodeRef} handle=".window-header" bounds="parent">
+        <Draggable nodeRef={nodeRef} handle=".cursor-move" bounds="parent">
           <div ref={nodeRef}>{windowContent}</div>
         </Draggable>
       )}

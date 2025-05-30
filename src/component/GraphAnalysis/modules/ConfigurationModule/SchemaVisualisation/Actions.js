@@ -10,7 +10,7 @@ import AddActionWindow from '../../Windows/Actions/PersonProfileWindow/Actions';
 // Utilities
 import { getNodeColor, getNodeIcon } from '../../Parser';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
-import globalWindowState from '../../globalWindowState';
+import globalWindowState from '../../VisualisationModule/globalWindowState';
 
 const Actions = ({ selectedItem }) => {
   const { t } = useTranslation();

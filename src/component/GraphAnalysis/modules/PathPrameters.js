@@ -3,7 +3,7 @@ import { createContext, useState, useContext, useMemo } from 'react';
 
 const AlgorithmContext = createContext();
 
-export function AlgorithmProvider({ children }) {
+export function PathPrameter({ children }) {
   const [pathFindingParams, setPathFindingParams] = useState(null);
   const [shortestPathParams, setShortestPathParams] = useState(null);
   const [startPathfinding, setStartPathfinding] = useState(false);

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { FaEye, FaCog } from 'react-icons/fa';
-import './contextmenu.css';
 import axios from 'axios';
 import { handleNodeExpansion_selected } from './ContextMenuFunctions';
 import { useTranslation } from 'react-i18next';
@@ -71,83 +70,56 @@ const ContextMenucanvas = ({
 
   return (
     <div
-      className="context-menu-container"
+      className="absolute bg-white border border-gray-200 rounded-lg shadow-lg z-[1050] min-w-[220px] overflow-hidden"
       style={{
-        '--context-menu-y': `${ContextMenucanvas.y}px`,
-        '--context-menu-x': `${ContextMenucanvas.x}px`,
+        top: `${ContextMenucanvas.y}px`,
+        left: `${ContextMenucanvas.x}px`,
       }}
     >
-      <div className="menu-header">{t('Canvas Actions')}</div>
-      <div className="menu-items">
+      <div className="px-4 py-2 border-b border-gray-200 bg-gray-100 font-bold text-gray-700 text-sm">
+        {t('Canvas Actions')}
+      </div>
+      <div className="py-1">
         {selectedNodes.size > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
               <button
-                className="menu-item"
+                className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={() => handleContextMenuAction('Expand all selected nodes')}
-                style={{ flex: '1' }}
               >
-                <FaEye style={{ marginRight: '10px', color: '#4361ee' }} />
+                <FaEye className="mr-2 text-blue-600" />
                 {t('Expand all selected nodes')}
               </button>
               <button
                 onClick={toggleExpandOptions}
-                style={{
-                  padding: '5px',
-                  backgroundColor: showExpandOptions ? 'rgba(66, 153, 225, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-                  border: '1px solid #ccc',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                }}
+                className={`p-1 rounded border border-gray-300 ${
+                  showExpandOptions ? 'bg-blue-500' : 'bg-white'
+                } hover:bg-blue-100 transition-colors`}
                 title={t('Toggle expand options')}
               >
-                <FaCog size={12} color={showExpandOptions ? '#fff' : '#333'} />
+                <FaCog size={12} className={showExpandOptions ? 'text-white' : 'text-gray-700'} />
               </button>
             </div>
             {showExpandOptions && (
               <div
-                className="expand-options"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                }}
+                className="flex flex-col gap-2 p-2 bg-white border border-gray-300 rounded"
               >
-                <label style={{ display: 'flex', alignItems: 'center', fontSize: '12px', color: '#333' }}>
+                <label className="flex items-center text-xs text-gray-700">
                   {t('Limit')}:
                   <input
                     type="number"
                     min="1"
                     value={expandLimit}
                     onChange={(e) => setExpandLimit(Number(e.target.value))}
-                    style={{
-                      width: '40px',
-                      height: '20px',
-                      fontSize: '12px',
-                      marginLeft: '4px',
-                      padding: '2px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                    }}
+                    className="w-10 h-5 ml-1 p-1 border border-gray-300 rounded text-xs"
                   />
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', fontSize: '12px', color: '#333' }}>
+                <label className="flex items-center text-xs text-gray-700">
                   {t('Direction')}:
                   <select
                     value={expandDirection}
                     onChange={(e) => setExpandDirection(e.target.value)}
-                    style={{
-                      height: '20px',
-                      fontSize: '12px',
-                      marginLeft: '4px',
-                      padding: '2px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                    }}
+                    className="h-5 ml-1 p-1 border border-gray-300 rounded text-xs"
                   >
                     <option value="In">{t('In')}</option>
                     <option value="Out">{t('Out')}</option>
@@ -160,27 +132,27 @@ const ContextMenucanvas = ({
         )}
 
         <button
-          className="menu-item"
+          className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           onClick={() => SetContextMenucanvas(null)}
         >
-          <FaEye style={{ marginRight: '10px', color: '#6c757d' }} />
+          <FaEye className="mr-2 text-gray-500" />
           {t('Dismiss')}
         </button>
-        <hr />
+        <hr className="my-1 border-gray-200" />
         {selectedNodes.size > 0 && (
           <button
-            className="menu-item"
+            className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             onClick={() => handleContextMenuAction('Deselect all nodes')}
           >
-            <FaEye style={{ marginRight: '10px', color: 'red' }} />
+            <FaEye className="mr-2 text-red-500" />
             {t('Deselect all nodes')}
           </button>
         )}
         <button
-          className="menu-item"
+          className="flex items-center w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           onClick={() => handleContextMenuAction('selecte all nodes')}
         >
-          <FaEye style={{ marginRight: '10px', color: 'green' }} />
+          <FaEye className="mr-2 text-green-500" />
           {t('Select all nodes')}
         </button>
       </div>

@@ -3,16 +3,15 @@ import axios from 'axios';
 import { Modal, Button, Form } from 'react-bootstrap';
 import ContextMenu from '../../Modules/InterrogationModule/Oreinted/Extensibilty/NodeContextMenu';
 import GraphCanvas from '../VisualisationModule/GraphCanvas';
-import PersonProfileWindow from "../Windows/Actions/PersonProfileWindow/PersonProfileWindow";
 import AddActionWindow from "../Windows/Actions/PersonProfileWindow/Actions";
 import Analyse_statistique from "../Windows/Actions/PersonProfileWindow/analyse_statistique";
 import Analyse_BackEnd from "../Windows/Actions/PersonProfileWindow/Analyse_BackEnd";
 import Community_BackEnd from "../Windows/Actions/PersonProfileWindow/Community_BackEnd";
-import { FaExpand, FaCompress, FaSave, FaUndo, FaTrash, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaExpand, FaCompress, FaSave, FaTrash, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa';
 import { MdOutlineTabUnselected } from "react-icons/md";
 import { ForceDirectedLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../function_container';
-import globalWindowState from '../globalWindowState';
+import globalWindowState from './globalWindowState';
 import { useTranslation } from 'react-i18next';
 import { filterNodesByQuery } from './GraphVisualizationUtils';
 import { BASE_URL_Backend } from '../../Platforme/Urls';
@@ -437,9 +436,7 @@ const GraphVisualization = React.memo(({
       )}
 
       {/* Windows */}
-      {activeWindow === 'PersonProfile' && (
-        <PersonProfileWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
-      )}
+  
       {activeWindow === 'add_action' && (
         <AddActionWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}

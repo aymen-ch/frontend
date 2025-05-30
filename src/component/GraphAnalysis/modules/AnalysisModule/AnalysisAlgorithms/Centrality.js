@@ -4,7 +4,7 @@ import { Button, Spinner, Form, Row, Col, Card } from 'react-bootstrap';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import TopKCentrality from './TopKCentrality';
 import { useTranslation } from 'react-i18next';
-import globalWindowState from '../../globalWindowState';
+import globalWindowState from '../../VisualisationModule/globalWindowState';
 import { Sliders, Zap, Activity, BarChart2 } from 'lucide-react';
 
 const Centrality = ({
@@ -51,7 +51,7 @@ const Centrality = ({
     setError(null);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get(`${BASE_URL_Backend}/node-types/properties/`, {
+      const response = await axios.get(`${BASE_URL_Backend}/node-types/properties_types/`, {
         params: { node_type: nodeType },
         headers: { Authorization: `Bearer ${token}` },
       });

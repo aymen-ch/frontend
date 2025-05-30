@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { NODE_CONFIG } from '../../Parser';
 import { Button, Spinner, Form, Row, Col, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import globalWindowState from '../../globalWindowState';
+import globalWindowState from '../../VisualisationModule/globalWindowState';
 import { Sliders, Zap, Activity, Target, BarChart2 } from 'lucide-react';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 
@@ -29,7 +29,7 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
   const fetchNodeProperties = async (nodeType) => {
     const token = localStorage.getItem('authToken');
     try {
-      const response = await axios.get(`${BASE_URL_Backend}/node-types/properties/`, {
+      const response = await axios.get(`${BASE_URL_Backend}/node-types/properties_types/`, {
         params: { node_type: nodeType },
         headers: {
           Authorization: `Bearer ${token}`,

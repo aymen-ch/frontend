@@ -1,19 +1,9 @@
 import React from 'react';
-import { getNodeIcon,getNodeColor } from '../../Parser';
+import { getNodeIcon, getNodeColor } from '../../Parser';
 
 export const NodeTypeVisibilityControl = ({ visibleNodeTypes }) => {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-        padding: '12px',
-        background: '#f9f9f9',
-        borderRadius: '8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      }}
-    >
+    <div className="flex flex-wrap gap-3 p-3 bg-gray-50 rounded-lg shadow-sm">
       {Object.keys(visibleNodeTypes).map((nodeType) => {
         const iconPath = getNodeIcon(nodeType);
         const color = getNodeColor(nodeType);
@@ -21,42 +11,21 @@ export const NodeTypeVisibilityControl = ({ visibleNodeTypes }) => {
         return (
           <div
             key={nodeType}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              backgroundColor: '#fff',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-              flexShrink: 0,
-              minWidth: 'fit-content',
-            }}
+            className="flex items-center gap-[6px] p-[6px_10px] rounded-md bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] flex-shrink-0 min-w-fit"
           >
             {iconPath && (
               <div
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  backgroundColor: color,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                className="w-6 h-6 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: color }}
               >
                 <img
                   src={iconPath}
                   alt={`${nodeType} icon`}
-                  style={{
-                    width: '14px',
-                    height: '14px',
-                    objectFit: 'contain',
-                  }}
+                  className="w-[14px] h-[14px] object-contain"
                 />
               </div>
             )}
-            <span style={{ color: '#2c3e50', fontWeight: 500, fontSize: '14px' }}>{nodeType}</span>
+            <span className="text-gray-800 font-medium text-sm">{nodeType}</span>
           </div>
         );
       })}

@@ -43,45 +43,6 @@ export const updateNodeConfig = async (nodeType, { color, size, icon, labelKey }
 // Initialize config on module load
 loadConfig();
 
-// Fetch node properties from the server
-export const fetchNodeProperties = async (nodeId) => {
-  try {
-    const response = await axios.post(
-      `${BASE_URL_Backend}/getdata/`,
-      { identity: parseInt(nodeId, 10) },
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching node properties:', error.response?.data || error.message);
-  }
-};
-
-// Parse graph data
-export const parsergraph = (searchResult) => {
- 
-  const nodes = searchResult.nodes.map((node) =>
-    createNode(
-      node.id,
-      node.nodeType,
-      node.properties,
-      false, // isSelected
-      null, // aggregatedproperties
-      false // ischema
-    )
-  );
-
-  const edges = searchResult.edges.map((edge) =>
-    createEdge(
-      { id: edge.id, type: edge.type, properties: edge.properties },
-      edge.startNode,
-      edge.endNode,
-      NODE_CONFIG.edgeColor || 'red' // Use config or fallback
-    )
-  );
-  return { nodes, edges };
-};
-
 // Utility function to create a node object
 export const createNode = (
   id,
@@ -145,165 +106,6 @@ export const createEdge = (rel, startId, endId, color = null,aggregationPath=nul
   group: rel.type,
 });
 
-// Utility function to parse nodes and edges from a subGraph
-const parseSubGraph = (subGraph) => {
-  const nodes = [];
-  const edges = [];
-
-  const affaire = subGraph.affaire;
-  if (affaire && affaire.id !== null && affaire.id !== undefined) {
-    nodes.push(createNode(affaire.id, 'Affaire', affaire.properties));
-  }
-
-  if (subGraph.nodes && Array.isArray(subGraph.nodes)) {
-    subGraph.nodes.forEach((node) => {
-      if (node.properties && node.id !== null && node.id !== undefined) {
-        nodes.push(createNode(node.id, node.node_type, node.properties));
-      }
-    });
-  }
-
-  if (subGraph.relations && Array.isArray(subGraph.relations)) {
-    subGraph.relations.forEach((relation) => {
-      if (
-        relation.startId !== null &&
-        relation.startId !== undefined &&
-        relation.endId !== null &&
-        relation.endId !== undefined
-      ) {
-        edges.push(createEdge({ id: relation.id, type: relation.type }, relation.startId, relation.endId));
-      }
-    });
-  }
-
-  return { nodes, edges };
-};
-
-// Utility function to parse nodes and edges from neighborhood data
-const parseNeighborhood = (neighborhoodData, contextNode) => {
-  if (!Array.isArray(neighborhoodData)) return { nodes: [], edges: [] };
-
-  const nodes = [];
-  const edges = [];
-
-  neighborhoodData.forEach((item) => {
-    const { related, relationship } = item;
-    nodes.push(createNode(related.properties, related.node_type, related.properties));
-    edges.push(createEdge(relationship, contextNode.id, related.properties.identity));
-  });
-
-  return { nodes, edges };
-};
-
-export const parseNetworkData = (networkData) => {
- 
-  if (!networkData || !Array.isArray(networkData.nodes) || !Array.isArray(networkData.edges)) {
-    return { nodes: [], edges: [] };
-  }
-
-  const nodes = [];
-  const edges = [];
-
-
-
-  networkData.nodes.forEach((node) => {
-    nodes.push(createNode(node.properties, node.labels[0], node.properties));
-  });
-
-  networkData.edges.forEach((edge) => {
-    edges.push(createEdge(edge.type, edge.startNode, edge.endNode));
-  });
-
-  return { nodes, edges };
-};
-
-export const parsePath = (path, selectedNodes) => {
- 
-  const selectedNodeIds = selectedNodes;
-
-  const formattedNodes = path.nodes.map((node) => {
-    const isSelected = selectedNodeIds.has(node.id.toString());
-    return createNode(node.id, node.type, node.properties, isSelected);
-  });
-  const formattedEdges = path.relationships.map((rel) =>
-    createEdge({ id: rel.id, type: rel.type }, rel.source, rel.target)
-  );
-  return { nodes: formattedNodes, edges: formattedEdges };
-};
-
-export const parseAggregationResponse = (responseData) => {
-  const { nodes: newNodes, relationships: newEdges } = responseData;
-  const parsedNodes = newNodes.map((node) =>
-    createNode(node.id, node.type, node.properties, false, node.aggregated_properties)
-  );
-  const parsedEdges = newEdges.map((rel) => createEdge(rel, rel.startId, rel.endId));
-  return { nodes: parsedNodes, edges: parsedEdges };
-};
-
-export const parseAggregationResponse_advanced = async (responseData) => {
-  const { nodes: newNodes, relations: newEdges } = responseData;
-  const parsedNodes = await Promise.all(
-    newNodes.map(async (node) => {
-      try {
-        const properties = await fetchNodeProperties(node.identity);
-        return createNode(node, node.type, properties);
-      } catch (error) {
-        console.error(`Error fetching properties for node ${node.identity}:`, error);
-        return createNode(node, node.type, {});
-      }
-    })
-  );
-  const parsedEdges = newEdges.map((rel) => createEdge(rel, rel.source, rel.target));
-  return { nodes: parsedNodes, edges: parsedEdges };
-};
-
-export const SubGraphParser = (subGraphs) => {
-  const nodes = [];
-  const edges = [];
-
-  if (!subGraphs || !Array.isArray(subGraphs)) {
-    console.error('Invalid subGraphs data:', subGraphs);
-    return { nodes, edges };
-  }
-
-  subGraphs.forEach((subGraph) => {
-    const { nodes: parsedNodes, edges: parsedEdges } = parseSubGraph(subGraph);
-    nodes.push(...parsedNodes);
-    edges.push(...parsedEdges);
-  });
-
-  return { nodes, edges };
-};
-
-export const AddNeighborhoodParser = (neighborhoodData, contextNode) => {
-  return parseNeighborhood(neighborhoodData, contextNode);
-};
-
-export const calculateNodeConfig = (node_size) => {
-  if (typeof node_size !== 'number' || node_size < 0) {
-    throw new Error('node_size must be a positive number');
-  }
-
-  const borderOffset = (node_size - 70) * (13 / 20) + 30;
-  const iconOffset = (node_size - 70) * (13 / 20) + 33;
-  // Scale defaultNodeWidth and defaultNodeHeight based on node_size
-  const baseSize = node_size === 90 ? 200 : node_size === 120 ? 250 : (node_size / 90) * 200;
-
-  return {
-    borderTop: `${borderOffset}%`,
-    borderLeft: `${borderOffset}%`,
-    iconTop: `${iconOffset}%`,
-    iconLeft: `${iconOffset}%`,
-    Nodewidth: `${baseSize}px`,
-    Nodehight: `${baseSize}px`,
-    captionTop: `${node_size}%`,
-    captionLeft: `${node_size / 2 - 2}%`,
-    defaultImageWidth: `${node_size}px`,
-    defaultImageHeight: `${node_size}px`,
-  };
-};
-
-// Create HTML for nodes
 export const createNodeHtml = (
   captionText,
   nodetype,
@@ -436,6 +238,136 @@ export const createNodeHtml = (
   return container;
 };
 
+export const parsergraph = (searchResult) => {
+  const nodes = searchResult.nodes.map((node) =>
+    createNode(
+      node.id,
+      node.nodeType,
+      node.properties,
+      false, // isSelected
+      null, // aggregatedproperties
+      false // ischema
+    )
+  );
+  const edges = searchResult.edges.map((edge) =>
+    createEdge(
+      { id: edge.id, type: edge.type, properties: edge.properties },
+      edge.startNode,
+      edge.endNode,
+      NODE_CONFIG.edgeColor || 'red' // Use config or fallback
+    )
+  );
+  return { nodes, edges };
+};
+
+
+// Utility function to parse nodes and edges from a subGraph
+const parseSubGraph_affaire = (subGraph) => {
+  const nodes = [];
+  const edges = [];
+
+  const affaire = subGraph.affaire;
+  if (affaire && affaire.id !== null && affaire.id !== undefined) {
+    nodes.push(createNode(affaire.id, 'Affaire', affaire.properties));
+  }
+
+  if (subGraph.nodes && Array.isArray(subGraph.nodes)) {
+    subGraph.nodes.forEach((node) => {
+      if (node.properties && node.id !== null && node.id !== undefined) {
+        nodes.push(createNode(node.id, node.node_type, node.properties));
+      }
+    });
+  }
+
+  if (subGraph.relations && Array.isArray(subGraph.relations)) {
+    subGraph.relations.forEach((relation) => {
+      if (
+        relation.startId !== null &&
+        relation.startId !== undefined &&
+        relation.endId !== null &&
+        relation.endId !== undefined
+      ) {
+        edges.push(createEdge({ id: relation.id, type: relation.type }, relation.startId, relation.endId));
+      }
+    });
+  }
+
+  return { nodes, edges };
+};
+
+
+export const parsePath = (path, selectedNodes) => {
+ 
+  const selectedNodeIds = selectedNodes;
+
+  const formattedNodes = path.nodes.map((node) => {
+    const isSelected = selectedNodeIds.has(node.id.toString());
+    return createNode(node.id, node.type, node.properties, isSelected);
+  });
+  const formattedEdges = path.relationships.map((rel) =>
+    createEdge({ id: rel.id, type: rel.type }, rel.source, rel.target)
+  );
+  return { nodes: formattedNodes, edges: formattedEdges };
+};
+
+export const parseAggregationResponse = (responseData) => {
+  const { nodes: newNodes, relationships: newEdges } = responseData;
+  const parsedNodes = newNodes.map((node) =>
+    createNode(node.id, node.type, node.properties, false, node.aggregated_properties)
+  );
+  const parsedEdges = newEdges.map((rel) => createEdge(rel, rel.startId, rel.endId));
+  return { nodes: parsedNodes, edges: parsedEdges };
+};
+
+
+
+export const ContextualizationGraphParser = (subGraphs) => {
+  const nodes = [];
+  const edges = [];
+
+  if (!subGraphs || !Array.isArray(subGraphs)) {
+    console.error('Invalid subGraphs data:', subGraphs);
+    return { nodes, edges };
+  }
+
+  subGraphs.forEach((subGraph) => {
+    const { nodes: parsedNodes, edges: parsedEdges } = parseSubGraph_affaire(subGraph);
+    nodes.push(...parsedNodes);
+    edges.push(...parsedEdges);
+  });
+
+  return { nodes, edges };
+};
+
+
+
+export const calculateNodeConfig = (node_size) => {
+  if (typeof node_size !== 'number' || node_size < 0) {
+    throw new Error('node_size must be a positive number');
+  }
+
+  const borderOffset = (node_size - 70) * (13 / 20) + 30;
+  const iconOffset = (node_size - 70) * (13 / 20) + 33;
+  // Scale defaultNodeWidth and defaultNodeHeight based on node_size
+  const baseSize = node_size === 90 ? 200 : node_size === 120 ? 250 : (node_size / 90) * 200;
+
+  return {
+    borderTop: `${borderOffset}%`,
+    borderLeft: `${borderOffset}%`,
+    iconTop: `${iconOffset}%`,
+    iconLeft: `${iconOffset}%`,
+    Nodewidth: `${baseSize}px`,
+    Nodehight: `${baseSize}px`,
+    captionTop: `${node_size}%`,
+    captionLeft: `${node_size / 2 - 2}%`,
+    defaultImageWidth: `${node_size}px`,
+    defaultImageHeight: `${node_size}px`,
+  };
+};
+
+// Create HTML for nodes
+
+
 // Node color and icon utilities
 export const getNodeColor = (nodeType) =>
   NODE_CONFIG.nodeTypes[nodeType]?.color || NODE_CONFIG.nodeTypes.default.color;
@@ -511,14 +443,6 @@ export const LabelManagerSchema = (node_type, properties = null) => {
   return result;
 };
 
-// Edge caption HTML
-const createEdgeCaptionHtml = () => {
-  const container = document.createElement('div');
-  container.style.position = 'absolute';
-  container.style.pointerEvents = 'none';
-  container.style.backgroundColor = 'black';
-  return container;
-};
 
 // Export NODE_CONFIG for direct access
 export { NODE_CONFIG };

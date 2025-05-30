@@ -499,130 +499,128 @@ const SchemaVisualizer = () => {
   };
 
 
+  
+
+
   return (
-    <div className="h-screen w-screen flex flex-col">
-      <h2 className="my-7.5 absolute left-1 text-center h-10">
-        {t('Schema visualization')}
-      </h2>
-      <div className="flex-1 flex min-h-0 relative">
-        <div
-          className={`flex-1 relative ${
-            isSidebarVisible
-              ? activeModule
-                ? 'mr-[630px] md:mr-[400px] sm:mr-[80vw]'
-                : 'mr-0'
-              : 'mr-0'
-          }`}
-        >
-          <GraphCanvas
+    <div className="h-[calc(100vh-50px)] bg-gradient-to-b from-gray-50 to-gray-100 p-0 overflow-hidden relative"> {/* Adjusted container style from file 2 */} 
+           <h3 className="text-center text-xl font-semibold py-2 flex-shrink-0"> {/* Added centering, styling, and flex-shrink-0 */} 
+        {t("Schema visualization")} 
+      </h3>
+
+      <div className="flex flex-grow m-0 p-0"> {/* Structure from file 2 */} 
+        {/* Main content area - Adjusted class based on file 2, added mr-[60px] when sidebar is visible */} 
+        <div className={`flex-grow 'lg:w-full md:w-full w-full h-[calc(100vh-60px)] overflow-y-auto' rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.05)] ${isSidebarVisible ? 'mr-[60px]' : 'mr-0'}`}> 
+          <GraphCanvas /* Kept original GraphCanvas and props from file 1 */ 
             nvlRef={nvlRef}
             nodes={nodes}
             edges={edges}
             selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
             setContextMenu={setContextMenu}
-            setnodetoshow={() => {}}
+            setnodetoshow={() => {}} /* Assuming placeholder or needs connection */ 
             ispath={false}
-            setrelationtoshow={() => {}}
+            setrelationtoshow={() => {}} /* Assuming placeholder or needs connection */ 
             setEdges={setEdges}
             setNodes={setNodes}
             selectedEdges={selectedEdges}
             setselectedEdges={setSelectedEdges}
           />
           <div>
-            <LayoutControl
-              nvlRef={nvlRef}
-              nodes={nodes}
-              edges={edges}
-              layoutType={layoutType}
-              setLayoutType={setLayoutType}
-            />
+           <LayoutControl
+            nvlRef={nvlRef}
+            nodes={nodes}
+            edges={edges}
+            layoutType={layoutType}
+            setLayoutType={setLayoutType}
+          />   
+              
           </div>
         </div>
 
-        {isSidebarVisible && (
-          <div
-            className={`fixed right-0 top-[120px] ${
-              activeModule
-                ? 'w-[630px] md:w-[630px] sm:w-[200vw]'
-                : 'w-[60px]'
-            } h-[calc(100vh-40px)] bg-gray-100 border-l border-gray-300 overflow-y-auto ${
-              activeModule ? 'p-4' : 'p-4 px-1.5'
-            } z-[1000] box-border transition-all duration-300 ease-in-out`}
-          >
-            <div className="side-nav">
-              <div className="side-nav-inner">
-                {[
-                  { label: t('Detail'), icon: <FaInfoCircle /> },
-                  { label: t('Attribue danalyse'), icon: <FaSpinner /> },
-                  { label: t('NodeConfig'), icon: <FaCogs /> },
-                  { label: t('Aggregation'), icon: <FaPlusCircle /> },
-                  { label: t('Actions'), icon: <FaPlusCircle /> },
-                ].map(({ label, icon }) => (
-                  <div
-                    key={label}
-                    className={`side-nav-item flex items-center gap-2 p-2.5 cursor-pointer ${
-                      activeModule === label ? 'bg-[#E6F0FA] border-l-4 border-cyan-500 text-blue-800 transform scale-105 shadow-md' : 'bg-transparent'
-                    }`}
-                    onClick={() => handleModuleClick(label)}
-                  >
-                    <span className="nav-icon text-base">{icon}</span>
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
+        {/* Vertical Sidebar Navigation - Logic from file 2 */} 
+        {isSidebarVisible && ( /* Use isSidebarVisible from file 1 */ 
+          <div className="absolute right-0 top-0 bottom-0 w-[60px] flex flex-col z-50 p-0"> 
+            <div className="flex flex-col h-full bg-[#E4EFE7] border-l border-black/10 overflow-y-auto justify-start pt-0 mt-0"> 
+              {[ /* Modules from file 1 */ 
+                t('Detail'),
+                t('Attribue danalyse'),
+                t('NodeConfig'),
+                t('Aggregation'),
+                t('Actions'),
+              ].map((module) => (
+                <div
+                  key={module}
+                  className={`flex items-center justify-center min-h-[100px] border-b border-white/10 text-gray-500 cursor-pointer transition-all writing-mode-vertical-rl px-3 py-4 ${ 
+                    activeModule === module
+                      ? 'bg-[#E6F0FA] border-l-4 border-cyan-500 text-blue-800 transform scale-105 shadow-md' 
+                      : '' 
+                  }`} 
+                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }} 
+                  onClick={() => handleModuleClick(module)} /* Use handleModuleClick from file 1 */ 
+                >
+                 {module}
+                </div>
+              ))}
             </div>
-
-            {activeModule && (
-              <div className="module-panel">
-                <div className="module-header flex items-center justify-between">
-                  <h5 className="module-title">{activeModule}</h5>
-                  <button
-                    className="btn btn-sm module-close-btn text-lg"
-                    onClick={() => setActiveModule(null)}
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <div className="module-content">
-                  {activeModule === t('Detail') && <Sidebar selectedItem={selectedItem} />}
-                  {activeModule === t('NodeConfig') && (
-                    <NodeConfigForm selectedNode={selectedItem} onUpdate={redrawGraph} />
-                  )}
-                  {activeModule === t('Aggregation') && (
-                    <PathBuilder
-                      isPathBuilding={isPathBuilding}
-                      setIsPathBuilding={setIsPathBuilding}
-                      selectedNodes={selectedNodes}
-                      selectedEdges={selectedEdges}
-                      nodes={nodes}
-                      edges={edges}
-                      pathName={pathName}
-                      setPathName={setPathName}
-                      isPathValid={isPathValid}
-                      setIsPathValid={setIsPathValid}
-                      pathResult={pathResult}
-                      setPathResult={setPathResult}
-                      virtualRelations={virtualRelations}
-                      setVirtualRelations={setVirtualRelations}
-                      setEdges={setEdges}
-                      nvlRef={nvlRef}
-                      setLayoutType={setLayoutType}
-                    />
-                  )}
-                  {activeModule === t('Actions') && <Actions selectedItem={selectedItem} />}
-                  {activeModule === t('Attribue danalyse') && (
-                    <AnalysisAttributeForm selectedItem={selectedItem} />
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         )}
+
+        {/* Active Module Panel - Logic from file 2 */} 
+        {isSidebarVisible && activeModule && ( /* Check both flags */ 
+        <div
+    className="absolute right-[60px] top-0 bottom-0 w-[700px] lg:w-[600px] md:w-[400px] sm:w-[300px] bg-white shadow-[-3px_0_10px_rgba(0,0,0,0.1)] z-20 overflow-y-auto p-5 border-l border-gray-200" /* Style from file 2 */ 
+  >
+    <div className="flex justify-between items-center border-b-2 border-[#3a4a66] pb-2 mb-4 sticky top-0 bg-white pt-1"> 
+      <h5 className="text-gray-800 font-semibold m-0">{activeModule}</h5>
+      <button className="text-gray-500 text-xl leading-none p-0" onClick={() => setActiveModule(null)}> {/* Use setActiveModule from file 1 */}
+        ×
+      </button>
+    </div>
+            <div className="bg-gray-50 rounded-lg"> 
+              {/* Conditional rendering using components from file 1 */} 
+              {activeModule === t('Detail') && <Sidebar selectedItem={selectedItem} />} 
+              {activeModule === t('NodeConfig') && (
+                <NodeConfigForm selectedNode={selectedItem} onUpdate={redrawGraph} />
+              )}
+              {activeModule === t('Aggregation') && ( /* Note: File 1 uses PathBuilder here, File 2 uses Aggregation. Assuming PathBuilder is correct for file 1's context */ 
+                <PathBuilder
+                  isPathBuilding={isPathBuilding}
+                  setIsPathBuilding={setIsPathBuilding}
+                  selectedNodes={selectedNodes}
+                  selectedEdges={selectedEdges}
+                  nodes={nodes}
+                  edges={edges}
+                  pathName={pathName}
+                  setPathName={setPathName}
+                  isPathValid={isPathValid}
+                  setIsPathValid={setIsPathValid}
+                  pathResult={pathResult}
+                  setPathResult={setPathResult}
+                  virtualRelations={virtualRelations}
+                  setVirtualRelations={setVirtualRelations}
+                  setEdges={setEdges}
+                  nvlRef={nvlRef}
+                  setLayoutType={setLayoutType}
+                />
+              )}
+              {activeModule === t('Actions') && <Actions selectedItem={selectedItem} />} 
+              {activeModule === t('Attribue danalyse') && (
+                <AnalysisAttributeForm selectedItem={selectedItem} />
+              )}
+              {/* Add placeholders for other modules if they exist in file 1 but weren't shown */}
+            </div>
+          </div>
+        )}
+
+        {/* Placeholder for TimelineBar if needed, based on file 2 */} 
+        {/* {SubGrapgTable.results.length > 0 && combinedNodes.length > 0 && ( ... )} */} 
       </div>
     </div>
   );
 };
 
 export default SchemaVisualizer;
+
+
+

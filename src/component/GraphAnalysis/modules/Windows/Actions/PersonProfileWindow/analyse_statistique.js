@@ -14,7 +14,7 @@ import {
 import Draggable from 'react-draggable';
 import axios from 'axios';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls';
-import './PersonProfileWindow.css';
+// Removed: import './PersonProfileWindow.css';
 import { 
   BarChart, 
   Bar, 
@@ -110,14 +110,9 @@ const CustomActiveShapePieChart = ({ data }) => {
         value: item.count
       }));
   
+    // Note: Replaced inline styles with Tailwind where possible, but kept some for chart specifics
     return (
-      <div style={{ 
-        width: '100%', 
-        height: '600px',  // Increased to 600px
-        padding: '20px',  // Added padding
-        backgroundColor: '#f8f9fa',  // Light background
-        borderRadius: '10px'  // Rounded corners
-      }}>
+      <div className="w-full h-[600px] p-5 bg-gray-50 rounded-lg">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -301,20 +296,30 @@ const Analyse_statistique = ({ data, onClose }) => {
 
   const stats = calculateStatistics();
 
+  // Base classes for the draggable window
+  const windowBaseClasses = "shadow-md rounded-lg overflow-hidden transition-all duration-300 ease-in-out select-none";
+  // Conditional classes for maximized state
+  const windowSizeClasses = isMaximized ? "w-[95vw] h-[90vh]" : "w-[800px] h-[600px]";
+
   const windowContent = (
-    <Card className={`profile-window ${isMaximized ? 'maximized' : ''} shadow`}>
-      <Card.Header className="window-header d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">
-          <Person className="me-2" />
-          <span>{t('Statistical Analysis')}: {selectedGroup} - {selectedAttribute}</span>
+    // Apply Tailwind classes for base style and size
+    <Card className={`${windowBaseClasses} ${windowSizeClasses}`}>
+      {/* Apply Tailwind classes for header */}
+      <Card.Header className="bg-gradient-to-br from-[#3a66db] to-[#1e45b9] cursor-move flex justify-between items-center text-white p-3">
+        {/* Apply Tailwind flex utilities */}
+        <div className="flex items-center">
+          <Person className="mr-2" />
+          {/* Apply Tailwind font weight */}
+          <span className="font-medium">{t('Statistical Analysis')}: {selectedGroup} - {selectedAttribute}</span>
         </div>
-        <div className="window-controls">
-          <Button variant="link" className="control-button p-0 me-2" title={t('Minimize')}>
+        <div> {/* Removed window-controls class as it was unstyled */}
+          {/* Apply Tailwind classes for control buttons */}
+          <Button variant="link" className="w-[30px] h-[30px] rounded flex items-center justify-center hover:bg-white/10 p-0 mr-2" title={t('Minimize')}>
             <Dash size={16} color="white" />
           </Button>
           <Button 
             variant="link" 
-            className="control-button p-0 me-2" 
+            className="w-[30px] h-[30px] rounded flex items-center justify-center hover:bg-white/10 p-0 mr-2" 
             onClick={toggleMaximize} 
             title={isMaximized ? t('Restore') : t('Maximize')}
           >
@@ -322,7 +327,7 @@ const Analyse_statistique = ({ data, onClose }) => {
           </Button>
           <Button 
             variant="link" 
-            className="control-button p-0" 
+            className="w-[30px] h-[30px] rounded flex items-center justify-center hover:bg-white/10 p-0" 
             onClick={onClose} 
             title={t('Close')}
           >
@@ -331,25 +336,30 @@ const Analyse_statistique = ({ data, onClose }) => {
         </div>
       </Card.Header>
       
-      <Card.Body>
+      {/* Apply Tailwind classes for body content area */}
+      <Card.Body className="h-[calc(100%-56px)] overflow-y-auto bg-gray-50 p-4">
         {loading ? (
-          <div className="text aorta-center">
+          // Apply Tailwind text alignment
+          <div className="text-center">
             <Spinner animation="border" role="status">
               <span className="visually-hidden">{t('Loading...')}</span>
             </Spinner>
           </div>
         ) : error ? (
-          <div className="alert alert-danger">{error}</div>
+          <div className="alert alert-danger">{error}</div> // Keep Bootstrap alert
         ) : (
           <>
+            {/* Keep Bootstrap Tabs, styling internal links with Tailwind is complex here */}
             <Tabs
               activeKey={activeTab}
               onSelect={(k) => setActiveTab(k)}
-              className="mb-3"
+              className="mb-3 bg-white border-b border-gray-200" // Added background and border
+              // Note: Styling active/inactive tabs requires more specific selectors or component overrides
             >
               <Tab eventKey="distribution" title={t('Distribution')}>
                 <Form.Group controlId="numBins" className="mb-3">
-                  <Form.Label>{t('Number of bins')}: {numBins}</Form.Label>
+                  {/* Apply Tailwind classes to Form Label */}
+                  <Form.Label className="font-semibold text-gray-700 text-[0.9rem] mb-1">{t('Number of bins')}: {numBins}</Form.Label>
                   <Form.Range 
                     min="5" 
                     max="50" 
@@ -423,8 +433,10 @@ const Analyse_statistique = ({ data, onClose }) => {
               </Tab>
               <Tab eventKey="statistics" title={t('Statistics')}>
                 {stats && (
+                  // Apply Tailwind margin
                   <div className="mt-3">
                     <h5>{t('Summary Statistics')}</h5>
+                    {/* Keep Bootstrap table styling */}
                     <table className="table table-bordered">
                       <tbody>
                         <tr>
@@ -460,10 +472,12 @@ const Analyse_statistique = ({ data, onClose }) => {
                   </div>
                 )}
               </Tab>
-              <Tab eventKey="pieChart" title={t('Distribution Pie')}>
-                <div style={{ height: 400 }}>
+              <Tab eventKey="pieChart" title={t('Pie Chart')}>
+                {stats && binnedData.length > 0 ? (
                   <CustomActiveShapePieChart data={binnedData} />
-                </div>
+                ) : (
+                  <p>{t('No data available for pie chart.')}</p>
+                )}
               </Tab>
             </Tabs>
           </>
@@ -473,18 +487,19 @@ const Analyse_statistique = ({ data, onClose }) => {
   );
 
   return (
-    <div className="profile-window-overlay">
-      {isMaximized ? (
-        windowContent
-      ) : (
-        <Draggable nodeRef={nodeRef} handle=".window-header" bounds="parent">
-          <div ref={nodeRef}>
-            {windowContent}
-          </div>
-        </Draggable>
-      )}
-    </div>
+    // Use Draggable for the window movement
+    <Draggable nodeRef={nodeRef} handle=".cursor-move" bounds="parent">
+      <div 
+        ref={nodeRef} 
+        // Apply Tailwind classes for the overlay
+        className="fixed inset-0 w-screen h-screen bg-black/50 flex justify-center items-center z-[1050] backdrop-blur-sm"
+        style={{ position: 'fixed' }} // Ensure position fixed is applied
+      >
+        {windowContent}
+      </div>
+    </Draggable>
   );
 };
 
 export default Analyse_statistique;
+

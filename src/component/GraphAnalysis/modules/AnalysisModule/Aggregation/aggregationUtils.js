@@ -9,6 +9,8 @@ export const getIntermediateTypes = (aggregationPath) => {
   return intermediateTypes;
 };
 
+
+
 export const handleAggregation = async (
 relationName = "apple_telephone",
 type,

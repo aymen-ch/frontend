@@ -4,7 +4,7 @@ import { Button, Spinner, Form } from 'react-bootstrap';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
 import randomColor from 'randomcolor';
-import globalWindowState from '../../globalWindowState';
+import globalWindowState from '../../VisualisationModule/globalWindowState';
 import { Target, BarChart2 } from 'lucide-react';
 
 const Community = ({ nodes, setNodes, isLoading, setIsLoading }) => {

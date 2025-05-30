@@ -1,8 +1,8 @@
 // src/utils/contextMenuHelpers.js
 import axios from 'axios';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls'; 
-import { AddNeighborhoodParser,parsePath ,parseNetworkData,parsergraph } from '../../../Parser';
-import globalWindowState from '../../../globalWindowState';
+import { parsePath,parsergraph } from '../../../Parser';
+import globalWindowState from '../../../VisualisationModule/globalWindowState';
 import { handleAggregation } from '../../../AnalysisModule/Aggregation/aggregationUtils'
 export const fetchPossibleRelations = async (node, setPossibleRelations) => {
   const token = localStorage.getItem('authToken');
@@ -305,167 +305,12 @@ export const handleActionSelect = async (
     }
   } catch (error) {
     console.error(`Error executing action ${action}:`, error);
-    // Optionally notify the user (e.g., with react-toastify)
-    // import { toast } from 'react-toastify';
-    // toast.error(`Failed to execute ${action}: ${error.message}`);
   }
 };
 
 
 
-// export const handleActionSelect = async (
-//   action,
-//   node,
-//   setActionsSubMenu,
-//   setContextMenu,
-//   setNodes,
-//   setEdges,
-//   setActiveAggregations=null
-// ) => {
-//   try {
-//     // Determine the ID field based on node group
-//     const idValue = node.id; // Fallback to node.id if idField is not found
 
-//     // Call the execute_action endpoint
-//     const response = await axios.post('/api/execute_action/', {
-//       action_name: action,
-//       id: idValue,
-//     });
-
-//     const { nodes, edges } = response.data;
-
-//     // Update nodes and edges, avoiding duplicates
-//     setNodes((prevNodes) => {
-//       const existingNodeIds = new Set(prevNodes.map((n) => n.id));
-//       const newNodes = nodes.filter((n) => !existingNodeIds.has(n.id));
-//       return [...prevNodes, ...newNodes];
-//     });
-
-//     setEdges((prevEdges) => {
-//       const existingEdgeIds = new Set(prevEdges.map((e) => `${e.from}-${e.to}`));
-//       const newEdges = edges.filter((e) => !existingEdgeIds.has(`${e.from}-${e.to}`));
-//       return [...prevEdges, ...newEdges];
-//     });
-
-//     // Optionally update active aggregations
-//     setActiveAggregations((prev) => ({
-//       ...prev,
-//       // Add any aggregation logic if needed
-//     }));
-//    if(node.group=="Personne"){
-//     await handleAggregation(
-//       "apple_telephone",
-//       ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"],
-//       "apple_telephone",
-//       setNodes,
-//       setEdges,
-//       updatedNodes// Use the prop nodes plus new criminalNodes
-//       ,setActiveAggregations
-//     );
-//    }
-//     // Close menus
-//     setActionsSubMenu(null);
-//     setContextMenu(null);
-//   } catch (error) {
-//     console.error('Error handling action:', error);
-//     // Optionally show an error message to the user
-//   }
-// };
-
-// export { fetchPossibleRelations, handleNodeExpansion, handleAllConnections, handleAdvancedExpand };
-
-// export const handleCriminalTree = async (node, setNodes, setEdges,setActiveAggregations) => {
-//   const token = localStorage.getItem('authToken');
-//   console.log("handleCriminalTree");
-//   try {
-//     const response = await axios.post(
-//       BASE_URL_Backend + '/personne_criminal_network/',
-//       { id:parseInt(node.id, 10) },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           'Content-Type': 'application/json',
-//         },
-//       }
-//     );
-
-//     if (response.status === 200) {
-//       const { nodes: criminalNodes, edges: criminalEdges } = parsergraph(response.data);
-//       let updatedNodes; // Define variable to hold the updated nodes
-//       setNodes((prevNodes) => {
-//         updatedNodes = [...prevNodes, ...criminalNodes]; // Assign the updated nodes
-//         return updatedNodes;
-//       });
-//       setEdges((prevEdges) => [...prevEdges, ...criminalEdges]);
-//       await handleAggregation(
-//         "apple_telephone",
-//         ["Personne", "Proprietaire", "Phone", "Appel_telephone", "Phone", "Proprietaire", "Personne"],
-//         "apple_telephone",
-//         setNodes,
-//         setEdges,
-//         updatedNodes// Use the prop nodes plus new criminalNodes
-//         ,setActiveAggregations
-//       );
-//     } else {
-//       console.error('Failed to fetch criminal network');
-//     }
-//   } catch (error) {
-//     console.error('Error fetching criminal network:', error);
-//   }
-// };
-// export const handleaffair_insame = async (node, setNodes, setEdges) => {
-//   const token = localStorage.getItem('authToken');
-//   console.log("handleCriminalTree");
-//   try {
-//     const response = await axios.post(
-//       BASE_URL_Backend + '/affaire_in_the_same_region/',
-//       { id: parseInt(node.id, 10)},
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           'Content-Type': 'application/json',
-//         },
-//       }
-//     );
-
-//     if (response.status === 200) {
-//       const { nodes: affairesnode, edges: affaireedges } = parsergraph(response.data);
-//       let updatedNodes; // Define variable to hold the updated nodes
-//       setNodes((prevNodes) => {
-//         updatedNodes = [...prevNodes, ...affairesnode]; // Assign the updated nodes
-//         return updatedNodes;
-//       });
-//       setEdges((prevEdges) => [...prevEdges, ...affaireedges]);
-//     } else {
-//       console.error('Failed to fetch affaire network');
-//     }
-//   } catch (error) {
-//     console.error('Error fetching affaires network:', error);
-//   }
-// };
-
-// export const handleActionSelect = async (action, node, setActionsSubMenu, setContextMenu , setNodes ,setEdges,setActiveAggregations) => {
-//   console.log(`Selected ${action}`);
-//   if (action === 'Show Person Profile') {
-//     globalWindowState.setWindow('PersonProfile', node);
-//     setActionsSubMenu(null);
-//     setContextMenu(null);
-//   } 
-//   if (action === 'Show tree of criminal') {
-//     await handleCriminalTree(node, setNodes, setEdges,setActiveAggregations);
-//     setActionsSubMenu(null);
-//     setContextMenu(null);
-//   }
-//   if (action === 'Affaire dans la meme region') {
-//     await handleaffair_insame(node, setNodes, setEdges);
-//     setActionsSubMenu(null);
-//     setContextMenu(null);
-//   }
-//   else {
-//     setActionsSubMenu(null);
-//     setContextMenu(null);
-//   }
-// };
 
 export const handleAdvancedExpand = async (
   node,

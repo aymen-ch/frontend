@@ -1,7 +1,7 @@
 // GraphCanvas.js
 import React, { useEffect, useState } from 'react';
 import useNvlVisualization from './NvlVisualization';
-import useCytoVisualization from './CytoscapeVisualization';
+
 const GraphCanvas = ({
   nvlRef,
   nodes,

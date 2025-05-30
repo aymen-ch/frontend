@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { updateNodeConfig, getNodeColor, getNodeIcon, NODE_CONFIG } from '../../Parser';
-import { fetchNodeProperties } from '../../../Platforme/Urls';
+import { getAuthToken,BASE_URL_Backend } from '../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
-
+import axios from 'axios';
 const NodeConfigForm = ({ selectedNode, onUpdate }) => {
   const [nodeType, setNodeType] = useState(selectedNode?.group || '');
   const [color, setColor] = useState('');
@@ -13,6 +13,27 @@ const NodeConfigForm = ({ selectedNode, onUpdate }) => {
   const [error, setError] = useState(null);
   const { t } = useTranslation();
 
+
+   const fetchNodeProperties = async (nodeType) => {
+  const token = getAuthToken();
+  try {
+    const response = await axios.get(`${BASE_URL_Backend}/node-types/properties_types/`, {
+      params: { node_type: nodeType },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 200) {
+      return response.data.properties;
+    } else {
+      throw new Error('Error fetching properties');
+    }
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
   useEffect(() => {
     setNodeType(selectedNode?.group || '');
   }, [selectedNode]);
