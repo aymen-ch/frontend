@@ -187,13 +187,22 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
     setOperations({ ...operations, [propertyName]: e.target.value });
   };
 
-  // Soumettre le formulaire et lancer la recherche
+  // Soumettre le formulaire et lancer la recherche avec validation
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedbackMessage('');
     setShowLoadMore(false);
     setRemainingNodes([]);
     setRemainingEdges([]);
+    setError(null);
+
+    // Vérifier si au moins une valeur est saisie
+    const hasValues = Object.values(formValues).some(value => value !== '' && value !== null);
+    if (!hasValues) {
+      setError(t('Veuillez remplir au moins un champ pour lancer la recherche.'));
+      return;
+    }
+
     try {
       const searchPayload = {
         values: formValues,

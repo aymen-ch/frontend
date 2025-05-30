@@ -181,8 +181,8 @@ const PathVisualization = React.memo(({
   const fetchNextDepth = () => {
     if (currentDepth < pathFindingParams.depth) {
       setCurrentDepth(currentDepth + 1);
-      fetchPathsForDepth(pathFindingParams.ids, currentDepth).then((pathCount) => {
-        if (pathCount === 0 && currentDepth >= pathFindingParams.depth) {
+      fetchPathsForDepth(pathFindingParams.ids, currentDepth + 1).then((pathCount) => {
+        if (pathCount === 0 && currentDepth +1 >= pathFindingParams.depth) {
           setIsSearching(false);
         }
       });
