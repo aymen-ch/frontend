@@ -8,8 +8,8 @@ import {
   ClickInteraction,
   HoverInteraction,
 } from '@neo4j-nvl/interaction-handlers';
-import { createNodeHtml } from '../Parser';
-import { LabelManager, LabelManagerSchema } from '../Parser';
+
+import { LabelManager, LabelManagerSchema,createNodeHtml } from './Parser';
 
 
 // CSS to ensure NVL nodes remain interactive

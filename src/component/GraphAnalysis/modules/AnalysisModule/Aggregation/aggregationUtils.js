@@ -1,5 +1,5 @@
 import { BASE_URL_Backend } from "../../../Platforme/Urls";
-import { parseAggregationResponse } from "../../Parser";
+import { parseAggregationResponse } from "../../VisualisationModule/Parser";
 import axios from "axios";
 export const getIntermediateTypes = (aggregationPath) => {
   const intermediateTypes = [];

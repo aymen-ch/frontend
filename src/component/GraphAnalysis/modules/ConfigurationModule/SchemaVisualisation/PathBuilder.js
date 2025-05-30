@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import NodeDetails from './NodeDetails';
-import EdgeDetails from './EdgeDetails';
-import { createEdge } from '../../Parser';
+
+import { createEdge, getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser'; // Added getNodeColor, getNodeIcon
 import { constructPath } from './cunstructpath';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
+import { FaCircle, FaInfoCircle } from 'react-icons/fa'; // Added FaCircle, FaInfoCircle
+
 const styles = {
   container: { marginTop: '20px', background: '#fff', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
   button: { width: '100%', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer', color: '#fff', transition: 'background-color 0.3s' },
@@ -20,6 +21,74 @@ const styles = {
   input: { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '10px' },
   validText: { color: '#4CAF50', marginBottom: '10px', textAlign: 'center' },
   pathNameDisplay: { fontStyle: 'italic', color: '#333', marginTop: '5px', minHeight: '20px' },
+  // Styles from NodeDetails (using Tailwind classes converted conceptually or kept as inline)
+  nodeDetailContainer: { background: '#fff', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '0.75rem', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', transition: 'transform 0.2s', maxWidth: '300px' }, // Simplified from Tailwind
+  nodeDetailContainerHover: { transform: 'translateY(-0.125rem)' }, // Simplified hover effect
+  nodeTypeLabel: { fontWeight: '600', fontSize: '0.875rem', color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.5rem' },
+  nodeInfoContainer: { display: 'flex', alignItems: 'center', padding: '0.5rem', borderRadius: '0.375rem', gap: '0.5rem', minHeight: '36px' },
+  nodeIcon: { width: '1.25rem', height: '1.25rem', objectFit: 'contain' },
+  nodeGroupText: { color: '#fff', fontSize: '0.875rem', fontWeight: '500', textShadow: '0 1px 1px rgba(0,0,0,0.2)' },
+  // Styles from EdgeDetails (inline)
+  edgeDetailSpan: {
+    backgroundColor: '#FFD700',
+    color: '#333',
+    padding: '2px 8px',
+    borderRadius: '3px',
+    margin: '2px',
+    display: 'inline-block',
+  }
+};
+
+// Inline NodeDetails Component Logic
+const NodeDetailsInline = ({ nodeId, nodes, t }) => {
+  const node = nodes.find((n) => n.id === nodeId);
+  if (!node) return null;
+
+  const { group, color, icon } = {
+    group: node.group,
+    color: getNodeColor(node.group),
+    icon: getNodeIcon(node.group),
+  };
+
+  const nodeTypeLabelText = nodeId.includes('_dup')
+    ? t('Final Node')
+    : t('Initial Node');
+
+  // Using inline styles based on the extracted Tailwind/CSS logic
+  return (
+    <div style={styles.nodeDetailContainer} 
+         onMouseOver={(e) => e.currentTarget.style.transform = styles.nodeDetailContainerHover.transform}
+         onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
+      <div style={styles.nodeTypeLabel}>
+        <FaInfoCircle />
+        {nodeTypeLabelText}
+      </div>
+      <div style={{ ...styles.nodeInfoContainer, backgroundColor: color }}>
+        {icon ? (
+          <img
+            src={icon}
+            alt={`${group} icon`}
+            style={styles.nodeIcon}
+          />
+        ) : (
+          <FaCircle style={styles.nodeIcon} /> // Use style object
+        )}
+        <span style={styles.nodeGroupText}>{group}</span>
+      </div>
+    </div>
+  );
+};
+
+// Inline EdgeDetails Component Logic
+const EdgeDetailsInline = ({ edgeId, edges }) => {
+  const edge = edges.find((e) => e.id === edgeId);
+  if (!edge) return null;
+
+  return (
+    <span style={styles.edgeDetailSpan}>
+      ➜ {edge.group}
+    </span>
+  );
 };
 
 const PathBuilder = ({
@@ -166,7 +235,8 @@ const PathBuilder = ({
               <div style={styles.nodeContainer}>
                 {[...selectedNodes].slice(0, 2).map((nodeId, index) => (
                   <div key={nodeId} style={styles.nodeItem}>
-                    <NodeDetails nodeId={nodeId} nodes={nodes} />
+                    {/* Replaced NodeDetails with NodeDetailsInline */}
+                    <NodeDetailsInline nodeId={nodeId} nodes={nodes} t={t} />
                     <div style={{ fontSize: '12px', color: '#666', textAlign: 'center' }}>
                       {index === 0 ? t('Start Node') : t('End Node')}
                     </div>
@@ -185,7 +255,8 @@ const PathBuilder = ({
             <div style={styles.section}>
               <span style={{ fontWeight: 'bold', color: '#0066cc', marginRight: '5px' }}>{t('Selected Relations')}:</span>
               {[...selectedEdges].map((edgeId) => (
-                <EdgeDetails key={edgeId} edgeId={edgeId} edges={edges} />
+                /* Replaced EdgeDetails with EdgeDetailsInline */
+                <EdgeDetailsInline key={edgeId} edgeId={edgeId} edges={edges} />
               ))}
             </div>
           )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { getNodeColor, getNodeIcon } from '../../Parser';
+import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser';
 import { FaCircle, FaInfoCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 

@@ -1,17 +1,17 @@
 import React, { useState, memo, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import ContextManagerComponent from '../Modules/AnalysisModule/AnalyseTempSpatiale/ContextManager';
-import GraphVisualization from '../Modules/VisualisationModule/GraphVisualization';
-import Aggregation from '../Modules/AnalysisModule/Aggregation/aggregation';
-import TimelineBar from '../Modules/AnalysisModule/AnalyseTempSpatiale/BarScroll';
-import PathVisualization from '../Modules/AnalysisModule/PathDetection/pathvisualizationCanvas';
-import PathFinder from '../Modules/AnalysisModule/PathDetection/PathInput';
-import Analysis from '../Modules/AnalysisModule/AnalysisAlgorithms/analysis';
-import DetailsModule from '../Modules/InterrogationModule/Details/Details';
-import InterrogationModule from '../Modules/InterrogationModule/interrogation';
+import ContextManagerComponent from '../../Modules/AnalysisModule/AnalyseTempSpatiale/ContextManager';
+import GraphVisualization from '../../Modules/VisualisationModule/GraphVisualization';
+import Aggregation from '../../Modules/AnalysisModule/Aggregation/aggregation';
+import TimelineBar from '../../Modules/AnalysisModule/AnalyseTempSpatiale/BarScroll';
+import PathVisualization from '../../Modules/AnalysisModule/PathDetection/pathvisualizationCanvas';
+import PathFinder from '../../Modules/AnalysisModule/PathDetection/PathInput';
+import Analysis from '../../Modules/AnalysisModule/AnalysisAlgorithms/analysis';
+import DetailsModule from '../../Modules/InterrogationModule/Details/Details';
+import InterrogationModule from '../../Modules/InterrogationModule/interrogation';
 import { useAggregation, fetchNodeDetail, ColorPersonWithClass, fetchrelationDetail,fetchAggregations } from './function_container';
-import { NODE_CONFIG } from './Parser';
+import { NODE_CONFIG } from '../VisualisationModule/Parser';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 

@@ -1,7 +1,7 @@
 // src/utils/contextMenuHelpers.js
 import axios from 'axios';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls'; 
-import { parsePath,parsergraph } from '../../../Parser';
+import { parsePath,parsergraph } from '../../../VisualisationModule/Parser';
 import globalWindowState from '../../../VisualisationModule/globalWindowState';
 import { handleAggregation } from '../../../AnalysisModule/Aggregation/aggregationUtils'
 export const fetchPossibleRelations = async (node, setPossibleRelations) => {

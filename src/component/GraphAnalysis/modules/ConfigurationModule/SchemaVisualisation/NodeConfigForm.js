@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { updateNodeConfig, getNodeColor, getNodeIcon, NODE_CONFIG } from '../../Parser';
+import { updateNodeConfig, getNodeColor, getNodeIcon, NODE_CONFIG } from '../../VisualisationModule/Parser';
 import { getAuthToken,BASE_URL_Backend } from '../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';

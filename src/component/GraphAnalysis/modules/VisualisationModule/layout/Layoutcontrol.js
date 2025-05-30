@@ -7,7 +7,7 @@ import {
   HierarchicalLayoutType,
   GridLayoutType,
 } from '@neo4j-nvl/base';
-import { handleLayoutChange } from '../../function_container';
+import { handleLayoutChange } from '../../ContainersModules/function_container';
 
 const LayoutControl = ({ nvlRef, nodes, edges, layoutType, setLayoutType }) => {
   const layouts = [

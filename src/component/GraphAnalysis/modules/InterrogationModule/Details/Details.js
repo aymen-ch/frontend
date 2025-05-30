@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NodeTypeVisibilityControl } from './NodeTypeVisibilityControl';
-import { getNodeColor, getNodeIcon } from '../../Parser';
+import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser';
 
 const DetailsModule = ({
   visibleNodeTypes,

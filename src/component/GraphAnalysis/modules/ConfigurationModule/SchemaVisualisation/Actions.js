@@ -8,7 +8,7 @@ import axios from 'axios';
 import AddActionWindow from '../../Windows/Actions/PersonProfileWindow/Actions';
 
 // Utilities
-import { getNodeColor, getNodeIcon } from '../../Parser';
+import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import globalWindowState from '../../VisualisationModule/globalWindowState';
 

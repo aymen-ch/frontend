@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import neo4j from 'neo4j-driver';
-import Sidebar from './sidebar';
+import Detail from './Detail';
 import PathBuilder from './PathBuilder';
 import GraphCanvas from '../../VisualisationModule/GraphCanvas';
 import LayoutControl from '../../VisualisationModule/layout/Layoutcontrol';
-import { createNode, createEdge, createNodeHtml } from '../../Parser';
+import { createNode, createEdge, createNodeHtml } from '../../VisualisationModule/Parser';
 import {  ForceDirectedLayoutType } from '@neo4j-nvl/base';
 import NodeConfigForm from './NodeConfigForm';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,6 @@ import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import '../../../../../i18n';
 import axios from 'axios';
 import Actions from './Actions'
-import { FaInfoCircle, FaCogs, FaPlusCircle ,FaSpinner} from 'react-icons/fa';
 
 
 
@@ -494,33 +493,29 @@ const SchemaVisualizer = () => {
     }
   }, [currentDb]);
 
-  const toggleSidebar = () => {
-    setIsSidebarVisible(!isSidebarVisible);
-  };
-
 
   
 
 
   return (
-    <div className="h-[calc(100vh-50px)] bg-gradient-to-b from-gray-50 to-gray-100 p-0 overflow-hidden relative"> {/* Adjusted container style from file 2 */} 
-           <h3 className="text-center text-xl font-semibold py-2 flex-shrink-0"> {/* Added centering, styling, and flex-shrink-0 */} 
+    <div className="h-[calc(100vh-50px)] bg-gradient-to-b from-gray-50 to-gray-100 p-0 overflow-hidden relative"> 
+           <h3 className="text-center text-xl font-semibold py-2 flex-shrink-0"> 
         {t("Schema visualization")} 
       </h3>
 
-      <div className="flex flex-grow m-0 p-0"> {/* Structure from file 2 */} 
-        {/* Main content area - Adjusted class based on file 2, added mr-[60px] when sidebar is visible */} 
+      <div className="flex flex-grow m-0 p-0"> 
+ 
         <div className={`flex-grow 'lg:w-full md:w-full w-full h-[calc(100vh-60px)] overflow-y-auto' rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.05)] ${isSidebarVisible ? 'mr-[60px]' : 'mr-0'}`}> 
-          <GraphCanvas /* Kept original GraphCanvas and props from file 1 */ 
+          <GraphCanvas 
             nvlRef={nvlRef}
             nodes={nodes}
             edges={edges}
             selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
             setContextMenu={setContextMenu}
-            setnodetoshow={() => {}} /* Assuming placeholder or needs connection */ 
+            setnodetoshow={() => {}}
             ispath={false}
-            setrelationtoshow={() => {}} /* Assuming placeholder or needs connection */ 
+            setrelationtoshow={() => {}} 
             setEdges={setEdges}
             setNodes={setNodes}
             selectedEdges={selectedEdges}
@@ -538,8 +533,7 @@ const SchemaVisualizer = () => {
           </div>
         </div>
 
-        {/* Vertical Sidebar Navigation - Logic from file 2 */} 
-        {isSidebarVisible && ( /* Use isSidebarVisible from file 1 */ 
+        {isSidebarVisible && (
           <div className="absolute right-0 top-0 bottom-0 w-[60px] flex flex-col z-50 p-0"> 
             <div className="flex flex-col h-full bg-[#E4EFE7] border-l border-black/10 overflow-y-auto justify-start pt-0 mt-0"> 
               {[ /* Modules from file 1 */ 
@@ -566,8 +560,7 @@ const SchemaVisualizer = () => {
           </div>
         )}
 
-        {/* Active Module Panel - Logic from file 2 */} 
-        {isSidebarVisible && activeModule && ( /* Check both flags */ 
+        {isSidebarVisible && activeModule && (
         <div
     className="absolute right-[60px] top-0 bottom-0 w-[700px] lg:w-[600px] md:w-[400px] sm:w-[300px] bg-white shadow-[-3px_0_10px_rgba(0,0,0,0.1)] z-20 overflow-y-auto p-5 border-l border-gray-200" /* Style from file 2 */ 
   >
@@ -579,7 +572,7 @@ const SchemaVisualizer = () => {
     </div>
             <div className="bg-gray-50 rounded-lg"> 
               {/* Conditional rendering using components from file 1 */} 
-              {activeModule === t('Detail') && <Sidebar selectedItem={selectedItem} />} 
+              {activeModule === t('Detail') && <Detail selectedItem={selectedItem} />} 
               {activeModule === t('NodeConfig') && (
                 <NodeConfigForm selectedNode={selectedItem} onUpdate={redrawGraph} />
               )}
@@ -608,13 +601,12 @@ const SchemaVisualizer = () => {
               {activeModule === t('Attribue danalyse') && (
                 <AnalysisAttributeForm selectedItem={selectedItem} />
               )}
-              {/* Add placeholders for other modules if they exist in file 1 but weren't shown */}
             </div>
           </div>
         )}
 
-        {/* Placeholder for TimelineBar if needed, based on file 2 */} 
-        {/* {SubGrapgTable.results.length > 0 && combinedNodes.length > 0 && ( ... )} */} 
+
+
       </div>
     </div>
   );

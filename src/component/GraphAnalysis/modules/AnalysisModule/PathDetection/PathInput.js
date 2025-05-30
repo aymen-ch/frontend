@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAlgorithm } from '../../PathPrameters';
+import { useAlgorithm } from '../../ContainersModules/PathPrameters';
 
 const PathFinder = ({
   setPathEdges,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getNodeIcon, getNodeColor } from '../../Parser';
+import { getNodeIcon, getNodeColor } from '../../VisualisationModule/Parser';
 import { handleAggregation, getIntermediateTypes } from './aggregationUtils';
 import { useTranslation } from 'react-i18next';
 const Aggregation = ({

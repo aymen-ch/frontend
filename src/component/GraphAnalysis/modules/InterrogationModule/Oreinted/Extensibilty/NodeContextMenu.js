@@ -25,7 +25,7 @@ import {
   handleAdvancedExpand,
   handleNodeExpansion_selected,
 } from './ContextMenuFunctions';
-import { getNodeColor, getNodeIcon } from '../../../Parser';
+import { getNodeColor, getNodeIcon } from '../../../VisualisationModule/Parser';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls';
 
 const ContextMenu = ({

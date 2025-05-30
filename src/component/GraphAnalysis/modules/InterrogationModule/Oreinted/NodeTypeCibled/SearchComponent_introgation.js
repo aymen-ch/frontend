@@ -1,9 +1,9 @@
 import React, { useEffect, useState, memo } from 'react';
-import { getNodeIcon, getNodeColor, parsergraph } from '../../../Parser';
+import { getNodeIcon, getNodeColor, parsergraph } from '../../../VisualisationModule/Parser';
 import { useTranslation } from 'react-i18next';
 import { getAuthToken,BASE_URL_Backend } from '../../../../Platforme/Urls'
 import axios from 'axios';
-const SearchComponent = ({ selectedNodeType, nodes, edges, setNodes, setEdges }) => {
+const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
   const [nodeProperties, setNodeProperties] = useState([]);
   const [formValues, setFormValues] = useState({});
   const [operations, setOperations] = useState({});

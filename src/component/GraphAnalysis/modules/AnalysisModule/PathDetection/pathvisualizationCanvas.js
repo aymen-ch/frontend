@@ -2,12 +2,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import GraphCanvas from '../../VisualisationModule/GraphCanvas';
 import { FaArrowLeft, FaArrowRight, FaList, FaTimes, FaProjectDiagram, FaBezierCurve, FaLayerGroup, FaSitemap, FaPlus, FaObjectGroup, FaStop } from 'react-icons/fa';
-import { parsePath } from '../../Parser';
+import { parsePath } from '../../VisualisationModule/Parser';
 import { computeLinearLayout } from '../../VisualisationModule/layout/layout';
 import { ForceDirectedLayoutType, FreeLayoutType, HierarchicalLayoutType, GridLayoutType } from '@neo4j-nvl/base';
-import { handleLayoutChange } from '../../function_container';
+import { handleLayoutChange } from '../../ContainersModules/function_container';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
-import { useAlgorithm } from '../../PathPrameters'
+import { useAlgorithm } from '../../ContainersModules/PathPrameters'
 
 const PathVisualization = React.memo(({
   edges,

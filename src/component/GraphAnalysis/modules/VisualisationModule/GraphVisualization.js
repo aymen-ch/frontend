@@ -10,12 +10,11 @@ import Community_BackEnd from "../Windows/Actions/PersonProfileWindow/Community_
 import { FaExpand, FaCompress, FaSave, FaTrash, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa';
 import { MdOutlineTabUnselected } from "react-icons/md";
 import { ForceDirectedLayoutType } from '@neo4j-nvl/base';
-import { handleLayoutChange } from '../function_container';
+import { handleLayoutChange } from '../ContainersModules/function_container';
 import globalWindowState from './globalWindowState';
 import { useTranslation } from 'react-i18next';
-import { filterNodesByQuery } from './GraphVisualizationUtils';
 import { BASE_URL_Backend } from '../../Platforme/Urls';
-import { getNodeColor, getNodeIcon, createNode } from '../Parser';
+import { getNodeColor, getNodeIcon, createNode } from '../VisualisationModule/Parser';
 import LayoutControl from '../VisualisationModule/layout/Layoutcontrol';
 import ContextMenuRel from '../InterrogationModule/Oreinted/Extensibilty/contextmenuRelarion';
 import ContextMenucanvas from '../InterrogationModule/Oreinted/Extensibilty/contextmenucanvas';
@@ -53,9 +52,6 @@ const GraphVisualization = React.memo(({
   const [render, setRenderer] = useState("canvas");
   const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
   const [searchtype, setsearchtype] = useState("current_graph");
-  const [graphHistory, setGraphHistory] = useState([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [showSettings, setShowSettings] = useState(false);
   const [activeWindow, setActiveWindow] = useState(null);
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -82,20 +78,18 @@ const GraphVisualization = React.memo(({
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (nodes.length > 0 || edges.length > 0) {
-      const newState = {
-        nodes: JSON.parse(JSON.stringify(nodes)),
-        edges: JSON.parse(JSON.stringify(edges)),
-        timestamp: Date.now()
-      };
-      if (historyIndex < graphHistory.length - 1) {
-        setGraphHistory(prev => prev.slice(0, historyIndex + 1));
-      }
-      setGraphHistory(prev => [...prev, newState]);
-      setHistoryIndex(prev => prev + 1);
-    }
-  }, [nodes, edges]);
+ const filterNodesByQuery = (nodes, query) => {
+    if (!query) return [];
+    const lowerQuery = query.toLowerCase();
+    return nodes.filter(node => 
+      node.properties && 
+      Object.values(node.properties).some(value => 
+        value && 
+        value.toString().toLowerCase().includes(lowerQuery)
+      )
+    );
+  };
+
 
   const handleSearchClick = async () => {
     if (searchtype === "current_graph") {
@@ -207,22 +201,36 @@ const GraphVisualization = React.memo(({
   const handlewebgl = (e) => {
     const selectedRenderer = e.target.value;
     if (selectedRenderer =='Thershold'){
-      nvlRef.current.setRenderer('canvas');
-        nvlRef.current.setLayoutOptions(nvlRef.current.getCurrentOptions());
-    }else{
-             setRenderer(selectedRenderer);
-            nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
-    }
+       setRenderer(selectedRenderer);
+        nvlRef.current.setRenderer('canvas');
+        const currentOptions = nvlRef.current.getCurrentOptions();
+        const updatedOptions = { ...currentOptions,  relationshipThreshold: 1 };
+        console.log(updatedOptions)
+        nvlRef.current.setLayoutOptions(updatedOptions);
+        nvlRef.current.restart(updatedOptions)
+    }else{   if (selectedRenderer =='canvas'){
+       setRenderer(selectedRenderer);
+        nvlRef.current.setRenderer('canvas');
+        const currentOptions = nvlRef.current.getCurrentOptions();
+        const updatedOptions = { ...currentOptions,  relationshipThreshold: 0 };
+        console.log(updatedOptions)
+        nvlRef.current.setLayoutOptions(updatedOptions);
+        nvlRef.current.restart(updatedOptions)
 
+    }
+    else{
+        setRenderer(selectedRenderer);
+        nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
+    }
+ }
+ 
   };
 
   const hanldemultiselecte = () => {
     setmultiselecte(!multiselecte);
   };
 
-  const toggleSettingsPanel = () => {
-    setShowSettings(!showSettings);
-  };
+
 
   const handleCloseWindow = () => {
     globalWindowState.clearWindow();

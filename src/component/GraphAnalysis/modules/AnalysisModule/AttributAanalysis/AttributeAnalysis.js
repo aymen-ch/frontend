@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import { NODE_CONFIG } from '../../Parser';
+import { NODE_CONFIG } from '../../VisualisationModule/Parser';
 import { Button, Spinner, Form, Row, Col, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import globalWindowState from '../../VisualisationModule/globalWindowState';
 import { Sliders, Zap, Activity, Target, BarChart2 } from 'lucide-react';
@@ -19,12 +19,6 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
-  // const centralityAttributes = [
-  //   '_betweenness',
-  //   '_degree',
-  //   '_closeness',
-  //   '_eigenvector',
-  // ];
 
   const fetchNodeProperties = async (nodeType) => {
     const token = localStorage.getItem('authToken');

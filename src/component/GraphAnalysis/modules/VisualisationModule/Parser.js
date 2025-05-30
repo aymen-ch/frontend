@@ -1,6 +1,6 @@
 // NodeStyleConfig.js
 import axios from 'axios';
-import { BASE_URL_Backend } from '../Platforme/Urls';
+import { BASE_URL_Backend } from '../../Platforme/Urls';
 
 // Initialize configuration object
 let NODE_CONFIG = {

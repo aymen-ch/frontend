@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Form, Button, ListGroup, Spinner, Row, Col, Card } from 'react-bootstrap';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
-import { LabelManager,parsergraph } from '../../Parser';
+import { LabelManager,parsergraph } from '../../VisualisationModule/Parser';
 
 const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCentralityAttribute, setSelectedCentralityAttribute }) => {
   const [start, setStart] = useState(0);

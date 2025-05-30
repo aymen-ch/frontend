@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 // Utilities
-import { getNodeColor, getNodeIcon } from '../../Parser';
+import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 
-const Sidebar = ({ selectedItem }) => {
+const Detail = ({ selectedItem }) => {
   const { t } = useTranslation();
 
   // State
@@ -243,7 +243,7 @@ const Sidebar = ({ selectedItem }) => {
 };
 
 // PropTypes
-Sidebar.propTypes = {
+Detail.propTypes = {
   selectedItem: PropTypes.shape({
     isnode: PropTypes.bool,
     group: PropTypes.string,
@@ -255,4 +255,4 @@ Sidebar.propTypes = {
   }),
 };
 
-export default Sidebar;
+export default Detail;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { getNodeIcon, getNodeColor } from '../../Parser';
+import { getNodeIcon, getNodeColor } from '../../VisualisationModule/Parser';
 
 export const NodeTypeVisibilityControl = ({ visibleNodeTypes }) => {
   return (

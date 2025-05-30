@@ -4,12 +4,11 @@ import { DropdownButton, Dropdown } from 'react-bootstrap';
 import { FaLanguage, FaProjectDiagram, FaCogs, FaTachometerAlt, FaChartLine } from 'react-icons/fa';
 import axios from 'axios';
 
-import Container_AlgorithmicAnalysis from '../Modules/ContainerModules';
+import Container_AlgorithmicAnalysis from '../Modules/ContainersModules/ContainerModules';
 import SchemaVisualizer from '../Modules/ConfigurationModule/SchemaVisualisation/schema';
 import SettingsPage from '../Modules/ConfigurationModule/Importation/SettingsPage';
 import Dashboard from '../Modules/ConfigurationModule/Dachboard/Dashboard';
 import { GlobalProvider } from './GlobalVariables';
-import { BASE_URL_Backend } from './Urls';
 
 const Graphe_analysis = () => {
   const { t, i18n } = useTranslation();

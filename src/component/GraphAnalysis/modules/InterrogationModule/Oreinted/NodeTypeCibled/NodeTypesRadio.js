@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { getNodeIcon, getNodeColor } from '../../../Parser';
+import { getNodeIcon, getNodeColor } from '../../../VisualisationModule/Parser';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
 

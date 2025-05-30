@@ -1,9 +1,9 @@
 
 import { useEffect } from 'react';
-import { BASE_URL_Backend } from '../Platforme/Urls';
-import { parseAggregationResponse,ContextualizationGraphParser } from './Parser';
+import { BASE_URL_Backend } from '../../Platforme/Urls';
+import { parseAggregationResponse,ContextualizationGraphParser } from '../VisualisationModule/Parser';
 import axios from 'axios';
-import { computeDagreLayout_1, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout,computeGeospatialLayout } from "../Modules/VisualisationModule/layout/layout";
+import { computeDagreLayout_1, computeForceDirectedLayout ,Operationnelle_Soutien_Leader,computeLinearLayout,computeGeospatialLayout } from "../VisualisationModule/layout/layout";
 import { FreeLayoutType } from '@neo4j-nvl/base';
 
 

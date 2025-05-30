@@ -1,6 +1,6 @@
 // src/utils/GraphConverter.js
 import neo4j from 'neo4j-driver'; // Import neo4j to use isPath
-import { createNode,createEdge } from '../../Parser';
+import { createNode,createEdge } from '../../VisualisationModule/Parser';
 
 export const convertNeo4jToGraph = (records) => {
   const newNodes = [];
