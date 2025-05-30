@@ -1,6 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 import { useState, memo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import SearchinputComponent from './OptionSelections';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import { useGlobalContext } from '../../../Platforme/GlobalVariables';
@@ -9,20 +10,33 @@ const ContextManagerComponent = ({
   SubGrapgTable,
   setSubGrapgTable,
 }) => {
-  const [ContextData, setContextData] = useState([]);
+  const [ContextData, setContextData] = useState({});
   const [showAggregation, setShowAggregation] = useState(false); // State to control visibility of Aggregation component
   const [loading, setLoading] = useState(false); // Loading state
+  const [error, setError] = useState(null); // State for validation error
   const { setNewContextHasArrived } = useGlobalContext();
+  const { t } = useTranslation();
+
   useEffect(() => {
-    console.log(ContextData);
+    console.log('ContextData:', ContextData);
   }, [ContextData]);
 
   const handleSubmit = async (e) => {
-    console.log("Submitted Context data ", ContextData);
     e.preventDefault();
+
+    // Validate required fields
+    if (!ContextData.wilaya_id) {
+      setError(t('contextManager.errorNoWilaya'));
+      return;
+    }
+    if (!ContextData.Affaire_type || ContextData.Affaire_type.length === 0) {
+      setError(t('contextManager.errorNoCategories'));
+      return;
+    }
 
     const token = localStorage.getItem('authToken');
     setLoading(true); // Set loading to true when request starts
+    setError(null); // Clear any previous error
 
     try {
       const response = await axios.post(
@@ -37,31 +51,41 @@ const ContextManagerComponent = ({
       );
 
       if (response.status === 200) {
-        console.log('Data submitted successfully! Contextualisaiton', response.data);
-        console.log(response.data)
+        console.log('Data submitted successfully! Contextualisation', response.data);
         setSubGrapgTable(response.data);
         setShowAggregation(true); // Show Aggregation component after successful submission
         setNewContextHasArrived(true);
       } else {
         console.error('Submission failed.');
+        setError(t('contextManager.errorSubmissionFailed'));
       }
     } catch (error) {
       console.error('Error during submission:', error);
+      setError(t('contextManager.errorSubmission'));
     } finally {
-      setLoading(false); // Set loading to false when request completes (success or error)
+      setLoading(false); // Set loading to false when request completes
     }
   };
 
   return (
     <div className="sidebar bg-light p-4 border shadow-sm" style={{ minHeight: '80vh' }}>
       <h5 className="mb-4 text-center">Context Manager</h5>
+
+      {/* Error Message */}
+      {error && (
+        <div className="alert alert-danger d-flex align-items-center" role="alert">
+          <span className="me-2 fs-5">⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
+
       <div className="mb-4">
         <SearchinputComponent setContextData={setContextData} />
       </div>
 
       <div className="d-flex justify-content-center mt-3">
-        <button 
-          className="btn btn-primary w-50" 
+        <button
+          className="btn btn-primary w-50"
           onClick={handleSubmit}
           disabled={loading} // Disable button while loading
         >

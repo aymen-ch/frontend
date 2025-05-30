@@ -100,7 +100,10 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
     if (!searchResult) return;
     const graphData = parsergraph(searchResult);
 
-    if (graphData.nodes.length > 1000) {
+    if (graphData.nodes.length === 0) {
+    setFeedbackMessage(t('⚠️ No results found for the search criteria.'));
+    }
+    else if (graphData.nodes.length > 1000) {
       // Keep first 1000 nodes/edges displayed
       const firstNodes = graphData.nodes.slice(0, 1000);
       const firstEdges = graphData.edges.filter(edge =>
@@ -179,6 +182,17 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
     setShowLoadMore(false);
     setRemainingNodes([]);
     setRemainingEdges([]);
+    setError(null);
+
+    // Validate that at least one property is filled
+    const hasValidProperty = Object.values(formValues).some(
+      (value) => value !== '' && value !== null && value !== undefined
+    );
+
+    if (!hasValidProperty) {
+      setError(t('searchComponent.errorNoProperties'));
+      return;
+    }
     try {
       const searchPayload = {
         values: formValues,
