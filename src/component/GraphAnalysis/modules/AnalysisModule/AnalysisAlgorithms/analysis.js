@@ -33,6 +33,9 @@ const Analysis = ({
       case 'linkPrediction':
         return (
           <LinkPrediction
+            setEdges={setEdges}
+            setNodes={setNodes}
+            nodes={nodes}
           />
         );
       case 'community':
