@@ -7,8 +7,9 @@ import randomColor from 'randomcolor';
 import globalWindowState from '../../VisualisationModule/globalWindowState';
 import { Target, BarChart2 } from 'lucide-react';
 
-const Community = ({ nodes, setNodes, isLoading, setIsLoading }) => {
+const Community = ({ nodes, setNodes }) => {
   const [selectedCommunityMeasure, setSelectedCommunityMeasure] = useState('uniform');
+    const [isLoading, setIsLoading] = useState(false);
 const{t} = useTranslation()
 const communityMethods = [
   { value: 'uniform', label: 'Uniform' },
@@ -91,6 +92,7 @@ const communityMethods = [
       
 
 <Button
+    disabled={true} // To DO later 
     size="sm"
     variant="info"
     className="w-100 d-flex align-items-center justify-content-center gap-1"

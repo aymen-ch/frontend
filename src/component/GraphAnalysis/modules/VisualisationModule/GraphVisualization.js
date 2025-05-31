@@ -3,10 +3,10 @@ import axios from 'axios';
 import { Modal, Button, Form } from 'react-bootstrap';
 import ContextMenu from '../../Modules/InterrogationModule/Oreinted/Extensibilty/NodeContextMenu';
 import GraphCanvas from '../VisualisationModule/GraphCanvas';
-import AddActionWindow from "../Windows/Actions/PersonProfileWindow/Actions";
-import Analyse_statistique from "../Windows/Actions/PersonProfileWindow/analyse_statistique";
-import Analyse_BackEnd from "../Windows/Actions/PersonProfileWindow/Analyse_BackEnd";
-import Community_BackEnd from "../Windows/Actions/PersonProfileWindow/Community_BackEnd";
+import AddActionWindow from "../Windows/Actions";
+import Analyse_statistique from "../Windows/Statisics_Window";
+import Analyse_BackEnd from "../Windows/Centrality_Window";
+import Community_BackEnd from "../Windows/Community_Window";
 import { FaExpand, FaCompress, FaSave, FaTrash, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa';
 import { MdOutlineTabUnselected } from "react-icons/md";
 import { ForceDirectedLayoutType } from '@neo4j-nvl/base';
@@ -437,7 +437,7 @@ const GraphVisualization = React.memo(({
       )}
 
       {/* Windows */}
-  
+      {console.log(activeWindow, 'activeWindow')}
       {activeWindow === 'add_action' && (
         <AddActionWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}

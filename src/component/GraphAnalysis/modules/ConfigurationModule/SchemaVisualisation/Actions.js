@@ -4,8 +4,8 @@ import PropTypes from 'prop-types'; // Validation des props
 import { useTranslation } from 'react-i18next'; // Hook pour la traduction
 import axios from 'axios'; // Client HTTP pour les appels API
 
-// Composants
-import AddActionWindow from '../../Windows/Actions/PersonProfileWindow/Actions'; // Fenêtre pour ajouter une action
+
+import AddActionWindow from '../../Windows/Actions';
 
 // Utilitaires
 import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser'; // Fonctions pour la couleur et l'icône des nœuds

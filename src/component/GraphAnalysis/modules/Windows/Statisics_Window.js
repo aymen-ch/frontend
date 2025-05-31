@@ -13,7 +13,7 @@ import {
 } from 'react-bootstrap-icons';
 import Draggable from 'react-draggable';
 import axios from 'axios';
-import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+import { BASE_URL_Backend } from '../../Platforme/Urls';
 // Removed: import './PersonProfileWindow.css';
 import { 
   BarChart, 

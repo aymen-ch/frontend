@@ -7,7 +7,7 @@ import { Controlled as CodeMirror } from 'react-codemirror2';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/dracula.css';
 import './cyphermode';
-import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+import { BASE_URL_Backend } from '../../Platforme/Urls';
 
 const AddActionWindow = ({ node, onClose }) => {
   const { t } = useTranslation();

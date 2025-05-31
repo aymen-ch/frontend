@@ -8,7 +8,7 @@ import Container_AlgorithmicAnalysis from '../Modules/ContainersModules/Containe
 import SchemaVisualizer from '../Modules/ConfigurationModule/SchemaVisualisation/schema';
 import SettingsPage from '../Modules/ConfigurationModule/Importation/SettingsPage';
 import Dashboard from '../Modules/ConfigurationModule/Dachboard/Dashboard';
-import { GlobalProvider } from './GlobalVariables';
+
 
 // Ce composant est le conteneur principal du projet, dédié à l'analyse, l'interrogation et la visualisation.
 // Il inclut une barre de navigation horizontale pour basculer entre les différents modules : schéma, importation (paramètres), tableau de bord et visualisation.
@@ -31,10 +31,10 @@ const Graphe_analysis = () => {
 
   // Composant pour afficher la page du schéma
   const SchemaPage = () => (
-    <div className="module-content">
-      <GlobalProvider>
+    <div className="module-content"> {/* Kept as is, not styled by PlatformAnalysis.css */}
+
         <SchemaVisualizer />
-      </GlobalProvider>
+
     </div>
   );
 
@@ -54,10 +54,10 @@ const Graphe_analysis = () => {
 
   // Composant pour afficher la page de visualisation
   const VisualizationPage = () => (
-    <div className="module-content">
-      <GlobalProvider>
-        <Container_AlgorithmicAnalysis />
-      </GlobalProvider>
+    <div className="module-content"> {/* Kept as is */}
+
+          <Container_AlgorithmicAnalysis />
+
     </div>
   );
 
