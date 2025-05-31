@@ -123,27 +123,40 @@ export const handleNodeExpansion_selected = async (selectedNodes, setNodes, setE
 
 
 /// Exécute les extensions d’un nœud : soit les relations physiques, soit toutes les relations, soit une relation virtuelle si elle existe, avec une direction et une limite (sans critère).
-export const handleNodeExpansion = async (node, relationType, setNodes, setEdges,virtualRelations, expandLimit = 100, expandDirection = 'In') => {
+// Gère l'expansion d'un nœud en ajoutant de nouveaux nœuds et arêtes
+// Gère l'expansion d'un nœud en ajoutant de nouveaux nœuds et arêtes
+export const handleNodeExpansion = async (
+  node, // Nœud à expandre
+  relationType, // Type de relation (standard ou virtuelle)
+  setNodes, // Fonction pour mettre à jour les nœuds
+  setEdges, // Fonction pour mettre à jour les arêtes
+  virtualRelations, // Liste des relations virtuelles
+  expandLimit = 100, // Limite du nombre de nœuds à expandre
+  expandDirection = 'In' // Direction de l'expansion (In/Out)
+) => {
+  // Récupère le token d'authentification depuis le stockage local
   const token = localStorage.getItem('authToken');
+  // Type du nœud
   const node_type = node.group;
+  // ID du nœud converti en entier
   const id = parseInt(node.id, 10);
 
   try {
-
+    // Recherche une relation virtuelle correspondant au type de relation
     const virtualRelation = virtualRelations.find((vr) => vr.name === relationType);
 
     let response;
     if (virtualRelation) {
-      // Handle virtual relation, include path, sense, and limit in payload
+      // Gère une relation virtuelle
       response = await axios.post(
         BASE_URL_Backend + '/extensibilty_virtuel/',
-        { 
-          node_type, 
-          id, 
+        {
+          node_type,
+          id,
           virtual_relation: relationType,
           path: virtualRelation.path,
-          expandLimit, // Include sense
-          expandDirection  // Include limit
+          expandLimit,
+          expandDirection,
         },
         {
           headers: {
@@ -153,15 +166,15 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
         }
       );
     } else {
-      // Handle standard relation, include sense and limit
+      // Gère une relation standard
       response = await axios.post(
         BASE_URL_Backend + '/extensibility/',
-        { 
-          node_type, 
-          id, 
+        {
+          node_type,
+          id,
           relation_type: relationType,
-          expandLimit, // Include sense
-          expandDirection  // Include limit
+          expandLimit,
+          expandDirection,
         },
         {
           headers: {
@@ -172,18 +185,64 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
       );
     }
 
+    // Vérifie si la requête a réussi
     if (response.status === 200) {
-      console.log("Response data:", response.data);
+      console.log('Données reçues :', response.data);
+      // Parse les données reçues pour obtenir les nœuds et arêtes
       const graphData = parsergraph(response.data);
+
+      // Ajoute les nouveaux nœuds sans dupliquer les existants
       setNodes((prevNodes) => {
-        return [...prevNodes, ...graphData.nodes];
+        // Affiche les IDs des nœuds existants pour le débogage
+        // Filtre les nouveaux nœuds pour exclure ceux qui existent déjà (comparaison par ID)
+        const newNodes = graphData.nodes
+          .filter((newNode) => !prevNodes.some((existingNode) => existingNode.id === newNode.id))
+          .map((newNode) => {
+            // Si c'est une relation virtuelle, ajoute aggregationType et aggregationpath
+            if (virtualRelation) {
+              return {
+                ...newNode,
+                aggregationType: relationType, // Ajoute le type d'agrégation (nom de la relation virtuelle)
+                aggregationpath: virtualRelation.path, // Ajoute le chemin de la relation virtuelle
+              };
+            }
+            return newNode;
+          });
+        // Retourne la liste des nœuds existants combinée aux nouveaux nœuds
+        return [...prevNodes, ...newNodes];
       });
-      setEdges((prevEdges) => [...prevEdges, ...graphData.edges]);
+
+      // Ajoute les nouvelles arêtes sans dupliquer les existantes
+      setEdges((prevEdges) => {
+        // Filtre les nouvelles arêtes pour exclure celles qui existent déjà (comparaison par ID ou from/to)
+        const newEdges = graphData.edges
+          .filter(
+            (newEdge) =>
+              !prevEdges.some(
+                (existingEdge) =>
+                  existingEdge.id === newEdge.id ||
+                  (existingEdge.from === newEdge.from && existingEdge.to === newEdge.to)
+              )
+          )
+          .map((newEdge) => {
+            // Si c'est une relation virtuelle, ajoute aggregationType et aggregationpath
+            if (virtualRelation) {
+              return {
+                ...newEdge,
+                aggregationType: relationType, // Ajoute le type d'agrégation (nom de la relation virtuelle)
+                aggregationpath: virtualRelation.path, // Ajoute le chemin de la relation virtuelle
+              };
+            }
+            return newEdge;
+          });
+        // Retourne la liste des arêtes existantes combinée aux nouvelles arêtes
+        return [...prevEdges, ...newEdges];
+      });
     } else {
-      console.error('Submission failed:', response.status);
+      console.error('Échec de la requête :', response.status);
     }
   } catch (error) {
-    console.error('Error during submission:', error);
+    console.error('Erreur lors de l’expansion du nœud :', error);
   }
 };
 

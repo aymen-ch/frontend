@@ -192,7 +192,7 @@ const GraphVisualization = React.memo(({
     const selectedNodeIds = Array.from(selectedNodes);
     const updatedNodes = nodes.filter(node => !selectedNodeIds.includes(node.id));
     const updatedEdges = edges.filter(
-      edge => !selectedNodeIds.includes(edge.source) && !selectedNodeIds.includes(edge.target)
+      edge => !selectedNodeIds.includes(edge.from) && !selectedNodeIds.includes(edge.to)
     );
     setNodes(updatedNodes);
     setEdges(updatedEdges);
@@ -204,7 +204,7 @@ const GraphVisualization = React.memo(({
   // Gère le changement de rendu (canvas ou WebGL)
   const handlewebgl = (e) => {
     const selectedRenderer = e.target.value;
-    if (selectedRenderer === 'Thershold') {
+    if (selectedRenderer === 'Moyenne') { /// Permet uniquement de masquer le nom de la relation jusqu’à un certain niveau de zoom.
       setRenderer(selectedRenderer);
       nvlRef.current.setRenderer('canvas');
       const currentOptions = nvlRef.current.getCurrentOptions();
@@ -212,7 +212,7 @@ const GraphVisualization = React.memo(({
       console.log(updatedOptions);
       nvlRef.current.setLayoutOptions(updatedOptions);
       nvlRef.current.restart(updatedOptions);
-    } else if (selectedRenderer === 'canvas') {
+    } else if (selectedRenderer === 'canvas') { //// Permet d’afficher les relations sans avoir besoin de zoomer. 
       setRenderer(selectedRenderer);
       nvlRef.current.setRenderer('canvas');
       const currentOptions = nvlRef.current.getCurrentOptions();
@@ -220,7 +220,7 @@ const GraphVisualization = React.memo(({
       console.log(updatedOptions);
       nvlRef.current.setLayoutOptions(updatedOptions);
       nvlRef.current.restart(updatedOptions);
-    } else {
+    } else { ////  WebGL permet de masquer le nom et le sens des relations.
       setRenderer(selectedRenderer);
       nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
     }
@@ -373,7 +373,7 @@ const GraphVisualization = React.memo(({
   title={t('Select Renderer')}
 >
   <option value="canvas">{t('Canvas')}</option>
-  <option value="Thershold">{t('Moyenne')}</option>
+  <option value="Moyenne">{t('Moyenne')}</option>
   <option value="WebGL">{t('WebGL')}</option>
 
 </select>

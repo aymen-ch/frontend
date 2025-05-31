@@ -103,6 +103,7 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
   useEffect(() => {
     if (relationtoshow) {
       fetchrelationDetail(relationtoshow, setSelectecRelationData);
+      console.log(SelectecRelationData)
     }
   }, [relationtoshow]);
 
@@ -131,7 +132,7 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
       return affaireData;
     });
   };
-  
+
 // Stocker la première affaire pour l'afficher
   useEffect(() => {
     if (SubGrapgTable.results.length > 0 && affairesInRange.length === 0) {

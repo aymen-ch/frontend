@@ -54,7 +54,7 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
 
     try {
       const response = await axios.post(
-        `${BASE_URL_Backend}/search-nodes/`,
+        `${BASE_URL_Backend}/search_cible_type_de_node/`,
         payload,
         {
           headers: {

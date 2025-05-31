@@ -75,7 +75,7 @@ export const handlePrevSubGraph = (currentSubGraphIndex, setCurrentSubGraphIndex
 export const fetchNodeDetail = async (nodeId, setSelectedNodeData) => {
     try {
       const response = await axios.post(
-        BASE_URL_Backend + "/getdata/",
+        BASE_URL_Backend + "/getnodedata/",
         { "identity": parseInt(nodeId, 10) },
         {
           headers: {
@@ -100,6 +100,7 @@ export const fetchrelationDetail = async (rel, setSelectecRelationData) => {
         BASE_URL_Backend + "/getrelationData/",
         { "identity": rel.id,
           "path":rel.aggregationpath,
+          "type":rel.aggregationType,
          },
         {
           headers: {
