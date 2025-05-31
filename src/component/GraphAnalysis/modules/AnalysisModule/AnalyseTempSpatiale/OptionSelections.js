@@ -6,6 +6,17 @@ import { getNodeIcon, getNodeColor } from '../../VisualisationModule/Parser';
 import './SearchInputComponent.css';
 import { useTranslation } from 'react-i18next';
 
+
+
+///****
+// This contains a set of filters 
+// The filters are wilaya , daira , commune , affaire type. date and depth.  and node types to display.
+// 
+// 
+// 
+//  */
+
+
 const SearchinputComponent = ({ setContextData }) => {
     const [affaireTypes, setaffaireTypes] = useState([]);
     const [nodeData, setNodeData] = useState([]);

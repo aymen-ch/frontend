@@ -1,25 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { NODE_CONFIG } from '../../VisualisationModule/Parser';
-import { Button, Spinner, Form, Row, Col, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Button, Spinner, Form  ,Alert} from 'react-bootstrap';
 import globalWindowState from '../../VisualisationModule/globalWindowState';
-import { Sliders, Zap, Activity, Target, BarChart2 } from 'lucide-react';
+import {  Target, BarChart2 } from 'lucide-react';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
+
+
+////******
+// This analyse module used analyse the attributes of the nodes.
+// 
+// it have two use case :
+// 1- change the size of a node by attribute 
+// 2- show the distribution of of an attribute of a node type 
+// 
+// 
+//  */
 
 const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
   const [selectedNodeType, setSelectedNodeType] = useState(null);
   const [nodeSize, setNodeSize] = useState({});
   const [sizeProperty, setSizeProperty] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('');
-  const [selectedAttribute, setSelectedAttribute] = useState('_betweenness');
+  const [selectedAttribute, setSelectedAttribute] = useState('');
   const [nodeData, setNodeData] = useState([]);
   const [nodeProperties, setNodeProperties] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [warning, setWarning] = useState(null); // New state for warning message
   const { t } = useTranslation();
 
-
+  // This will return the properties of the node type
   const fetchNodeProperties = async (nodeType) => {
     const token = localStorage.getItem('authToken');
     try {
@@ -192,100 +204,123 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
     setNodeSize(initialSizes);
   }, [combinedNodes]);
 
-  return (
-    <div className="p-3">
-      <h5>{t('attribute_analysis')}</h5>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {loading && <Spinner animation="border" />}
-      
-      <div className="node-config-container" style={{ marginBottom: '20px' }}>
-        <h6>{t('change_size_of_node_by')}</h6>
-        <Form.Select 
-          value={selectedNodeType || ''} 
-          onChange={(e) => setSelectedNodeType(e.target.value)}
-          style={{ marginBottom: '10px', width: '100%', padding: '5px' }}
-        >
-          <option value="">{t('select_node_type')}</option>
-          {nodeTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
-          ))}
-        </Form.Select>
 
-        {selectedNodeType && (
-          <div className="config-controls">
-            <div style={{ marginBottom: '10px' }}>
-              <Form.Label>{t('size_by_property')}</Form.Label>
-              <Form.Select
-                value={sizeProperty}
-                onChange={(e) => handleSizePropertyChange(selectedNodeType, e.target.value)}
-                style={{ width: '100%', padding: '5px', marginTop: '5px' }}
-              >
-                <option value="">{t('manual_size')}</option>
-                {getPropertiesForNodeType(selectedNodeType).map(prop => (
-                  <option key={prop} value={prop}>{prop}</option>
-                ))}
-              </Form.Select>
-            </div>
+  const handleStatisticalAnalysisClick = () => {
+    console.log('selectedAttribute:', selectedAttribute);
+    if (!selectedGroup || !selectedAttribute) {
+      setWarning(t('warning_select_both node type and attribute')); // Show warning if either is not selected
+      return;
+    }
+    setWarning(null); // Clear warning if both are selected
+    globalWindowState.setWindow("analyse_statistique", { selectedAttribute, selectedGroup });
+  };
+ return (
+  <div className="p-4 bg-gray-100 rounded-lg shadow-md">
+    <h5 className="text-lg font-semibold text-gray-800 mb-4">{t('attribute_analysis')}</h5>
+    {error && <div className="alert alert-danger mb-4">{error}</div>}
+ 
+    {loading && <Spinner animation="border" className="mb-4" />}
 
-            {!sizeProperty && (
-              <div style={{ marginBottom: '10px' }}>
-                <Form.Label>{t('size')}: {nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}px</Form.Label>
-                <input
-                  type="range"
-                  min="50"
-                  max="500"
-                  value={nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}
-                  onChange={(e) => handleSizeChange(selectedNodeType, e.target.value)}
-                  style={{ width: '100%' }}
-                />
-              </div>
-            )}
+    {/* Change Node Size Part */}
+    <div className="node-config-container mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+      <h6 className="text-md font-medium text-gray-700 mb-3">{t('change_node_size')}</h6>
+      <Form.Select
+        value={selectedNodeType || ''}
+        onChange={(e) => setSelectedNodeType(e.target.value)}
+        className="mb-3 w-full p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">{t('select_node_type')}</option>
+        {nodeTypes.map(type => (
+          <option key={type} value={type}>{type}</option>
+        ))}
+      </Form.Select>
+
+      {selectedNodeType && (
+        <div className="config-controls space-y-4">
+          <div>
+            <Form.Label className="text-sm text-gray-600">{t('size_by_property')}</Form.Label>
+            <Form.Select
+              value={sizeProperty}
+              onChange={(e) => handleSizePropertyChange(selectedNodeType, e.target.value)}
+              className="w-full p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">{t('manual_size')}</option>
+              {getPropertiesForNodeType(selectedNodeType).map(prop => (
+                <option key={prop} value={prop}>{prop}</option>
+              ))}
+            </Form.Select>
           </div>
-        )}
-      </div>
 
-      <div>
-        <Form.Label>{t('select_node_type')}</Form.Label>
-        <Form.Select
-          size="sm"
-          value={selectedGroup}
-          onChange={(e) => setSelectedGroup(e.target.value)}
-        >
-          <option value="">{t('select_node_type')}</option>
-          {nodeData.map((node) => (
-            <option key={node.type} value={node.type}>
-              <Target size={16} className="me-2" />
-              {node.type}
-            </option>
-          ))}
-        </Form.Select>
+          {!sizeProperty && (
+            <div>
+              <Form.Label className="text-sm text-gray-600">
+                {t('size')}: {nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}px
+              </Form.Label>
+              <input
+                type="range"
+                min="50"
+                max="500"
+                value={nodeSize[selectedNodeType] || NODE_CONFIG.defaultNodeSize || 100}
+                onChange={(e) => handleSizeChange(selectedNodeType, e.target.value)}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
 
-        <Form.Label>{t('numeric_properties')}</Form.Label>
-        <Form.Select
-          size="sm"
-          value={selectedAttribute}
-          onChange={(e) => setSelectedAttribute(e.target.value)}
-        >
-          <option value="">{t('select_attribute')}</option>
-          {getNumericNodeProperties().map(prop => (
-            <option key={prop} value={prop}>{prop}</option>
-          ))}
-        
-        </Form.Select>
+    {/* Visual Separator */}
+    <div className="border-t border-gray-300 my-6"></div>
+         {warning && (
+        <Alert variant="warning" className="mb-4">
+          ⚠️ {warning}
+        </Alert>
+      )}
+    {/* Statistics Part */}
+    <div className="statistics-container p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+      <h6 className="text-md font-medium text-gray-700 mb-3">{t('statistics')}</h6>
+      <Form.Label className="text-sm text-gray-600">{t('select_node_type')}</Form.Label>
+      <Form.Select
+        size="sm"
+        value={selectedGroup}
+        onChange={(e) => setSelectedGroup(e.target.value)}
+        className="mb-3 w-full p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
+      >
+        <option value="">{t('select_node_type')}</option>
+        {nodeData.map((node) => (
+          <option key={node.type} value={node.type}>
+            <Target size={16} className="inline-block mr-2" />
+            {node.type}
+          </option>
+        ))}
+      </Form.Select>
+
+      <Form.Label className="text-sm text-gray-600">{t('numeric_properties')}</Form.Label>
+      <Form.Select
+        size="sm"
+        value={selectedAttribute}
+        onChange={(e) => setSelectedAttribute(e.target.value)}
+        className="mb-3 w-full p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
+      >
+        <option value="">{t('select_attribute')}</option>
+        {getNumericNodeProperties().map(prop => (
+          <option key={prop} value={prop}>{prop}</option>
+        ))}
+      </Form.Select>
 
         <Button
           size="sm"
           variant="info"
-          className="w-100 d-flex align-items-center justify-content-center gap-1 mt-3"
-          onClick={() => globalWindowState.setWindow("analyse_statistique", { selectedAttribute, selectedGroup })}
-          style={{ height: '50px' }}
+          className="w-full flex items-center justify-center gap-2 mt-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-md p-3"
+          onClick={handleStatisticalAnalysisClick} // Updated to use new handler
         >
-          <BarChart2 size={14} className="me-1" />
+          <BarChart2 size={14} className="inline-block" />
           {t('button_statistical_analysis')}
         </Button>
-      </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default AttributeAnalysis;

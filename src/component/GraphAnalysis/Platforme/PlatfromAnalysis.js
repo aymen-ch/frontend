@@ -8,7 +8,7 @@ import Container_AlgorithmicAnalysis from '../Modules/ContainersModules/Containe
 import SchemaVisualizer from '../Modules/ConfigurationModule/SchemaVisualisation/schema';
 import SettingsPage from '../Modules/ConfigurationModule/Importation/SettingsPage';
 import Dashboard from '../Modules/ConfigurationModule/Dachboard/Dashboard';
-import { GlobalProvider } from './GlobalVariables';
+
 
 const Graphe_analysis = () => {
   const { t, i18n } = useTranslation();
@@ -35,9 +35,9 @@ const Graphe_analysis = () => {
 
   const SchemaPage = () => (
     <div className="module-content"> {/* Kept as is, not styled by PlatformAnalysis.css */}
-      <GlobalProvider>
+
         <SchemaVisualizer />
-      </GlobalProvider>
+
     </div>
   );
 
@@ -55,10 +55,9 @@ const Graphe_analysis = () => {
 
   const VisualizationPage = () => (
     <div className="module-content"> {/* Kept as is */}
-      <GlobalProvider>
-    
+
           <Container_AlgorithmicAnalysis />
-      </GlobalProvider>
+
     </div>
   );
 

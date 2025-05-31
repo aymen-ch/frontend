@@ -7,7 +7,7 @@ import NodeClasificationBackEnd from './NodeClasificationBackEnd/NodeClasificati
 import { useTranslation } from 'react-i18next';
 
 
-const LinkPrediction = ({ selectedAffaires, depth, setDepth, isAggLoading, setIsAggLoading, setNodes, setEdges, showNodeClassification, setShowNodeClassification }) => {
+const LinkPrediction = ({   }) => {
   
 
     const{t} = useTranslation()

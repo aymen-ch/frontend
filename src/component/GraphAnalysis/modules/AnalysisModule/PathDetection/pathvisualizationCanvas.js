@@ -9,6 +9,21 @@ import { handleLayoutChange } from '../../ContainersModules/function_container';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import { useAlgorithm } from '../../ContainersModules/PathPrameters'
 
+///****
+// This is path visualization component take as input a set of nodes and edges
+// it calls 2 end point in the backend  endpoint 'get_all_connections' witch return all sub graph that conact 2 or more nodes 
+// or calls end point 'shortestpath' to return the shortest path between 2 nodes
+// 
+//  The code will work with 2 senarios :
+//        1- on startPathfinding is true : depth is input 
+//                   it will call end point 'get_all_connections' using iterateDepths from 1 to depth (it will stop when a path is found) the user can stop the search using the stop button
+//                     after a path is found the user can continue searching the next depth using the bettun next depth
+//        2- on  startShortestPathFinding is true :  it will call end point 'shortestpath' and return the shortest path between 2 nodes (if excit )
+//
+//
+// GraphCanvas is the component that display the graph  (other then MemoizedGraphVisualization that exist in the container module)
+//  */
+
 const PathVisualization = React.memo(({
   edges,
   nodes,
@@ -52,7 +67,8 @@ const PathVisualization = React.memo(({
     startShortestPathFinding
   } = useAlgorithm();
 
-  // Handle path-finding API call for a specific depth
+
+  // This function will take 2 or nodes   and retrun the sub graph conrect  between them
   const fetchPathsForDepth = async (ids, depth) => {
     console.log("Fetching paths for depth:", depth);
     setIsLoading(true);
@@ -98,7 +114,15 @@ const PathVisualization = React.memo(({
     }
   };
 
-  // Handle shortest path API call
+
+  //**
+  // this will take exctly 2 node and retrun the shortest path between them
+  // 
+  // 
+  // 
+  // 
+  // 
+  // *//
   const startShortestPath = async (params) => {
     console.log("Starting shortest path for IDs:", params.ids);
     setIsLoading(true);
@@ -178,6 +202,13 @@ const PathVisualization = React.memo(({
     }
   }, [pathFindingParams, startPathfinding]);
 
+
+  //*
+  // when finding the first path for the first time fetchPathsForDepth it will stop
+  //  to continue searching in next depth we use fetchNextDepth to look for possible paths in that depth 
+  // 
+  // 
+  // **///
   const fetchNextDepth = () => {
     if (currentDepth < pathFindingParams.depth) {
       setCurrentDepth(currentDepth + 1);
@@ -189,11 +220,15 @@ const PathVisualization = React.memo(({
     }
   };
 
+
+
   const stopSearching = () => {
     setIsSearching(false);
     setCurrentDepth(0);
   };
 
+
+  /// when  startShortestPathFinding is true (by the user in Pathinput.js) we call startShortestPath
   useEffect(() => {
     if (shortestPathParams && startShortestPathFinding) {
       console.log("Starting shortest path with params:", startShortestPathFinding);
@@ -201,30 +236,13 @@ const PathVisualization = React.memo(({
     }
   }, [shortestPathParams, startShortestPathFinding]);
 
-  const addPathsToCanvas = (paths) => {
-    let nodesToAdd = [];
-    let edgesToAdd = [];
 
-    paths.forEach((path) => {
-      const { nodes: pathNodes, edges: pathEdges } = parsePath(path, selectednodes);
-      nodesToAdd = [...nodesToAdd, ...pathNodes];
-      edgesToAdd = [...edgesToAdd, ...pathEdges];
-    });
 
-    nodesToAdd = Array.from(new Map(nodesToAdd.map(node => [node.id, node])).values());
-    edgesToAdd = Array.from(new Map(edgesToAdd.map(edge => [`${edge.from}-${edge.to}`, edge])).values());
-
-    setNodes((prevNodes) => {
-      const existingNodeIds = new Set(prevNodes.map(node => node.id));
-      const newNodes = nodesToAdd.filter(node => !existingNodeIds.has(node.id));
-      return [...prevNodes, ...newNodes];
-    });
-
-    setEdges((prevEdges) => {
-      const newEdges = edgesToAdd.map(edge => ({ ...edge, selected: true }));
-      return [...prevEdges, ...newEdges];
-    });
-  };
+//****
+// 
+// All the function below work with the window of the pathvisualisation.js they handle the drag , resize ....
+// 
+//  */
 
   const handleMouseDown = useCallback((e) => {
     if (e.target.closest('[data-draggable="true"]')) {
@@ -376,6 +394,8 @@ const PathVisualization = React.memo(({
     setIsSearching(false);
   };
 
+
+  //// This will add the current path visual in pathvisualization  to the main visualization
   const addCurrentPathToVisualization = () => {
     let nodesToAdd = [];
     let edgesToAdd = [];

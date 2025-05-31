@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 // Components
-import AddActionWindow from '../../Windows/Actions/PersonProfileWindow/Actions';
+import AddActionWindow from '../../Windows/Actions';
 
 // Utilities
 import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser';

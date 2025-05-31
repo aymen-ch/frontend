@@ -4,22 +4,25 @@ import { useState, memo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import SearchinputComponent from './OptionSelections';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
-import { useGlobalContext } from '../../../Platforme/GlobalVariables';
+
+
+////*****
+// This is the container of Analyse temporelle et géospatiale.
+// Contains a set of filters, which can be found inside OptionSelections.js.
+// ContextData is sent to OptionSelections.js to be loaded with data.
+// The parameters(ContextData) are sent to filter_affaire_relations.
+// 
+// */
 
 const ContextManagerComponent = ({
-  SubGrapgTable,
   setSubGrapgTable,
 }) => {
-  const [ContextData, setContextData] = useState({});
-  const [showAggregation, setShowAggregation] = useState(false); // State to control visibility of Aggregation component
+
+  const [ContextData, setContextData] = useState({}); // the result of the filters
   const [loading, setLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // State for validation error
-  const { setNewContextHasArrived } = useGlobalContext();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    console.log('ContextData:', ContextData);
-  }, [ContextData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,8 +56,6 @@ const ContextManagerComponent = ({
       if (response.status === 200) {
         console.log('Data submitted successfully! Contextualisation', response.data);
         setSubGrapgTable(response.data);
-        setShowAggregation(true); // Show Aggregation component after successful submission
-        setNewContextHasArrived(true);
       } else {
         console.error('Submission failed.');
         setError(t('contextManager.errorSubmissionFailed'));

@@ -1,6 +1,15 @@
 // AlgorithmContext.js
 import { createContext, useState, useContext, useMemo } from 'react';
 
+
+///***
+// This is a set of global variables. It will be used  , it initialization is in the parent component ContainerModule.js.
+// It shares the variables with the child components PathInput.js and PathVisualization.js.
+// 
+// 
+// 
+// ** *////
+
 const AlgorithmContext = createContext();
 
 export function PathPrameter({ children }) {

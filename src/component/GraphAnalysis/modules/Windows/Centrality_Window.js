@@ -9,7 +9,7 @@ import {
 import Draggable from 'react-draggable';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
-import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+import { BASE_URL_Backend } from '../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
 
 const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
@@ -337,8 +337,8 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
             <p>{t('Loading...')}</p>
           </div>
         )}
-        {error && <p className="text-danger mt-3">{error}</p>}
-        {!loading && !error && relationshipTypes.length > 0 ? (
+       
+        {!loading  && relationshipTypes.length > 0 ? (
           <ListGroup variant="flush" className="bg-white rounded shadow-sm">
             {relationshipTypes.map((relType, index) => (
               <ListGroup.Item
@@ -384,8 +384,9 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
             {t('No virtual relations found where path starts and ends with')} {selectedGroup}.
           </p>
         )}
-
+        {error && <p className="text-danger mt-3">{error}</p>}
         <div className="d-grid gap-2 mt-4">
+               
           <Button
             variant="primary"
             onClick={handleSubmit}
@@ -440,17 +441,20 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
     </Card>
   );
 
-  return (
-    <div className="profile-window-overlay bg-dark bg-opacity-50">
-      {isMaximized ? (
-        windowContent
-      ) : (
-        <Draggable nodeRef={nodeRef} handle=".window-header" bounds="parent">
-          <div ref={nodeRef}>{windowContent}</div>
-        </Draggable>
-      )}
-    </div>
-  );
+return (
+  <div className="fixed inset-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center z-[1050] backdrop-blur-sm">
+    {console.log('isMaximized', isMaximized)}
+    {isMaximized ? (
+      windowContent
+    ) : (
+      <Draggable nodeRef={nodeRef} handle=".window-header" bounds="parent">
+        <div ref={nodeRef} className="w-full max-w-3xl bg-white rounded-lg shadow-xl">
+          {windowContent}
+        </div>
+      </Draggable>
+    )}
+  </div>
+);
 };
 
 export default Analyse_BackEnd;

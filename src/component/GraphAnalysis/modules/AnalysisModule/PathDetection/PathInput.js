@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAlgorithm } from '../../ContainersModules/PathPrameters';
 
+// 
+//  This is a path finder. Its role is to give parameters to the Path Visualization window.
+// 'IsBoxPath' is a variable that indicates whether the window pathvisualisation.js is visible or not.
+//  SelectedNodes are the set of nodes selected in the graph.
+// 
+// **
+
 const PathFinder = ({
-  setPathEdges,
-  setPathNodes,
-  setAllPaths,
-  setCurrentPathIndex,
   setIsBoxPath,
   selectednodes,
-  setPathisempty,
 }) => {
   const [depth, setDepth] = useState(1);
   const [error, setError] = useState(null); // State for error messages

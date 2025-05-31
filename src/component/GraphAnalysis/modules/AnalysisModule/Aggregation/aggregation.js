@@ -1,7 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { getNodeIcon, getNodeColor } from '../../VisualisationModule/Parser';
+
 import { handleAggregation, getIntermediateTypes } from './aggregationUtils';
 import { useTranslation } from 'react-i18next';
+
+////***
+// This Componet responsible for Aggregation 
+// it will take virtualRelations   use generate list of Toggoles (check box)
+// when you check on ageregation it will call handleAggregation
+// 
+// 
+// 
+// 
+//  */
+
 const Aggregation = ({
   setEdges,
   setNodes,
@@ -10,21 +20,18 @@ const Aggregation = ({
   setActiveAggregations,
   virtualRelations
 }) => {
-  const [selectedAffaires, setSelectedAffaires] = useState([]);
+
   const { t } = useTranslation();
 
-  useEffect(() => {
-    const affids = nodes
-      .filter((node) => node.group === "Affaire")
-      .map((node) => parseInt(node.id, 10));
-    setSelectedAffaires(affids);
-  }, [nodes]);
 
+
+  //Extract aggregation path form virtualRelations
   const getAggregationPath = (relationName) => {
     const relation = virtualRelations.find((rel) => rel.name === relationName);
     return relation ? relation.path : null;
   };
 
+  //Do the Agregation 
   const handleTypeFilterChange = async (relationName) => {
     const aggregationPath = getAggregationPath(relationName);
     if (aggregationPath) {
@@ -32,6 +39,8 @@ const Aggregation = ({
     }
   };
 
+
+  ///This is where nodes and edges of virtual path are being hidden (The Aggregation it self)
   const toggleAggregation = (relationName) => {
     if (activeAggregations[relationName]) {
       setEdges((prevEdges) => {
@@ -75,27 +84,8 @@ const Aggregation = ({
     }
   };
 
-  const renderIconWithBackground = (type) => {
-    const iconUrl = getNodeIcon(type);
-    const backgroundColor = getNodeColor(type);
-    return (
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '20px',
-          height: '20px',
-          borderRadius: '50%',
-          backgroundColor: backgroundColor,
-          margin: '0 2px',
-        }}
-      >
-        <img src={iconUrl} alt={type} style={{ width: '12px', height: '12px' }} />
-      </span>
-    );
-  };
 
+  /// This for printing the agreagtion path in the UI
   const renderAggregationPath = (relation) => {
     const { name, path } = relation;
     if (!path || path.length < 1) return null;

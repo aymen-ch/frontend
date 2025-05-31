@@ -5,11 +5,12 @@ import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
 import { LabelManager,parsergraph } from '../../VisualisationModule/Parser';
 
-const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCentralityAttribute, setSelectedCentralityAttribute }) => {
+const TopK_Nodes = ({ setNodes, selectedGroup, setSelectedGroup, selectedCentralityAttribute, setSelectedCentralityAttribute }) => {
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(10);
   const [topKnodes, setTopKnodes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [warning, setWarning] = useState(null); // New state for warning message
   const [error, setError] = useState(null);
   const { t } = useTranslation();
 
@@ -46,7 +47,12 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
     }
   };
 
-  const handleAddNodeToVisualization = (node) => {
+const handleAddNodeToVisualization = (node) => {
+    if (!selectedCentralityAttribute) {
+      setWarning('⚠️ ' + t('Please select a centrality attribute')); // Set warning message
+      return;
+    }
+    setWarning(null); // Clear warning if attribute is selected
     const parsedResult = parsergraph({ nodes: [node], edges: [] });
     const newNode = parsedResult.nodes[0];
     setNodes((prevNodes) => [...prevNodes, newNode]);
@@ -55,7 +61,7 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
   return (
     <Card className="shadow-sm border-0">
       <Card.Body className="p-4">
-        <Card.Title className="mb-4 text-primary">{t('Top K Centrality Nodes')}</Card.Title>
+        <Card.Title className="mb-4 text-primary">{t('Top K  Nodes')}</Card.Title>
 
         <Row className="g-3 mb-4">
           <Col md={6}>
@@ -89,7 +95,7 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
         <Button
           variant="primary"
           onClick={handleFetchNodes}
-          disabled={isLoading || !selectedGroup || !selectedCentralityAttribute}
+          disabled={isLoading }//|| !selectedGroup || !selectedCentralityAttribute
           size="sm"
           className="w-100 mb-4 shadow-sm"
         >
@@ -111,8 +117,13 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
         </Button>
 
         {error && <div className="text-danger mb-3">{error}</div>}
+        {warning && (
+          <div className="text-warning mb-3 bg-warning-subtle p-2 rounded">
+            {warning}
+          </div>
+        )}
 
-        {topKnodes.length > 0 && (
+        {selectedCentralityAttribute && topKnodes.length > 0 && (
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
             <ListGroup variant="flush">
               {topKnodes.map((node, index) => (
@@ -152,4 +163,4 @@ const TopKCentrality = ({ setNodes, selectedGroup, setSelectedGroup, selectedCen
   );
 };
 
-export default TopKCentrality;
+export default TopK_Nodes;
