@@ -24,11 +24,11 @@ const Memoizedcontext = memo(ContextManagerComponent);
 
 // si la partie (visulisation dans le navbar horizontal) Contient les onglets, la visualisation du graphe et la visualisation des chemins affichée si isBoxPath est vrai
 
-const Container_AlgorithmicAnalysis = () => {
+const Container_AlgorithmicAnalysis = ({ selectedVisualization,initialNodes, initialEdges, onBackToList, addVisualization }) => {
   const { t } = useTranslation();
   // Noeuds et relations
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
+  const [nodes, setNodes] = useState(initialNodes || []);
+  const [edges, setEdges] = useState(initialEdges || []);
  // Variables pour la contextualisation ; chaque affaire possède ses propres noeuds et relations 
   const [SubGrapgTable, setSubGrapgTable] = useState({ results: [] });
   const [currentSubGraphIndex, setCurrentSubGraphIndex] = useState(0);
@@ -198,6 +198,8 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
             setselectedEdges={setselectedEdges}
             setSubGrapgTable={setSubGrapgTable}
             virtualRelations={virtualRelations}
+            addVisualization={addVisualization}
+            onBackToList={onBackToList}
           />
 
 
