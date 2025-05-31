@@ -63,6 +63,10 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
   ];
 
   useEffect(() => {
+    setCentralityResults([]);
+   }, []);
+   
+  useEffect(() => {
     const fetchRelationshipTypes = async () => {
       if (!selectedGroup) return;
 
@@ -205,7 +209,8 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
       });
 
       // Store the centrality results
-      setCentralityResults(response.data.results || []);
+      console.log('Centrality calculation result:', response.data);
+      setCentralityResults(response.data || []);
       console.log('Centrality calculation result:', response.data);
     } catch (err) {
       setError(err.response?.data?.error || t('Failed to calculate centrality'));
@@ -359,7 +364,7 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
           !loading && !error && <p className="text-muted mt-3">{t('No relationship types found.')}</p>
         )}
 
-        <h5 className="mt-4 mb-3 text-primary">{t('Virtual Relations')}</h5>
+        {/* <h5 className="mt-4 mb-3 text-primary">{t('Virtual Relations')}</h5>
         {virtualRelationItems.length > 0 ? (
           <ListGroup variant="flush" className="bg-white rounded shadow-sm">
             {virtualRelationItems.map((item, index) => (
@@ -383,7 +388,7 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
           <p className="text-muted mt-3">
             {t('No virtual relations found where path starts and ends with')} {selectedGroup}.
           </p>
-        )}
+        )} */}
         {error && <p className="text-danger mt-3">{error}</p>}
         <div className="d-grid gap-2 mt-4">
                
@@ -412,31 +417,35 @@ const Analyse_BackEnd = ({ selectedGroup, onClose }) => {
         </div>
 
         {/* Centrality Results Table */}
-        {centralityResults.length > 0 && (
-          <div className="mt-5">
-            <h5 className="mb-3 text-primary">{t('Centrality Results')}</h5>
-            <Table striped bordered hover responsive className="shadow-sm">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th>{t('Node ID')}</th>
-                  <th>{t('Centrality Score')}</th>
-                  {isNormalized && <th>{t('Normalized Score')}</th>}
-                  <th>{t('Algorithm')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {centralityResults.map((result, index) => (
-                  <tr key={index}>
-                    <td>{result.node_id}</td>
-                    <td>{result.score.toFixed(4)}</td>
-                    {isNormalized && <td>{result.normalized_score?.toFixed(4) || 'N/A'}</td>}
-                    <td>{selectedCentrality}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </div>
-        )}
+      {centralityResults && Object.keys(centralityResults).length > 0 &&  (
+    <div className="mt-5">
+      <h5 className="mb-3 text-primary">{t('Centrality Results')}</h5>
+      <Table striped bordered hover responsive className="shadow-sm">
+        <thead className="bg-primary text-white">
+          <tr>
+            <th>{t('Node Type')}</th>
+            <th>{t('Centrality Algorithm')}</th>
+            <th>{t('Mean Score')}</th>
+            <th>{t('Minimum Score')}</th>
+            <th>{t('Nodes Written')}</th>
+            <th>{t('Write Property')}</th>
+            {isNormalized && <th>{t('Nodes Normalized')}</th>}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{centralityResults.node_type}</td>
+            <td>{centralityResults.centrality_algorithm}</td>
+            <td>{centralityResults.mean_score.toFixed(4)}</td>
+            <td>{centralityResults.minimum_score.toFixed(4)}</td>
+            <td>{centralityResults.nodes_written}</td>
+            <td>{centralityResults.write_property}</td>
+            {isNormalized && <td>{centralityResults.nodes_normalized}</td>}
+          </tr>
+        </tbody>
+      </Table>
+  </div>
+)}  
       </Card.Body>
     </Card>
   );

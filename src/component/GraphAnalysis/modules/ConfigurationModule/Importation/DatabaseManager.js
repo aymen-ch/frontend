@@ -14,6 +14,18 @@ import {
 import { useTranslation } from 'react-i18next';
 import './DatabaseManager.css';
 
+
+////******
+//  This component is responsible for : 
+//  1- creating a new database 
+//  2- changing the current database
+//  3- deleting a database
+// 
+// 
+// 
+// 
+//  */
+
 const DatabaseManager = ({
   error,
   setError,
@@ -28,7 +40,7 @@ const DatabaseManager = ({
   const [loadingDatabases, setLoadingDatabases] = useState(false);
   const [loadingCreateDb, setLoadingCreateDb] = useState(false);
   const [loadingSwitchDb, setLoadingSwitchDb] = useState(false);
-  const [loadingDeleteDb, setLoadingDeleteDb] = useState(false);
+  const [loadingDeleteDb, setLoadingDeleteDb] = useState(false); 
   const [loadingRefresh, setLoadingRefresh] = useState(false); // New state for refresh button
   const { currentDb, setCurrentDb, databases, setDatabases } = useDatabase();
 
@@ -37,7 +49,7 @@ const DatabaseManager = ({
     fetchAllDatabases();
   }, []);
 
-  const fetchCurrentDatabase = async () => {
+  const fetchCurrentDatabase = async () => { //// Get the current database that  i am currently connecting at form bakend
     setLoadingCurrentDb(true);
     try {
       const response = await axios.post(
@@ -59,7 +71,7 @@ const DatabaseManager = ({
     }
   };
 
-  const fetchAllDatabases = async () => {
+  const fetchAllDatabases = async () => { /// Get all the dataBases that exist in the neo4j driver
     setLoadingDatabases(true);
     setLoadingRefresh(true); // Set refresh loading state
     try {
@@ -174,6 +186,7 @@ const DatabaseManager = ({
 
   const handleRefreshDatabases = async () => {
     await fetchAllDatabases(); // Trigger re-fetch of databases
+    await fetchCurrentDatabase(); // Trigger re-fetch of current database
   };
 
   return (

@@ -6,9 +6,25 @@ import { useDatabase } from './DatabaseContext';
 import { useTranslation } from 'react-i18next'; // Importing the translation hook
 
 
-const GeneralTab = () => {
+/////******
+//  This component displays the statistics of the current database.
+//  The statistics are retrieved form /database_stats/`
+// 
+// 
+//
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+//  */
+
+
+const Summary_Statistics = () => {
   const { t } = useTranslation(); // Initialize the translation hook
-  const { currentDb, databases } = useDatabase();
+  const { currentDb, databases } = useDatabase(); // Context 
   const [stats, setStats] = useState(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [error, setError] = useState('');
@@ -88,4 +104,4 @@ const GeneralTab = () => {
   );
 };
 
-export default GeneralTab;
+export default Summary_Statistics;

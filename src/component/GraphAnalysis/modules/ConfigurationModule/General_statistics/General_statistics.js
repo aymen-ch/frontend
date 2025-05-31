@@ -23,10 +23,21 @@ import {
   Line,
   Brush
 } from 'recharts';
-import './Dashboard.css';
+import './General_statistics.css';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 
-const Dashboard = () => {
+
+
+////******
+// This component is responsible for : showing statistics 
+// 
+//  {/* Database Stats Card */} is for all databases
+//  {/* Additional Data Sections */} only work for databases that contains node of type affaire 
+// 
+// 
+//  */
+
+const General_statistics = () => {
   // State for all data views
   const [stats, setStats] = useState({});
   const [nodeTypeCounts, setNodeTypeCounts] = useState({});
@@ -445,4 +456,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default General_statistics;

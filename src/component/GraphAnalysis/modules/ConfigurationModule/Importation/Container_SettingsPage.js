@@ -4,11 +4,21 @@ import { useTranslation } from 'react-i18next';
 import { FaLanguage } from 'react-icons/fa';  // Importing an icon
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import DatabaseManager from './DatabaseManager';
-import SettingsTabs from './SettingsTabs';
+import SettingsTabs from './Container_Tabs';
 import './SettingsPage.css';
 import { DatabaseProvider } from './DatabaseContext';
 
-const SettingsPage = () => {
+
+//***
+// 
+//  The importaion page of the configuration module
+//  contain 3 parts : 
+//    1-  Database Manager : for creating new database  and changing the current database
+//    2-  importing data to the current one  (It is important to handle the conflict of the Ids before importing)
+//    3-  changing the langue
+//  */
+
+const Container_SettingsPage = () => {
   const { t, i18n } = useTranslation();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -63,4 +73,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default Container_SettingsPage;

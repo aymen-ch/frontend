@@ -10,6 +10,9 @@ import SettingsPage from '../Modules/ConfigurationModule/Importation/SettingsPag
 import Dashboard from '../Modules/ConfigurationModule/Dachboard/Dashboard';
 import VisualizationList from '../Modules/ContainersModules/existingvisualization';
 import { BASE_URL_Backend } from './Urls';
+import Container_SettingsPage from '../Modules/ConfigurationModule/Importation/Container_SettingsPage';
+import General_statistics from '../Modules/ConfigurationModule/General_statistics/General_statistics';
+
 
 // Ce composant est le conteneur principal du projet, dédié à l'analyse, l'interrogation et la visualisation.
 // Il inclut une barre de navigation horizontale pour basculer entre les différents modules : schéma, importation (paramètres), tableau de bord et visualisation.
@@ -100,14 +103,14 @@ const handleVisualizationSelect = async (visualization) => {
   // Composant pour afficher la page des paramètres
   const SettingPage = () => (
     <div className="module-content">
-      <SettingsPage />
+      <Container_SettingsPage />
     </div>
   );
 
   // Composant pour afficher la page du tableau de bord
   const DashboardPage = () => (
     <div className="module-content">
-      <Dashboard />
+      <General_statistics />
     </div>
   );
 
