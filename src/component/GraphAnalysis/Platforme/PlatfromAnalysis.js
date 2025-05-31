@@ -6,8 +6,6 @@ import axios from 'axios';
 
 import Container_AlgorithmicAnalysis from '../Modules/ContainersModules/ContainerModules';
 import SchemaVisualizer from '../Modules/ConfigurationModule/SchemaVisualisation/schema';
-import SettingsPage from '../Modules/ConfigurationModule/Importation/SettingsPage';
-import Dashboard from '../Modules/ConfigurationModule/Dachboard/Dashboard';
 import VisualizationList from '../Modules/ContainersModules/existingvisualization';
 import { BASE_URL_Backend } from './Urls';
 import Container_SettingsPage from '../Modules/ConfigurationModule/Importation/Container_SettingsPage';
