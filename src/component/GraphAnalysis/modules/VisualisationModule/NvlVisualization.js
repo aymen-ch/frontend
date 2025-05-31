@@ -1,5 +1,7 @@
+// useNvlVisualization.js : Hook personnalisé pour gérer la visualisation interactive des nœuds et relations avec Neo4j NVL
+
 import { useEffect, useRef, useState } from 'react';
-import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
+import { InteractiveNvlWrapper } from '@neo4j-nvl/react'; // Composant React pour la visualisation NVL
 import {
   PanInteraction,
   ZoomInteraction,
@@ -7,227 +9,235 @@ import {
   BoxSelectInteraction,
   ClickInteraction,
   HoverInteraction,
-} from '@neo4j-nvl/interaction-handlers';
+} from '@neo4j-nvl/interaction-handlers'; // Gestionnaires d'interactions pour la visualisation
 
-import { LabelManager, LabelManagerSchema,createNodeHtml } from './Parser';
+import { LabelManager, LabelManagerSchema, createNodeHtml } from './Parser'; // Fonctions utilitaires pour les étiquettes et le HTML des nœuds
 
-
-// CSS to ensure NVL nodes remain interactive
-
+// Hook personnalisé pour configurer la visualisation NVL
 const useNvlVisualization = ({
-  nvlRef,
-  nodes,
-  edges,
-  selectedNodes,
-  setSelectedNodes,
-  setContextMenu,
-  setContextMenuRel,
-  SetContextMenucanvas,
-  setnodetoshow,
-  setrelationtoshow,
-  shiftPressed,
-  selectedEdges,
-  setselectedEdges,
-  sethoverEdge,
-  ispath,
-  layoutType,
-  multiselecte,
-  setmultiselecte,
+  nvlRef, // Référence pour le composant NVL
+  nodes, // Liste des nœuds
+  edges, // Liste des relations
+  selectedNodes, // Nœuds sélectionnés
+  setSelectedNodes, // Met à jour les nœuds sélectionnés
+  setContextMenu, // Gère le menu contextuel des nœuds
+  setContextMenuRel, // Gère le menu contextuel des relations
+  SetContextMenucanvas, // Gère le menu contextuel du canevas
+  setnodetoshow, // Définit le nœud à afficher
+  setrelationtoshow, // Définit la relation à afficher
+  selectedEdges, // Relations sélectionnées
+  setselectedEdges, // Met à jour les relations sélectionnées
+  sethoverEdge, // Définit la relation survolée
+  ispath, // Indicateur de mode chemin
+  layoutType, // Type de disposition
+  multiselecte, // Indicateur de sélection multiple
+  setmultiselecte, // Met à jour l'état de sélection multiple
 }) => {
-  const previouslyHoveredNodeRef = useRef(null);
-  const selectedNodeRef = useRef(null);
-  const selectedRelationRef = useRef(null);
-  const minimapContainerRef = useRef(null);
-  const [isMinimapReady, setIsMinimapReady] = useState(false);
-  const [hoverdnode, sethovernode] = useState(null);
+  // Références
+  const previouslyHoveredNodeRef = useRef(null); // Nœud précédemment survolé
+  const selectedNodeRef = useRef(null); // Nœud actuellement sélectionné
+  const selectedRelationRef = useRef(null); // Relation actuellement sélectionnée
+  const minimapContainerRef = useRef(null); // Conteneur de la mini-carte
+
+  // État
+  const [isMinimapReady, setIsMinimapReady] = useState(false); // Indique si la mini-carte est prête
+  const [hoverdnode, sethovernode] = useState(null); // Nœud actuellement survolé
   const layoutoptions = {
-    direction: 'up',
-    packing: 'bin',
+    direction: 'up', // Direction de la disposition
+    packing: 'bin', // Type d'empaquetage
   };
 
+  // Vérifie si la mini-carte est prête
   useEffect(() => {
     if (minimapContainerRef.current) {
-      setIsMinimapReady(true);
+      setIsMinimapReady(true); // Active la mini-carte
     }
   }, []);
 
-  // Add Ctrl + A event listener for selecting all nodes
+  // Gestion de la touche Ctrl + A pour sélectionner tous les nœuds
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.ctrlKey && event.key === 'a') {
-        event.preventDefault(); // Prevent browser default behavior (e.g., selecting all text)
-        const allNodeIds = nodes.map(node => node.id);
-        setSelectedNodes(new Set(allNodeIds));
+        event.preventDefault(); // Empêche le comportement par défaut
+        const allNodeIds = nodes.map(node => node.id); // Récupère tous les IDs des nœuds
+        setSelectedNodes(new Set(allNodeIds)); // Sélectionne tous les nœuds
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown); // Ajoute l'écouteur
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown); // Nettoie l'écouteur
     };
   }, [nodes, setSelectedNodes]);
 
+  // Gestion des interactions NVL
   useEffect(() => {
     if (!nvlRef.current) return;
 
-    const panInteraction = new PanInteraction(nvlRef.current);
-    const boxSelectInteraction = new BoxSelectInteraction(nvlRef.current);
-    const clickInteraction = new ClickInteraction(nvlRef.current);
-    const zoomInteraction = new ZoomInteraction(nvlRef.current);
-    const dragNodeInteraction = new DragNodeInteraction(nvlRef.current);
-    const hoverInteraction = new HoverInteraction(nvlRef.current);
+    // Initialise les gestionnaires d'interactions
+    const panInteraction = new PanInteraction(nvlRef.current); // Déplacement du canevas
+    const boxSelectInteraction = new BoxSelectInteraction(nvlRef.current); // Sélection par boîte
+    const clickInteraction = new ClickInteraction(nvlRef.current); // Gestion des clics
+    const zoomInteraction = new ZoomInteraction(nvlRef.current); // Gestion du zoom
+    const dragNodeInteraction = new DragNodeInteraction(nvlRef.current); // Déplacement des nœuds
+    const hoverInteraction = new HoverInteraction(nvlRef.current); // Gestion du survol
 
-    dragNodeInteraction.mouseDownNode = null;
+    dragNodeInteraction.mouseDownNode = null; // Réinitialise le nœud en cours de déplacement
 
     if (multiselecte) {
+      // Gestion de la sélection multiple
       boxSelectInteraction.updateCallback('onBoxSelect', ({ nodes, rels }) => {
         setSelectedNodes((prevSelected) => {
-          const newSelected = new Set(prevSelected);
+          const newSelected = new Set(prevSelected); // Copie les nœuds sélectionnés
           nodes.forEach((node) => {
-            newSelected.has(node.id) ? newSelected.delete(node.id) : newSelected.add(node.id);
+            newSelected.has(node.id) ? newSelected.delete(node.id) : newSelected.add(node.id); // Ajoute ou supprime
           });
           return newSelected;
         });
 
         setselectedEdges?.((prevSelected) => {
-          const newSelected = new Set(prevSelected);
+          const newSelected = new Set(prevSelected); // Copie les relations sélectionnées
           rels.forEach((rel) => {
-            newSelected.has(rel.id) ? newSelected.delete(rel.id) : newSelected.add(rel.id);
+            newSelected.has(rel.id) ? newSelected.delete(rel.id) : newSelected.add(rel.id); // Ajoute ou supprime
           });
           return newSelected;
         });
 
-        setmultiselecte(false);
+        setmultiselecte(false); // Désactive la sélection multiple
       });
-      panInteraction.destroy();
-      zoomInteraction.destroy();
-    } else if (layoutType === 'geospatial') {
-      panInteraction.destroy();
-      zoomInteraction.destroy();
-      boxSelectInteraction.destroy();
+      panInteraction.destroy(); // Désactive le déplacement
+      zoomInteraction.destroy(); // Désactive le zoom
     } else {
-      panInteraction.updateCallback('onPan', () => console.log('onPan'));
-      zoomInteraction.updateCallback('onZoom', () => console.log('onZoom'));
-      boxSelectInteraction.destroy();
+      panInteraction.updateCallback('onPan', () => console.log('onPan')); // Log du déplacement
+      zoomInteraction.updateCallback('onZoom', () => console.log('onZoom')); // Log du zoom
+      boxSelectInteraction.destroy(); // Désactive la sélection par boîte
     }
 
+    // Gestion du clic droit sur un nœud
     clickInteraction.updateCallback('onNodeRightClick', (node, hitElements, event) => {
       event.preventDefault();
       setContextMenu({
         visible: true,
-        x: event.clientX - 100,
-        y: event.clientY - 200,
-        node,
+        x: event.clientX - 100, // Position X du menu
+        y: event.clientY - 200, // Position Y du menu
+        node, // Nœud concerné
       });
     });
 
+    // Gestion du clic sur un nœud
     clickInteraction.updateCallback('onNodeClick', (node, hitElements, event) => {
       if (node && node.id) {
         setSelectedNodes((prevSelected) => {
-          const newSelected = new Set(prevSelected);
-          newSelected.add(node.id);
+          const newSelected = new Set(prevSelected); // Copie les nœuds sélectionnés
+          newSelected.add(node.id); // Ajoute le nœud
           return newSelected;
         });
-        selectedNodeRef.current = node.id;
-        setnodetoshow(node.id);
+        selectedNodeRef.current = node.id; // Met à jour la référence
+        setnodetoshow(node.id); // Affiche le nœud
       }
     });
 
+    // Gestion du clic sur une relation
     clickInteraction.updateCallback('onRelationshipClick', (edge, hitElements, event) => {
       if (edge && edge.id) {
         setselectedEdges?.((prevSelected) => {
-          const newSelected = new Set(prevSelected);
-          newSelected.add(edge.id);
+          const newSelected = new Set(prevSelected); // Copie les relations sélectionnées
+          newSelected.add(edge.id); // Ajoute la relation
           return newSelected;
         });
-        selectedRelationRef.current = edge.id;
+        selectedRelationRef.current = edge.id; // Met à jour la référence
       }
     });
 
+    // Gestion du clic droit sur une relation
     clickInteraction.updateCallback('onRelationshipRightClick', (edge, hitElements, event) => {
       event.preventDefault();
       setContextMenuRel({
         visible: true,
-        x: event.clientX - 230,
-        y: event.clientY - 200,
-        edge,
+        x: event.clientX - 230, // Position X du menu
+        y: event.clientY - 200, // Position Y du menu
+        edge, // Relation concernée
       });
     });
 
+    // Gestion du clic sur le canevas
     clickInteraction.updateCallback('onCanvasClick', (event) => {
       if (!event.hitElements || event.hitElements.length === 0) {
-        setSelectedNodes?.(new Set());
-        setselectedEdges?.(new Set());
-        selectedNodeRef.current = null;
-        selectedRelationRef.current = null;
-        setnodetoshow(null);
+        setSelectedNodes?.(new Set()); // Réinitialise les nœuds sélectionnés
+        setselectedEdges?.(new Set()); // Réinitialise les relations sélectionnées
+        selectedNodeRef.current = null; // Réinitialise la référence du nœud
+        selectedRelationRef.current = null; // Réinitialise la référence de la relation
+        setnodetoshow(null); // Réinitialise le nœud affiché
         if (typeof setContextMenu === 'function') {
-          setContextMenu(null);
+          setContextMenu(null); // Ferme le menu contextuel des nœuds
         }
         if (typeof SetContextMenucanvas === 'function') {
-          SetContextMenucanvas(null);
+          SetContextMenucanvas(null); // Ferme le menu contextuel du canevas
         }
       }
     });
 
+    // Gestion du clic droit sur le canevas
     clickInteraction.updateCallback('onCanvasRightClick', (event) => {
       event.preventDefault();
       if (typeof SetContextMenucanvas === 'function') {
         SetContextMenucanvas({
           visible: true,
-          x: event.clientX - 230,
-          y: event.clientY - 200,
+          x: event.clientX - 230, // Position X du menu
+          y: event.clientY - 200, // Position Y du menu
         });
       }
     });
 
+    // Gestion du survol
     hoverInteraction.updateCallback('onHover', (element, hitElements, event) => {
       if (!hitElements || ((!hitElements.nodes || hitElements.nodes.length === 0) && 
           (!hitElements.relationships || hitElements.relationships.length === 0))) {
         if (previouslyHoveredNodeRef.current) {
           const shadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
-          if (shadowEffect) shadowEffect.remove();
-          previouslyHoveredNodeRef.current = null;
+          if (shadowEffect) shadowEffect.remove(); // Supprime l'effet de survol
+          previouslyHoveredNodeRef.current = null; // Réinitialise la référence
         }
-        setrelationtoshow(selectedRelationRef.current);
-        sethoverEdge(null);
-        setnodetoshow(selectedNodeRef.current);
-        sethovernode(null);
+        setrelationtoshow(selectedRelationRef.current); // Affiche la relation sélectionnée
+        sethoverEdge(null); // Réinitialise la relation survolée
+        setnodetoshow(selectedNodeRef.current); // Affiche le nœud sélectionné
+        sethovernode(null); // Réinitialise le nœud survolé
         return;
       }
 
       if (hitElements.nodes && hitElements.nodes.length > 0) {
-        const hoveredNode = hitElements.nodes[0];
+        const hoveredNode = hitElements.nodes[0]; // Nœud survolé
         if (hoveredNode && hoveredNode.data.id) {
           if (previouslyHoveredNodeRef.current) {
             const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
-            if (previousShadowEffect) previousShadowEffect.remove();
+            if (previousShadowEffect) previousShadowEffect.remove(); // Supprime l'effet précédent
           }
-          const hoverEffectPlaceholder = hoveredNode.data.html;
+          const hoverEffectPlaceholder = hoveredNode.data.html; // Placeholder pour l'effet
           if (hoverEffectPlaceholder) {
-            setnodetoshow(hoveredNode.data.id);
-            setrelationtoshow(null);
-            sethovernode(hoveredNode.data.id);
+            setnodetoshow(hoveredNode.data.id); // Affiche le nœud
+            setrelationtoshow(null); // Réinitialise la relation affichée
+            sethovernode(hoveredNode.data.id); // Met à jour le nœud survolé
           }
-          previouslyHoveredNodeRef.current = hoverEffectPlaceholder;
+          previouslyHoveredNodeRef.current = hoverEffectPlaceholder; // Met à jour la référence
         }
       }
 
       if (hitElements.relationships && hitElements.relationships.length > 0) {
-        const hoveredEdge = hitElements.relationships[0];
+        const hoveredEdge = hitElements.relationships[0]; // Relation survolée
         if (hoveredEdge && hoveredEdge.data.id) {
           if (previouslyHoveredNodeRef.current) {
             const previousShadowEffect = previouslyHoveredNodeRef.current.querySelector('#test');
-            if (previousShadowEffect) previousShadowEffect.remove();
-            previouslyHoveredNodeRef.current = null;
+            if (previousShadowEffect) previousShadowEffect.remove(); // Supprime l'effet précédent
+            previouslyHoveredNodeRef.current = null; // Réinitialise la référence
           }
-          setnodetoshow(null);
-          setrelationtoshow(hoveredEdge.data);
-          sethoverEdge(hoveredEdge.data.id);
+          setnodetoshow(null); // Réinitialise le nœud affiché
+          setrelationtoshow(hoveredEdge.data); // Affiche la relation
+          sethoverEdge(hoveredEdge.data.id); // Met à jour la relation survolée
         }
       }
     });
 
+    // Nettoyage des interactions
     return () => {
       panInteraction.destroy();
       boxSelectInteraction.destroy();
@@ -250,61 +260,58 @@ const useNvlVisualization = ({
     setmultiselecte,
   ]);
 
+  // Options de configuration NVL
   const nvlOptions = {
-    minimapContainer: minimapContainerRef.current,
-    disableTelemetry: true,
+    minimapContainer: minimapContainerRef.current, // Conteneur de la mini-carte
+    disableTelemetry: true, // Désactive la télémétrie
     styling: {
-      disabledItemFontColor: '#808080',
-      selectedBorderColor: 'rgba(71, 39, 134, 0.9)',
-      dropShadowColor: 'rgba(85, 83, 174, 0.5)',
-      backgroundColor: 'transparent',
+      disabledItemFontColor: '#808080', // Couleur des éléments désactivés
+      selectedBorderColor: 'rgba(71, 39, 134, 0.9)', // Couleur de la bordure sélectionnée
+      dropShadowColor: 'rgba(85, 83, 174, 0.5)', // Couleur de l'ombre
+      backgroundColor: 'transparent', // Fond transparent
     },
-    initialZoom: 1,
-    layoutOptions: layoutoptions,
+    initialZoom: 1, // Zoom initial
+    layoutOptions: layoutoptions, // Options de disposition
   };
 
-
-
+  // Fonction pour obtenir le composant de visualisation
   const getVisualizationComponent = (hoveredEdge) => {
     const nvlProps = {
       nodes: nodes.map((node) => ({
         ...node,
-        hovered: node.id === hoverdnode,
-        selected: selectedNodes?.has(node.id) && !node.isSelected,
+        hovered: node.id === hoverdnode, // Indique si le nœud est survolé
+        selected: selectedNodes?.has(node.id) && !node.isSelected, // Indique si sélectionné
         html: createNodeHtml(
           node.ischema
-            ? LabelManagerSchema(node.group, node.properties)
-            : LabelManager(node.group, { ...node.properties, ...node.properties_analyse }),
-          node.group,
-          selectedNodes?.has(node.id),
-          node.selecte === true,
-          1,
-          node.id,
-          false,
-          '🔴',
-          node.size
+            ? LabelManagerSchema(node.group, node.properties) // Étiquette pour schéma
+            : LabelManager(node.group, { ...node.properties, ...node.properties_analyse }), // Étiquette standard
+          node.group, // Type de nœud
+          selectedNodes?.has(node.id), // État sélectionné
+          node.selecte === true, // État de chemin
+          1, // Compteur de groupe
+          node.id, // ID du nœud
+          false, // Pas d'icône supplémentaire
+          '🔴', // Icône par défaut
+          node.size // Taille du nœud
         ),
       })),
       rels: edges.map((edge) => ({
         ...edge,
-        selected: selectedEdges?.has(edge.id) || edge.selected,
-        color: edge.id === hoveredEdge || selectedEdges?.has(edge.id) || edge.selected ? '#B771E5' : (edge.color || '#808080'),
-        width: edge.id === hoveredEdge || selectedEdges?.has(edge.id) || edge.selected ? 15 : (edge.width || 1),
+        selected: selectedEdges?.has(edge.id) || edge.selected, // Indique si sélectionnée
+        color: edge.id === hoveredEdge || selectedEdges?.has(edge.id) || edge.selected ? '#B771E5' : (edge.color || '#808080'), // Couleur de la relation
+        width: edge.id === hoveredEdge || selectedEdges?.has(edge.id) || edge.selected ? 15 : (edge.width || 1), // Largeur de la relation
       })),
     };
 
-
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      
-      {  (isMinimapReady || !ispath) && (
+        {(isMinimapReady || !ispath) && (
           <InteractiveNvlWrapper
-            ref={nvlRef}
-            {...nvlProps}
-            nvlOptions={nvlOptions}
-            allowDynamicMinZoom={true}
-            onError={(error) => console.error('NVL Error:', error)}
-            className={`nvl-wrapper ${layoutType === 'geospatial' ? 'geospatial' : ''}`}
+            ref={nvlRef} // Référence NVL
+            {...nvlProps} // Propriétés des nœuds et relations
+            nvlOptions={nvlOptions} // Options de configuration
+            allowDynamicMinZoom={true} // Autorise le zoom dynamique
+            onError={(error) => console.error('Erreur NVL:', error)} // Gestion des erreurs
             style={{
               width: '100%',
               height: '100%',
@@ -312,13 +319,13 @@ const useNvlVisualization = ({
               top: 0,
               left: 0,
               zIndex: 0,
-              cursor: multiselecte ? 'crosshair' : 'pointer',
-              pointerEvents: layoutType === 'geospatial' ? 'none' : 'auto',
+              cursor: multiselecte ? 'crosshair' : 'pointer', // Curseur selon le mode
+              pointerEvents: 'auto', // Active les interactions
             }}
           />
         )}
         <div
-          ref={minimapContainerRef}
+          ref={minimapContainerRef} // Conteneur de la mini-carte
           style={{
             position: 'absolute',
             bottom: '100px',
@@ -329,14 +336,14 @@ const useNvlVisualization = ({
             border: '1px solid lightgray',
             borderRadius: '4px',
             overflow: 'hidden',
-            display: ispath ? 'block' : 'none',
+            display: ispath ? 'block' : 'none', // Affiche la mini-carte en mode chemin
           }}
         />
       </div>
     );
   };
 
-  return { getVisualizationComponent };
+  return { getVisualizationComponent }; // Retourne la fonction de rendu
 };
 
-export default useNvlVisualization;
+export default useNvlVisualization; // Exporte le hook

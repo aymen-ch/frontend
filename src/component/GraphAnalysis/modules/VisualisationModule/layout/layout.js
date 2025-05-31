@@ -5,6 +5,8 @@ import {  forceX, forceY } from 'd3-force';
 import cytoscape from 'cytoscape';
 import cise from 'cytoscape-cise';
 import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force';
+
+////  contient plusieur layout pour test , tel que hirarchique ...
 // Register the CISe layout with Cytoscape
 import cola from 'cytoscape-cola';
 cytoscape.use(cola); // Register the CoLa layout with Cytoscape

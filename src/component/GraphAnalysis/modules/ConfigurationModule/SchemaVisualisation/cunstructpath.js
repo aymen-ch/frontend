@@ -1,31 +1,40 @@
-export const constructPath = (selectedNodes, selectedRelationships, allNodes) => {
+
+///cette function permet de verify et de cree un chemin virtuelle enter deux nodes(selectedNodes) , et ensmble des relation(selectedRelationships)
+export const constructPath = (selectedNodes, selectedRelationships, allNodes, allEdges) => {
     // If there's no start node or no relationships, return an error
-    if (!selectedNodes.length || !selectedRelationships.length) {
+    if (!selectedNodes.size || !selectedRelationships.size) {
         return 'Incomplete selection';
     }
 
-    // Assume the first selected node is the start node
-    const startNode = selectedNodes[0];
-    let path = [startNode.group]; // Start with the node's type (e.g., "Personne")
-    let currentNodeId = startNode.id;
+    // Assume the first selected node ID is the start node
+    const startNodeId = Array.from(selectedNodes)[0];
+    const startNode = allNodes.find(n => n.id === startNodeId);
+    if (!startNode) {
+        return 'Start node not found';
+    }
+    let path = [startNode.group]; // Start with the node's type (e.g., "Unite")
+    let currentNodeId = startNodeId;
     const usedRelationships = new Set();
     
-    // For your case where start and end are both "Personne"
-    const endNode = selectedNodes.length > 1 ? selectedNodes[1] : selectedNodes[0];
+    // For the case where start and end are both specified
+    const endNodeId = selectedNodes.size > 1 ? Array.from(selectedNodes)[1] : startNodeId;
+    const endNode = allNodes.find(n => n.id === endNodeId);
+    if (!endNode) {
+        return 'End node not found';
+    }
     
     // Build the path
     let foundPath = false;
     let iterations = 0;
-    const maxIterations = selectedRelationships.length * 2; // Prevent infinite loops
+    const maxIterations = selectedRelationships.size * 2; // Prevent infinite loops
 
     while (iterations < maxIterations && !foundPath) {
         iterations++;
         
         // Find all relationships connected to the current node that haven't been used
-        const possibleRelationships = selectedRelationships.filter(rel => 
-            (rel.from === currentNodeId || rel.to === currentNodeId) && 
-            !usedRelationships.has(rel.id)
-        );
+        const possibleRelationships = Array.from(selectedRelationships)
+            .map(relId => allEdges.find(edge => edge.id === relId))
+            .filter(rel => rel && (rel.from === currentNodeId || rel.to === currentNodeId) && !usedRelationships.has(rel.id));
         
         if (possibleRelationships.length === 0) {
             break; // No more connections
@@ -33,8 +42,8 @@ export const constructPath = (selectedNodes, selectedRelationships, allNodes) =>
         
         // Sort relationships to prefer those that connect to the end node directly
         possibleRelationships.sort((a, b) => {
-            const aConnectsToEnd = (a.from === endNode.id || a.to === endNode.id);
-            const bConnectsToEnd = (b.from === endNode.id || b.to === endNode.id);
+            const aConnectsToEnd = (a.from === endNodeId || a.to === endNodeId);
+            const bConnectsToEnd = (b.from === endNodeId || b.to === endNodeId);
             return bConnectsToEnd - aConnectsToEnd;
         });
         
@@ -45,7 +54,7 @@ export const constructPath = (selectedNodes, selectedRelationships, allNodes) =>
         // Determine the next node
         const nextNodeId = nextRel.from === currentNodeId ? nextRel.to : nextRel.from;
         
-        // Find the next node in allNodes (since it might not be in selectedNodes)
+        // Find the next node in allNodes
         const nextNode = allNodes.find(node => node.id === nextNodeId);
         if (!nextNode) {
             continue; // Skip if the connected node isn't found
@@ -62,7 +71,7 @@ export const constructPath = (selectedNodes, selectedRelationships, allNodes) =>
         currentNodeId = nextNodeId;
         
         // Check if we've reached the end node
-        if (currentNodeId === endNode.id) {
+        if (currentNodeId === endNodeId) {
             foundPath = true;
         }
     }
@@ -71,39 +80,45 @@ export const constructPath = (selectedNodes, selectedRelationships, allNodes) =>
     if (foundPath) {
         return path;
     } else {
-        // Try to find if there's an indirect path through other nodes
-        if (selectedNodes.length === 2) {
-            const node1 = selectedNodes[0];
-            const node2 = selectedNodes[1];
+        // Try to find an indirect path through other nodes
+        if (selectedNodes.size === 2) {
+            const node1Id = Array.from(selectedNodes)[0];
+            const node2Id = Array.from(selectedNodes)[1];
+            const node1 = allNodes.find(n => n.id === node1Id);
+            const node2 = allNodes.find(n => n.id === node2Id);
             
-            // Check if there's a common connection between the two nodes
-            const node1Connections = selectedRelationships.filter(rel => 
-                rel.from === node1.id || rel.to === node1.id
-            );
+            if (!node1 || !node2) {
+                return 'One or both nodes not found';
+            }
             
-            const node2Connections = selectedRelationships.filter(rel => 
-                rel.from === node2.id || rel.to === node2.id
-            );
+            // Check connections for both nodes
+            const node1Connections = Array.from(selectedRelationships)
+                .map(relId => allEdges.find(edge => edge.id === relId))
+                .filter(rel => rel && (rel.from === node1Id || rel.to === node1Id));
+            
+            const node2Connections = Array.from(selectedRelationships)
+                .map(relId => allEdges.find(edge => edge.id === relId))
+                .filter(rel => rel && (rel.from === node2Id || rel.to === node2Id));
             
             // Find intermediate nodes that connect to both
             const intermediateNodes = new Set();
             node1Connections.forEach(rel => {
-                const otherNode = rel.from === node1.id ? rel.to : rel.from;
-                if (node2Connections.some(r => r.from === otherNode || r.to === otherNode)) {
-                    intermediateNodes.add(otherNode);
+                const otherNodeId = rel.from === node1Id ? rel.to : rel.from;
+                if (node2Connections.some(r => r.from === otherNodeId || r.to === otherNodeId)) {
+                    intermediateNodes.add(otherNodeId);
                 }
             });
             
             if (intermediateNodes.size > 0) {
-                const intermediateNode = Array.from(intermediateNodes)[0];
-                const intermediateNodeData = allNodes.find(n => n.id === intermediateNode);
+                const intermediateNodeId = Array.from(intermediateNodes)[0];
+                const intermediateNodeData = allNodes.find(n => n.id === intermediateNodeId);
                 const rel1 = node1Connections.find(rel => 
-                    rel.from === node1.id && rel.to === intermediateNode || 
-                    rel.to === node1.id && rel.from === intermediateNode
+                    rel.from === node1Id && rel.to === intermediateNodeId || 
+                    rel.to === node1Id && rel.from === intermediateNodeId
                 );
                 const rel2 = node2Connections.find(rel => 
-                    rel.from === node2.id && rel.to === intermediateNode || 
-                    rel.to === node2.id && rel.from === intermediateNode
+                    rel.from === node2Id && rel.to === intermediateNodeId || 
+                    rel.to === node2Id && rel.from === intermediateNodeId
                 );
                 
                 return [

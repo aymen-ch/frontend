@@ -4,6 +4,9 @@ import axios from 'axios';
 import { handleNodeExpansion_selected } from './ContextMenuFunctions';
 import { useTranslation } from 'react-i18next';
 
+
+
+// Menu contextuel affiché lors d'un clic droit sur le canvas du graphe
 const ContextMenucanvas = ({
   ContextMenucanvas,
   SetContextMenucanvas,
@@ -11,19 +14,16 @@ const ContextMenucanvas = ({
   setEdges,
   selectedNodes,
   setSelectedNodes,
-  selectedEdges,
   setselectedEdges,
 }) => {
   const { t } = useTranslation();
-  const [expandLimit, setExpandLimit] = useState(10);
-  const [expandDirection, setExpandDirection] = useState('Both');
-  const [showExpandOptions, setShowExpandOptions] = useState(false);
-
+  const [expandLimit, setExpandLimit] = useState(10); // État pour la direction d'expansion (Entrée, Sortie, Les deux)
+  const [expandDirection, setExpandDirection] = useState('Both');// État pour la limite d'expansion des noeuds
+  const [showExpandOptions, setShowExpandOptions] = useState(false);  // État pour afficher/masquer les options d'expansion
   if (!ContextMenucanvas || !ContextMenucanvas.visible) return null;
 
   const handleContextMenuAction = (action) => {
     if (!ContextMenucanvas) return;
-
     if (action === 'Deselect all nodes') {
       setSelectedNodes(new Set());
       setselectedEdges(new Set());
@@ -155,6 +155,8 @@ const ContextMenucanvas = ({
           <FaEye className="mr-2 text-green-500" />
           {t('Select all nodes')}
         </button>
+
+
       </div>
     </div>
   );

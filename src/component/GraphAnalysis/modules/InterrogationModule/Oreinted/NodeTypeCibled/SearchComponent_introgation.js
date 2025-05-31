@@ -6,28 +6,19 @@ import axios from 'axios';
 
 // Ce composant permet de rechercher des noeuds par leurs propriétés et d'ajouter les résultats au graphe
 const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
-  // État pour les propriétés du type de noeud sélectionné
-  const [nodeProperties, setNodeProperties] = useState([]);
-  // État pour les valeurs saisies dans le formulaire
-  const [formValues, setFormValues] = useState({});
-  // État pour les opérations de recherche (ex. '=', 'contains')
-  const [operations, setOperations] = useState({});
-  // État pour gérer les erreurs lors des appels API
-  const [error, setError] = useState(null);
-  // État pour stocker les résultats de la recherche
-  const [searchResult, setSearchResult] = useState('');
-  // Message pour indiquer le succès ou l'échec de la recherche
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  // Noeuds restants non affichés (si > 1000 noeuds)
-  const [remainingNodes, setRemainingNodes] = useState([]);
-  // Relations restantes non affichées (si > 1000 noeuds)
-  const [remainingEdges, setRemainingEdges] = useState([]);
-  // État pour afficher le bouton "Charger plus"
-  const [showLoadMore, setShowLoadMore] = useState(false);
+  const [nodeProperties, setNodeProperties] = useState([]); // État pour les propriétés du type de noeud sélectionné
+  const [formValues, setFormValues] = useState({});// État pour les valeurs saisies dans le formulaire
+  const [operations, setOperations] = useState({});// État pour les opérations de recherche (ex. '=', 'contains')
+  const [error, setError] = useState(null);// État pour gérer les erreurs lors des appels API
+  const [searchResult, setSearchResult] = useState(''); // État pour stocker les résultats de la recherche
+  const [feedbackMessage, setFeedbackMessage] = useState('');// Message pour indiquer le succès ou l'échec de la recherche
+  const [remainingNodes, setRemainingNodes] = useState([]); // Noeuds restants non affichés (si > 1000 noeuds)
+  const [remainingEdges, setRemainingEdges] = useState([]);// Relations restantes non affichées (si > 1000 noeuds)
+  const [showLoadMore, setShowLoadMore] = useState(false);// État pour afficher le bouton "Charger plus"
 
   const { t } = useTranslation();
 
-  // Récupérer les propriétés d'un type de noeud via l'API
+  // Récupérer les propriétés d'un type de noeud avdc leurs type via l'API
   const fetchNodeProperties = async (nodeType) => {
     const token = getAuthToken();
     try {

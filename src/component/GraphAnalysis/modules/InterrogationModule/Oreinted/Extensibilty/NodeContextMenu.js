@@ -20,13 +20,17 @@ import { FaLocationDot, FaCodeFork } from 'react-icons/fa6';
 import {
   fetchPossibleRelations,
   handleNodeExpansion,
-  handleAllConnections,
+
   handleActionSelect,
   handleAdvancedExpand,
   handleNodeExpansion_selected,
 } from './ContextMenuFunctions';
 import { getNodeColor, getNodeIcon } from '../../../VisualisationModule/Parser';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls';
+
+
+
+// Menu contextuel affiché lors d'un clic droit sur un node dans un graphe
 
 const ContextMenu = ({
   contextMenu,
@@ -35,44 +39,57 @@ const ContextMenu = ({
   setEdges,
   setSelectedNodes,
   selectedNodes,
-  setPathEdges,
-  setPathNodes,
-  setAllPaths,
-  setCurrentPathIndex,
-  setIsBoxPath,
-  setActiveAggregations,
+  virtualRelations
 }) => {
+   // Hook de traduction
   const { t } = useTranslation();
+  // État pour stocker les relations possibles (réelles et virtuelles) pour le nœud cible
   const [possibleRelations, setPossibleRelations] = useState([]);
+  // État pour gérer la position et la visibilité du sous-menu "Expand"
   const [subContextMenu, setSubContextMenu] = useState(null);
+  // État pour gérer la position et la visibilité du sous-menu "Actions"
   const [actionsSubMenu, setActionsSubMenu] = useState(null);
-  const [advancedAggregationSubMenu, setAdvancedAggregationSubMenu] = useState(null);
+  // État pour gérer la position et la visibilité du sous-menu "Advanced Expansion"
+  const [AdvancedExpansionMenu, setAdvancedExpansionMenu] = useState(null);
+  // État pour stocker les propriétés du nœud cible (récupérées de l'API)
   const [nodeProperties, setNodeProperties] = useState([]);
+  // État pour indiquer si les propriétés sont en cours de chargement
   const [loadingProperties, setLoadingProperties] = useState(false);
+  // État pour stocker une erreur lors de la récupération des propriétés
   const [errorProperties, setErrorProperties] = useState(null);
+  // Références aux boutons principaux pour calculer la position des sous-menus
   const expandButtonRef = useRef(null);
   const actionsButtonRef = useRef(null);
   const advancedAggregationButtonRef = useRef(null);
+  // Références aux sous-menus pour gérer leur fermeture au survol
   const subContextRef = useRef(null);
   const actionsSubRef = useRef(null);
   const advancedAggregationSubRef = useRef(null);
+  // État pour stocker les paramètres de l'expansion avancée
   const [advancedExpandParams, setAdvancedExpandParams] = useState({
-    attribute: '',
-    threshold: 0.01,
-    maxLevel: 5,
-    direction: 'Both',
+    attribute: '',       // Attribut numérique pour l'agrégation
+    threshold: 0.01,   // Seuil pour l'agrégation
+    maxLevel: 5,       // Niveau maximum d'expansion
+    direction: 'Both', // Direction de l'expansion (Both, Incoming, Outgoing)
   });
+  // État pour stocker les actions disponibles pour le type de nœud cible
   const [availableActions, setAvailableActions] = useState([]);
+  // Mappage des noms d'actions (traduits) vers leurs icônes
   const actionIcons = {
     [t('Affaire dans la meme region')]: FaLocationDot,
     [t('Show Criminal Network')]: FaCodeFork,
     [t('Show Person Profile')]: FaInfoCircle,
   };
+  // État pour contrôler la visibilité des descriptions des actions spécifiques
   const [visibleDescriptions, setVisibleDescriptions] = useState({});
-
+  // État pour la limite du nombre de nœuds à ajouter lors d'une expansion simple
   const [expandLimit, setExpandLimit] = useState(10);
+  // État pour la direction de l'expansion simple
   const [expandDirection, setExpandDirection] = useState('Both');
 
+
+
+  /// les properties numeric d'un node
   const fetchNodeProperties = useCallback(async (nodeType) => {
     if (!nodeType) return;
     setLoadingProperties(true);
@@ -101,6 +118,7 @@ const ContextMenu = ({
     }
   }, [t]);
 
+
   const getNumericNodeProperties = useCallback(() => {
     return nodeProperties
       .filter((prop) => prop.type === 'int' || prop.type === 'float')
@@ -126,15 +144,7 @@ const ContextMenu = ({
           count: rel.count,
         }));
 
-        let virtualRelations = [];
-        try {
-          const stored = JSON.parse(localStorage.getItem('virtualRelations'));
-          if (Array.isArray(stored)) {
-            virtualRelations = stored;
-          }
-        } catch (err) {
-          console.warn('Invalid virtualRelations data in localStorage', err);
-        }
+     
 
         const nodeGroup = contextMenu.node.group;
 
@@ -199,7 +209,7 @@ const ContextMenu = ({
         visible: true,
       });
       setActionsSubMenu(null);
-      setAdvancedAggregationSubMenu(null);
+      setAdvancedExpansionMenu(null);
     }
   };
 
@@ -218,7 +228,7 @@ const ContextMenu = ({
         visible: true,
       });
       setSubContextMenu(null);
-      setAdvancedAggregationSubMenu(null);
+      setAdvancedExpansionMenu(null);
     }
   };
 
@@ -231,7 +241,7 @@ const ContextMenu = ({
   const handleMouseEnterAdvancedAggregation = () => {
     if (advancedAggregationButtonRef.current) {
       const buttonRect = advancedAggregationButtonRef.current.getBoundingClientRect();
-      setAdvancedAggregationSubMenu({
+      setAdvancedExpansionMenu({
         x: contextMenu.x + buttonRect.width,
         y: contextMenu.y,
         visible: true,
@@ -243,7 +253,7 @@ const ContextMenu = ({
 
   const handleMouseLeaveAdvancedAggregation = () => {
     if (!advancedAggregationSubRef.current || !advancedAggregationSubRef.current.matches(':hover')) {
-      setAdvancedAggregationSubMenu(null);
+      setAdvancedExpansionMenu(null);
     }
   };
 
@@ -253,7 +263,7 @@ const ContextMenu = ({
     await handleAdvancedExpand(contextMenu.node, setNodes, setEdges, advancedExpandParams);
 
     setContextMenu(null);
-    setAdvancedAggregationSubMenu(null);
+    setAdvancedExpansionMenu(null);
   };
 
   const handleContextMenuAction = (action, relationType = null) => {
@@ -269,7 +279,7 @@ const ContextMenu = ({
       setEdges((prev) => prev.filter((edge) => !selectedNodeIds.has(edge.from) && !selectedNodeIds.has(edge.to)));
       setSelectedNodes(new Set());
     } else if (action === t('View Neighborhood') || action === t('Expand Specific Relation')) {
-      handleNodeExpansion(contextMenu.node, relationType, setNodes, setEdges, expandLimit, expandDirection);
+      handleNodeExpansion(contextMenu.node, relationType, setNodes, setEdges,virtualRelations, expandLimit, expandDirection);
     } else if (action === t('Select Node')) {
       setSelectedNodes((prev) => new Set([...prev, contextMenu.node.id]));
     } else if (action === t('Activated')) {
@@ -292,9 +302,7 @@ const ContextMenu = ({
       });
     } else if (action === t('Edit Node')) {
       console.log('Edit Node:', contextMenu.node);
-    } else if (action === t('all connections')) {
-      handleAllConnections(selectedNodes, setAllPaths, setCurrentPathIndex, setPathNodes, setPathEdges, setIsBoxPath);
-    } else if (action === t('Disable Others')) {
+    }else if (action === t('Disable Others')) {
       const clickedNodeId = contextMenu.node.id;
       const enabledNodeIds = new Set([clickedNodeId]);
       setEdges((prevEdges) => {
@@ -324,7 +332,7 @@ const ContextMenu = ({
     setContextMenu(null);
     setSubContextMenu(null);
     setActionsSubMenu(null);
-    setAdvancedAggregationSubMenu(null);
+    setAdvancedExpansionMenu(null);
   };
 
   if (!contextMenu || !contextMenu.visible) return null;
@@ -625,7 +633,6 @@ const ContextMenu = ({
                           setContextMenu,
                           setNodes,
                           setEdges,
-                          setActiveAggregations
                         )
                       }
                     >
@@ -661,34 +668,17 @@ const ContextMenu = ({
             ) : (
               <div className="px-4 py-2 text-gray-500 text-sm italic">{t('No actions available')}</div>
             )}
-            <hr className="my-1 border-gray-200" />
-            <button
-              className="flex items-center w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50 transition-colors"
-              onClick={() =>
-                handleActionSelect(
-                  'add_action',
-                  contextMenu.node,
-                  setActionsSubMenu,
-                  setContextMenu,
-                  setNodes,
-                  setEdges,
-                  setActiveAggregations
-                )
-              }
-            >
-              <FaPlus className="mr-2" />
-              {t('Add New Action')}
-            </button>
+       
           </div>
         </div>
       )}
 
-      {advancedAggregationSubMenu?.visible && (
+      {AdvancedExpansionMenu?.visible && (
         <div
           className="absolute bg-white border border-gray-200 rounded-lg shadow-lg z-[1001] min-w-[220px] overflow-hidden"
-          style={{ top: `${advancedAggregationSubMenu.y}px`, left: `${advancedAggregationSubMenu.x}px` }}
+          style={{ top: `${AdvancedExpansionMenu.y}px`, left: `${AdvancedExpansionMenu.x}px` }}
           ref={advancedAggregationSubRef}
-          onMouseLeave={() => setAdvancedAggregationSubMenu(null)}
+          onMouseLeave={() => setAdvancedExpansionMenu(null)}
         >
           <div className="px-4 py-2 border-b border-gray-200 bg-gray-100 font-bold text-gray-700 text-sm">
             {t('Advanced Expention')}

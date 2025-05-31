@@ -20,55 +20,50 @@ import ContextMenuRel from '../InterrogationModule/Oreinted/Extensibilty/context
 import ContextMenucanvas from '../InterrogationModule/Oreinted/Extensibilty/contextmenucanvas';
 import PropTypes from 'prop-types';
 
+// Ce composant est le conteneur de la visualisation : il contient le canevas de visualisation, les options de mise en page, de sauvegarde, de mode plein écran, ainsi qu'une barre de recherche.
+// Il inclut également les différents menus contextuels qui seront affichés lors des interactions de l'utilisateur.
 const GraphVisualization = React.memo(({
-  setEdges,
-  edges,
-  setNodes,
-  nodes,
-  nvlRef,
-  isFullscreen,
-  toggleFullscreen,
-  setnodetoshow,
-  setPathEdges,
-  setPathNodes,
-  setIsBoxPath,
-  depth,
-  isPathFindingStarted,
-  selectedNodes,
-  setSelectedNodes,
-  ispath,
-  setrelationtoshow,
-  setActiveAggregations,
-  selectedEdges,
-  setselectedEdges,
-  setSubGrapgTable,
+  setEdges, // Fonction pour mettre à jour les arêtes
+  edges, // Liste des arêtes du graphe
+  setNodes, // Fonction pour mettre à jour les nœuds
+  nodes, // Liste des nœuds du graphe
+  nvlRef, // Référence au canevas de visualisation
+  isFullscreen, // État du mode plein écran
+  toggleFullscreen, // Fonction pour basculer le mode plein écran
+  setnodetoshow, // Fonction pour définir les nœuds à afficher
+  selectedNodes, // Nœuds actuellement sélectionnés
+  setSelectedNodes, // Fonction pour mettre à jour les nœuds sélectionnés
+  ispath, // Indicateur si un chemin est affiché
+  setrelationtoshow, // Fonction pour définir les relations à afficher
+  selectedEdges, // Arêtes actuellement sélectionnées
+  setselectedEdges, // Fonction pour mettre à jour les arêtes sélectionnées
+  setSubGrapgTable, // Fonction pour mettre à jour la table du sous-graphe
+  virtualRelations // Relations virtuelles du graphe
 }) => {
-  const [contextMenu, setContextMenu] = useState(null);
-  const [contextMenuRel, setContextMenuRel] = useState(null);
-  const [ContextMenucanvass, SetContextMenucanvass] = useState(null);
-  const { t } = useTranslation();
-  const [allPaths, setAllPaths] = useState([]);
-  const [currentPathIndex, setCurrentPathIndex] = useState(0);
-  const [render, setRenderer] = useState("canvas");
-  const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType);
-  const [searchtype, setsearchtype] = useState("current_graph");
-  const [activeWindow, setActiveWindow] = useState(null);
-  const [inputValue, setInputValue] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [multiselecte, setmultiselecte] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveType, setSaveType] = useState('png');
-  const [fileName, setFileName] = useState('');
+  const [contextMenu, setContextMenu] = useState(null); // État pour gérer le menu contextuel des nœuds
+  const [contextMenuRel, setContextMenuRel] = useState(null);  // État pour gérer le menu contextuel des relations
+  const [ContextMenucanvass, SetContextMenucanvass] = useState(null); // État pour gérer le menu contextuel du canevas
+  const { t } = useTranslation();  // Hook pour la gestion des traduction
+  const [render, setRenderer] = useState("canvas");  // Type de rendu (par défaut : canvas)
+  const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType); // Type de mise en page (par défaut : ForceDirectedLayoutType)
+  const [searchtype, setsearchtype] = useState("current_graph");  // Type de recherche (par défaut : graphe actuel)
+  const [activeWindow, setActiveWindow] = useState(null); // Fenêtre actuellement active
+  const [inputValue, setInputValue] = useState(''); // Valeur de l'entrée de recherche
+  const [searchResults, setSearchResults] = useState([]); // Résultats de la recherche
+  const [isLoading, setIsLoading] = useState(false);// État de chargement pour la recherche
+  const [multiselecte, setmultiselecte] = useState(false); // Indicateur pour la sélection multiple
+  const [showSaveModal, setShowSaveModal] = useState(false);  // État pour afficher la modale de sauvegarde
+  const [saveType, setSaveType] = useState('png');// Type de fichier pour la sauvegarde (par défaut : png)
+  const [fileName, setFileName] = useState('');  // Nom du fichier pour la sauvegarde
+  const searchRef = useRef(null);  // Référence pour le champ de recherche
+  const resultsRef = useRef(null); // Référence pour les résultats de recherche
 
-  const searchRef = useRef(null);
-  const resultsRef = useRef(null);
-
-
+  // Met à jour la mise en page lorsque le nombre de nœuds change
   useEffect(() => {
     handleLayoutChange(layoutType, nvlRef, nodes, edges, setLayoutType);
   }, [nodes.length]);
 
+  // Surveille l'état de la fenêtre active
   useEffect(() => {
     const checkWindowState = () => {
       setActiveWindow(globalWindowState.activeWindow);
@@ -78,19 +73,21 @@ const GraphVisualization = React.memo(({
     return () => clearInterval(interval);
   }, []);
 
- const filterNodesByQuery = (nodes, query) => {
+  // Filtre les nœuds selon la requête de recherche
+  const filterNodesByQuery = (nodes, query) => {
     if (!query) return [];
     const lowerQuery = query.toLowerCase();
-    return nodes.filter(node => 
-      node.properties && 
-      Object.values(node.properties).some(value => 
-        value && 
+    return nodes.filter(node =>
+      node.properties &&
+      Object.values(node.properties).some(value =>
+        value &&
         value.toString().toLowerCase().includes(lowerQuery)
       )
     );
   };
 
-
+  // Gère le clic sur le bouton de recherche,
+  /// la recherche dans la base de donnees peut prend de temp il peut aussi returner 
   const handleSearchClick = async () => {
     if (searchtype === "current_graph") {
       const newFilteredNodes = filterNodesByQuery(nodes, inputValue);
@@ -104,7 +101,7 @@ const GraphVisualization = React.memo(({
       });
       setNodes(updatedNodes);
       nvlRef.current.fit(
-        newFilteredNodes.map((n) => n.id), 
+        newFilteredNodes.map((n) => n.id),
         {
           animated: true,
           maxZoom: 1.0,
@@ -123,16 +120,17 @@ const GraphVisualization = React.memo(({
             'Content-Type': 'application/json',
           }
         });
-        const limitedResults = response.data.slice(0, 50);
+        const limitedResults = response.data.slice(0, 50);/// on a limit a 50 premier valeur 
         setSearchResults(limitedResults);
       } catch (error) {
-        console.error('Error searching database:', error);
+        console.error('Erreur lors de la recherche dans la base de données :', error);
       } finally {
         setIsLoading(false);
       }
     }
   };
 
+  // Ajoute un nœud de recherche au canevas
   const handleAddNodeToCanvas = (result) => {
     setNodes(prevNodes => {
       const node = createNode(result.id, result.properties.type, result.properties);
@@ -143,27 +141,32 @@ const GraphVisualization = React.memo(({
     });
   };
 
+  // Réinitialise la recherche
   const handleClearSearch = () => {
     setSearchResults([]);
     setInputValue('');
   };
 
+  // Change le type de recherche
   const handleSearchTypeChange = (e) => {
     setsearchtype(e.target.value);
     setSearchResults([]);
   };
 
+  // Gère les changements dans le champ de recherche
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
 
+  // Ouvre la modale de sauvegarde
   const handleSave = () => {
     setShowSaveModal(true);
   };
 
+  // Confirme la sauvegarde du graphe
   const handleSaveConfirm = async () => {
     if (!fileName.trim()) {
-      alert(t('Please enter a file name'));
+      alert(t('Veuillez entrer un nom de fichier'));
       return;
     }
     if (saveType === 'png') {
@@ -177,14 +180,14 @@ const GraphVisualization = React.memo(({
     setSaveType('png');
   };
 
+  // Annule la sauvegarde
   const handleSaveCancel = () => {
     setShowSaveModal(false);
     setFileName('');
     setSaveType('json');
   };
 
-
-
+  // Supprime les nœuds et arêtes sélectionnés
   const handleDelete = () => {
     const selectedNodeIds = Array.from(selectedNodes);
     const updatedNodes = nodes.filter(node => !selectedNodeIds.includes(node.id));
@@ -198,44 +201,42 @@ const GraphVisualization = React.memo(({
     setselectedEdges(new Set());
   };
 
+  // Gère le changement de rendu (canvas ou WebGL)
   const handlewebgl = (e) => {
     const selectedRenderer = e.target.value;
-    if (selectedRenderer =='Thershold'){
-       setRenderer(selectedRenderer);
-        nvlRef.current.setRenderer('canvas');
-        const currentOptions = nvlRef.current.getCurrentOptions();
-        const updatedOptions = { ...currentOptions,  relationshipThreshold: 1 };
-        console.log(updatedOptions)
-        nvlRef.current.setLayoutOptions(updatedOptions);
-        nvlRef.current.restart(updatedOptions)
-    }else{   if (selectedRenderer =='canvas'){
-       setRenderer(selectedRenderer);
-        nvlRef.current.setRenderer('canvas');
-        const currentOptions = nvlRef.current.getCurrentOptions();
-        const updatedOptions = { ...currentOptions,  relationshipThreshold: 0 };
-        console.log(updatedOptions)
-        nvlRef.current.setLayoutOptions(updatedOptions);
-        nvlRef.current.restart(updatedOptions)
-
+    if (selectedRenderer === 'Thershold') {
+      setRenderer(selectedRenderer);
+      nvlRef.current.setRenderer('canvas');
+      const currentOptions = nvlRef.current.getCurrentOptions();
+      const updatedOptions = { ...currentOptions, relationshipThreshold: 1 };
+      console.log(updatedOptions);
+      nvlRef.current.setLayoutOptions(updatedOptions);
+      nvlRef.current.restart(updatedOptions);
+    } else if (selectedRenderer === 'canvas') {
+      setRenderer(selectedRenderer);
+      nvlRef.current.setRenderer('canvas');
+      const currentOptions = nvlRef.current.getCurrentOptions();
+      const updatedOptions = { ...currentOptions, relationshipThreshold: 0 };
+      console.log(updatedOptions);
+      nvlRef.current.setLayoutOptions(updatedOptions);
+      nvlRef.current.restart(updatedOptions);
+    } else {
+      setRenderer(selectedRenderer);
+      nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
     }
-    else{
-        setRenderer(selectedRenderer);
-        nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
-    }
- }
- 
   };
 
+  // Active ou désactive la sélection multiple
   const hanldemultiselecte = () => {
     setmultiselecte(!multiselecte);
   };
 
-
-
+  // Ferme la fenêtre active
   const handleCloseWindow = () => {
     globalWindowState.clearWindow();
     setActiveWindow(null);
   };
+
 
   return (
     <div className={`w-full h-full ${isFullscreen ? 'fixed inset-0 z-[20000] bg-white' : 'relative border border-gray-300'}`}>
@@ -411,15 +412,7 @@ const GraphVisualization = React.memo(({
           setEdges={setEdges}
           setSelectedNodes={setSelectedNodes}
           selectedNodes={selectedNodes}
-          setAllPaths={setAllPaths}
-          setCurrentPathIndex={setCurrentPathIndex}
-          setPathEdges={setPathEdges}
-          setPathNodes={setPathNodes}
-          nvlref={nvlRef}
-          setIsBoxPath={setIsBoxPath}
-          depth={depth}
-          isPathFindingStarted={isPathFindingStarted}
-          setActiveAggregations={setActiveAggregations}
+          virtualRelations={virtualRelations}
         />
       )}
       {contextMenuRel && contextMenuRel.visible && (

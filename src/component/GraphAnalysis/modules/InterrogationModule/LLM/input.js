@@ -1,35 +1,45 @@
-import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
-
+import React, { useEffect ,useState} from 'react';
+import axios from 'axios';
+import { BASE_URL_Backend } from '../../../Platforme/Urls';
+// Composant pour la zone de saisie du chat et les options associées
 const ChatInput = ({
-  inputText,
-  setInputText,
-  responseType,
-  setResponseType,
-  isLoading,
-  handleSendMessage,
-  maxCorrections,
-  setMaxCorrections,
-  selectedModel,
-  setSelectedModel,
+  inputText, // Texte actuel dans la zone de saisie
+  setInputText, // Fonction pour mettre à jour le texte de saisie
+  responseType, // Type de réponse sélectionné (Graphique, Tableau)
+  setResponseType, // Fonction pour mettre à jour le type de réponse
+  isLoading, // Indicateur si une requête est en cours
+  handleSendMessage, // Fonction à appeler pour envoyer le message
+  selectedModel, // Modèle d'IA actuellement sélectionné
+  setSelectedModel, // Fonction pour mettre à jour le modèle sélectionné
 }) => {
-  const modelOptions = [
-    { value: 'hf.co/DavidLanz/text2cypher-gemma-2-9b-it-finetuned-2024v1:latest', label: 'text2cypher9b' },
-    { value: 'tomasonjo/codestral-text2cypher:latest', label: 'text2cypher 22.2b' },
-    { value: 'llama3.2:latest', label: 'llama 3b' },
-  ];
 
-  const handleIncrement = () => setMaxCorrections((prev) => prev + 1);
-  const handleDecrement = () => setMaxCorrections((prev) => (prev > 0 ? prev - 1 : 0));
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    if (value === '') setMaxCorrections('');
-    else if (!isNaN(Number(value)) && Number(value) >= 0) setMaxCorrections(Number(value));
-  };
-  const handleBlur = () => {
-    if (maxCorrections === '' || isNaN(maxCorrections)) setMaxCorrections(0);
-  };
+  // État pour stocker les options de modèles d'IA disponibles
+  const [modelOptions, setModelOptions] = useState([]);
+
+  // Effet pour charger les modèles d'IA disponibles au montage du composant
+  useEffect(() => {
+    // Fonction asynchrone pour récupérer les modèles depuis le backend
+    const fetchModels = async () => {
+      try {
+        // Appel API pour obtenir la liste des modèles Ollama
+        const response = await axios.post(BASE_URL_Backend + '/getollamamodeles/');
+        // Récupération des données des modèles
+        const models = response.data;
+        // Formatage des modèles pour les options du select
+        const options = models.map(model => ({
+          value: model.name, // Valeur de l'option (nom du modèle)
+          label: model.name  // Texte affiché de l'option (nom du modèle)
+        }));
+        // Mise à jour de l'état avec les options formatées
+        setModelOptions(options);
+      } catch (error) {
+        // Gestion des erreurs lors de la récupération des modèles
+        console.error('Échec de la récupération des modèles:', error);
+      }
+    };
+    // Appel de la fonction pour récupérer les modèles
+    fetchModels();
+  }, []); // Le tableau vide indique que cet effet ne s'exécute qu'une fois au montage
 
   return (
     <div className="flex flex-col gap-2 p-3 bg-white rounded-lg shadow-chat">

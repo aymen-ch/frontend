@@ -1,47 +1,53 @@
 import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import RadioBarComoponent from './NodeTypesRadio';
-import SearchComponent from './SearchComponent_introgation';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Importe les styles CSS de Bootstrap
+import RadioBarComoponent from './NodeTypesRadio'; // Importe le composant pour la sélection du type de nœud
+import SearchComponent from './SearchComponent_introgation'; // Importe le composant de recherche
 
-/// pour linterrogation cible apr type de nodes
-
+// Composant principal pour l'interrogation ciblée par type de nœuds
+// Il combine la sélection du type de nœud et la recherche associée.
 const Properties_introgation = ({ nodes, edges, setNodes, setEdges }) => {
-  const [selectedNodeType, setSelectedNodeType] = useState('');
-  const [isSearchVisible, setIsSearchVisible] = useState(true); // State to toggle search visibility
+  const [selectedNodeType, setSelectedNodeType] = useState('');  // État pour stocker le type de nœud sélectionné via RadioBarComoponent
+  const [isSearchVisible, setIsSearchVisible] = useState(true);// État pour contrôler la visibilité du composant de recherche
 
-  // Toggle Search Visibility
+  // Fonction pour basculer la visibilité du composant de recherche
   const toggleSearchVisibility = () => {
-    setIsSearchVisible(!isSearchVisible);
+    setIsSearchVisible(!isSearchVisible); // Inverse la valeur actuelle de isSearchVisible
   };
 
+  // Rendu JSX du composant
   return (
     <div className="container-fluid d-flex flex-column p-0" style={{ height: '100vh', backgroundColor: '#f8f9fa' }}>
-      {/* Row 1: RadioBarComponent - Takes full width */}
-      <div className="row m-0" style={{ flex: '0 0 auto' }}> {/* Removed flex-grow-1 and set flex to auto */}
+      {/* Première ligne : Composant RadioBarComponent */}
+      {/* Prend toute la largeur disponible, hauteur automatique */}
+      <div className="row m-0" style={{ flex: '0 0 auto' }}>
         <div className="col-12 p-0">
           <div className="card h-100 border-0 shadow-sm rounded-0" style={{ backgroundColor: '#ffffff' }}>
             <div className="card-body p-0">
+              {/* Instance du composant RadioBar */}
               <RadioBarComoponent
-                onResult={setSelectedNodeType}
-                toggleSearchVisibility={toggleSearchVisibility}
+                onResult={setSelectedNodeType} // Passe la fonction pour mettre à jour le type de nœud sélectionné
+                toggleSearchVisibility={toggleSearchVisibility} // Passe la fonction pour basculer la visibilité de la recherche
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Row 2: SearchComponent - Takes full width */}
+      {/* Deuxième ligne : Composant SearchComponent (conditionnel) */}
+      {/* S'affiche seulement si isSearchVisible est vrai */}
+      {/* Prend la hauteur restante disponible */}
       {isSearchVisible && (
-        <div className="row m-0" style={{ flex: '1 1 auto', marginTop: '0.5rem' }}> {/* Adjusted flex and added margin-top */}
+        <div className="row m-0" style={{ flex: '1 1 auto', marginTop: '0.5rem' }}>
           <div className="col-12 p-0">
             <div className="card h-100 border-0 shadow-sm rounded-0" style={{ backgroundColor: '#ffffff' }}>
               <div className="card-body p-0">
+                {/* Instance du composant SearchComponent */}
                 <SearchComponent
-                  selectedNodeType={selectedNodeType}
-                  nodes={nodes}
-                  edges={edges}
-                  setNodes={setNodes}
-                  setEdges={setEdges}
+                  selectedNodeType={selectedNodeType} // Passe le type de nœud sélectionné
+                  nodes={nodes} // Passe les données des nœuds
+                  edges={edges} // Passe les données des arêtes
+                  setNodes={setNodes} // Passe la fonction pour mettre à jour les nœuds
+                  setEdges={setEdges} // Passe la fonction pour mettre à jour les arêtes
                 />
               </div>
             </div>
@@ -52,4 +58,6 @@ const Properties_introgation = ({ nodes, edges, setNodes, setEdges }) => {
   );
 };
 
+// Exporte le composant pour utilisation dans d'autres parties de l'application
 export default Properties_introgation;
+

@@ -8,7 +8,7 @@ import {
   GridLayoutType,
 } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../../ContainersModules/function_container';
-
+////  afficher les diffrent layout disponible dans la visualsiation
 const LayoutControl = ({ nvlRef, nodes, edges, layoutType, setLayoutType }) => {
   const layouts = [
     { type: d3ForceLayoutType, icon: <FaProjectDiagram size={16} />, title: 'd3ForceLayoutType' },

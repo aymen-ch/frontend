@@ -61,14 +61,14 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
   const [visibleNodeTypes, setVisibleNodeTypes] = useState({}); // Types de noeuds visualisés, affichés dans l'onglet des détails
  
 
-
+// Récupérer toutes les agrégations depuis le fichier d'agrégation du backend
  useEffect(() => {
-    fetchAggregations(setVirtualRelations); // Récupérer toutes les agrégations depuis le fichier d'agrégation du backend
+    fetchAggregations(setVirtualRelations); 
   }, []);
 
 
 
-
+// Récupérer les types de noeuds existants
   useEffect(() => {
     const nodeTypes = {};
     nodes.forEach((node) => {
@@ -77,29 +77,38 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
       }
     });
     setVisibleNodeTypes(nodeTypes);
-  }, [nodes]);// Récupérer les types de noeuds existants
+  }, [nodes]);
 
-
+// Changer l'onglet actif
   const handleModuleClick = (module) => {
     setActiveModule(activeModule === module ? null : module);
-  };// Changer l'onglet actif
+  };
 
+  // Activer/désactiver le mode plein écran
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
-  };// Activer/désactiver le mode plein écran
+  };
 
+
+
+  // Récupérer les informations d'un noeud si son ID n'est pas null
   useEffect(() => {
     if (nodetoshow) {
       fetchNodeDetail(nodetoshow, setSelectedNodeData);
     }
-  }, [nodetoshow]);// Récupérer les informations d'un noeud si son ID n'est pas null
+  }, [nodetoshow]);
 
+
+// Récupérer les informations d'une relation si son ID n'est pas null
   useEffect(() => {
     if (relationtoshow) {
       fetchrelationDetail(relationtoshow, setSelectecRelationData);
     }
-  }, [relationtoshow]);// Récupérer les informations d'une relation si son ID n'est pas null
+  }, [relationtoshow]);
 
+
+
+// Récupérer toutes les affaires retournées par l'onglet de contextualisation, utilisées par la barre de défilement
   const extractAffaires = () => {
     return SubGrapgTable.results.map((result, index) => {
       const affaireData = {
@@ -121,16 +130,15 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
 
       return affaireData;
     });
-  };// Récupérer toutes les affaires retournées par l'onglet de contextualisation, utilisées par la barre de défilement
-
-
+  };
+  
+// Stocker la première affaire pour l'afficher
   useEffect(() => {
     if (SubGrapgTable.results.length > 0 && affairesInRange.length === 0) {
       setAffairesInRange([SubGrapgTable.results[0].affaire.id]);
       setCurrentSubGraphIndex(0);
     }
-  }, [SubGrapgTable]);// Stocker la première affaire pour l'afficher
-
+  }, [SubGrapgTable]);
 
 
   // Appliquer l'agrégation sur le graphe de contextualisation si elle est active, useffect difinier dans function_container
@@ -181,17 +189,14 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
             isFullscreen={isFullscreen}
             toggleFullscreen={toggleFullscreen}
             setnodetoshow={setnodetoshow}
-            setPathEdges={setPathEdges}
-            setPathNodes={setPathNodes}
-            setIsBoxPath={setIsBoxPath}
             selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
             ispath={true}
             setrelationtoshow={setrelationtoshow}
-            setActiveAggregations={setActiveAggregations}
             selectedEdges={selectedEdges}
             setselectedEdges={setselectedEdges}
             setSubGrapgTable={setSubGrapgTable}
+            virtualRelations={virtualRelations}
           />
 
 
@@ -260,7 +265,7 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
 
         {activeModule && (
         <div
-    className="absolute right-[60px] top-0 bottom-0 w-[700px] lg:w-[600px] md:w-[400px] sm:w-[300px] bg-white shadow-[-3px_0_10px_rgba(0,0,0,0.1)] z-20 overflow-y-auto p-5 border-l border-gray-200"
+    className="absolute right-[60px] top-0 bottom-0 w-[700px] lg:w-[600px] md:w-[400px] sm:w-[300px] bg-white shadow-[-3px_0_10px_rgba(0,0,0,0.1)] z-[1200] overflow-y-auto p-5 border-l border-gray-200"
   >
     <div className="flex justify-between items-center border-b-2 border-[#3a4a66] pb-2 mb-4 sticky top-0 bg-white pt-1">
       <h5 className="text-gray-800 font-semibold m-0">{activeModule}</h5>

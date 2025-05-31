@@ -1,86 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaEye } from 'react-icons/fa';
-import PropTypes from 'prop-types';
-import { useTranslation } from 'react-i18next';
-import axios from 'axios';
+import { FaPlus, FaEye } from 'react-icons/fa'; // Icônes pour ajouter et voir les détails
+import PropTypes from 'prop-types'; // Validation des props
+import { useTranslation } from 'react-i18next'; // Hook pour la traduction
+import axios from 'axios'; // Client HTTP pour les appels API
 
-// Components
-import AddActionWindow from '../../Windows/Actions/PersonProfileWindow/Actions';
+// Composants
+import AddActionWindow from '../../Windows/Actions/PersonProfileWindow/Actions'; // Fenêtre pour ajouter une action
 
-// Utilities
-import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser';
-import { BASE_URL_Backend } from '../../../Platforme/Urls';
-import globalWindowState from '../../VisualisationModule/globalWindowState';
+// Utilitaires
+import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser'; // Fonctions pour la couleur et l'icône des nœuds
+import { BASE_URL_Backend } from '../../../Platforme/Urls'; // URL de base de l'API backend
+import globalWindowState from '../../VisualisationModule/globalWindowState'; // État global de la fenêtre
 
+// Composant pour gérer les actions d'un nœud sélectionné
 const Actions = ({ selectedItem }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(); // Fonction de traduction
 
-  // State
-  const [availableActions, setAvailableActions] = useState([]);
-  const [loadingActions, setLoadingActions] = useState(false);
-  const [actionError, setActionError] = useState('');
-  const [selectedAction, setSelectedAction] = useState(null);
-  const [activeWindow, setActiveWindow] = useState(null);
+  // État
+  const [availableActions, setAvailableActions] = useState([]); // Liste des actions disponibles
+  const [loadingActions, setLoadingActions] = useState(false); // Indicateur de chargement des actions
+  const [actionError, setActionError] = useState(''); // Message d'erreur pour les actions
+  const [selectedAction, setSelectedAction] = useState(null); // Action sélectionnée pour les détails
+  const [activeWindow, setActiveWindow] = useState(null); // Fenêtre active
 
-  // Effects
+  // Fonction pour récupérer les actions disponibles
+  const fetchAvailableActions = async (nodeType) => {
+    setLoadingActions(true); // Active l'indicateur de chargement
+    try {
+      const response = await axios.post(`${BASE_URL_Backend}/get_available_actions/`, {
+        node_type: nodeType, // Type de nœud
+      });
+      setAvailableActions(response.data || []); // Met à jour les actions disponibles
+      console.log(response.data.actions); // Affiche les actions dans la console
+      setActionError(''); // Efface les erreurs
+    } catch (error) {
+      setActionError(error.response?.data?.error || t('sidebar.actionsFetchError')); // Définit le message d'erreur
+    } finally {
+      setLoadingActions(false); // Désactive l'indicateur de chargement
+    }
+  };
+
+  // Effets
   useEffect(() => {
     if (selectedItem?.isnode) {
-      fetchAvailableActions(selectedItem.group);
+      fetchAvailableActions(selectedItem.group); // Récupère les actions si un nœud est sélectionné
     } else {
-      setAvailableActions([]);
+      setAvailableActions([]); // Réinitialise les actions si aucun nœud
     }
   }, [selectedItem]);
 
   useEffect(() => {
     const checkWindowState = () => {
-      setActiveWindow(globalWindowState.activeWindow);
+      setActiveWindow(globalWindowState.activeWindow); // Met à jour la fenêtre active
     };
 
-    checkWindowState();
-    const interval = setInterval(checkWindowState, 100);
-    return () => clearInterval(interval);
+    checkWindowState(); // Vérifie l'état initial
+    const interval = setInterval(checkWindowState, 100); // Vérifie toutes les 100ms
+    return () => clearInterval(interval); // Nettoie l'intervalle
   }, []);
 
-  // API Calls
-  const fetchAvailableActions = async (nodeType) => {
-    setLoadingActions(true);
-    try {
-      const response = await axios.post(`${BASE_URL_Backend}/get_available_actions/`, {
-        node_type: nodeType,
-      });
-      setAvailableActions(response.data || []);
-      console.log(response.data.actions)
-      setActionError('');
-    } catch (error) {
-      setActionError(error.response?.data?.error || t('sidebar.actionsFetchError'));
-    } finally {
-      setLoadingActions(false);
-    }
-  };
-
-  // Event Handlers
+  // Gestionnaires d'événements
   const handleAddActionClick = () => {
-    const itemWithoutId = { ...selectedItem, id: null }; // or node_id: null if applicable
-    globalWindowState.setWindow('add_action', itemWithoutId);
+    const itemWithoutId = { ...selectedItem, id: null }; // Supprime l'ID du nœud
+    globalWindowState.setWindow('add_action', itemWithoutId); // Ouvre la fenêtre d'ajout d'action
   };
 
   const handleCloseWindow = () => {
-    globalWindowState.clearWindow();
-    setActiveWindow(null);
+    globalWindowState.clearWindow(); // Ferme la fenêtre
+    setActiveWindow(null); // Réinitialise la fenêtre active
     if (selectedItem?.isnode) {
-      fetchAvailableActions(selectedItem.group);
+      fetchAvailableActions(selectedItem.group); // Récupère les actions à nouveau
     }
   };
 
   const handleViewActionDetails = (action) => {
-    setSelectedAction(action);
+    setSelectedAction(action); // Sélectionne une action pour afficher ses détails
   };
 
   const handleCloseActionDetails = () => {
-    setSelectedAction(null);
+    setSelectedAction(null); // Ferme la fenêtre des détails
   };
 
-  // Render Components
+  // Composant pour afficher le badge du nœud
   const NodeBadge = () => (
     <div className={`flex items-center px-2.5 py-1 rounded-full text-white text-sm gap-1.5`} style={{ backgroundColor: getNodeColor(selectedItem.group) }}>
       <img
@@ -92,6 +93,7 @@ const Actions = ({ selectedItem }) => {
     </div>
   );
 
+  // Composant pour afficher une action
   const ActionItem = ({ action, index }) => (
     <li className="flex justify-between items-center py-2 border-b border-gray-100" key={index}>
       <div className="action-info">
@@ -102,7 +104,7 @@ const Actions = ({ selectedItem }) => {
       </div>
       <button
         className="bg-gray-500 hover:bg-gray-600 text-white border-none rounded px-2.5 py-1 flex items-center gap-1.5 text-sm disabled:opacity-50"
-        onClick={() => handleViewActionDetails(action)}
+        onClick={() => handleViewActionDetails(action)} // Affiche les détails de l'action
         disabled={loadingActions}
       >
         <FaEye /> {t('sidebar.viewDetails')}
@@ -110,6 +112,7 @@ const Actions = ({ selectedItem }) => {
     </li>
   );
 
+  // Composant pour la modale des détails d'action
   const ActionDetailsModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1000]">
       <div className="bg-white rounded-lg w-full max-w-xl max-h-[80vh] overflow-y-auto shadow-xl">
@@ -144,7 +147,7 @@ const Actions = ({ selectedItem }) => {
     </div>
   );
 
-  // Conditional Rendering
+  // Rendu conditionnel
   if (!selectedItem) {
     return (
       <div className="p-4 h-full overflow-y-auto">
@@ -165,24 +168,24 @@ const Actions = ({ selectedItem }) => {
 
   return (
     <div className="p-4 h-full overflow-y-auto">
-      {/* Add Action Window */}
+      {/* Fenêtre d'ajout d'action */}
       {activeWindow === 'add_action' && (
         <AddActionWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
 
-      {/* Header */}
+      {/* En-tête */}
       <div className="flex items-center gap-2.5 mb-4">
         <NodeBadge />
         <h3 className="m-0 text-lg">{t('sidebar.actionsTitle')}</h3>
       </div>
 
-      {/* Actions Section */}
+      {/* Section des actions */}
       <div className="mt-2.5">
         <div className="flex justify-between items-center mb-2.5">
           <h4>{t('sidebar.availableActions')}</h4>
           <button
             className="bg-green-500 hover:bg-green-600 text-white border-none px-2.5 py-1 rounded flex items-center gap-1.5 text-sm disabled:opacity-50"
-            onClick={handleAddActionClick}
+            onClick={handleAddActionClick} // Ouvre la fenêtre d'ajout
             disabled={loadingActions}
           >
             <FaPlus /> {t('sidebar.addAction')}
@@ -204,17 +207,17 @@ const Actions = ({ selectedItem }) => {
         {actionError && <div className="text-red-500 mt-2.5 text-sm">{actionError}</div>}
       </div>
 
-      {/* Action Details Modal */}
+      {/* Modale des détails d'action */}
       {selectedAction && <ActionDetailsModal />}
     </div>
   );
 };
 
-// PropTypes
+// Validation des props
 Actions.propTypes = {
   selectedItem: PropTypes.shape({
-    isnode: PropTypes.bool,
-    group: PropTypes.string,
+    isnode: PropTypes.bool, // Indique si l'élément est un nœud
+    group: PropTypes.string, // Groupe du nœud
   }),
 };
 

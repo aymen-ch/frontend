@@ -1,9 +1,12 @@
 // src/utils/contextMenuHelpers.js
 import axios from 'axios';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls'; 
-import { parsePath,parsergraph } from '../../../VisualisationModule/Parser';
-import globalWindowState from '../../../VisualisationModule/globalWindowState';
-import { handleAggregation } from '../../../AnalysisModule/Aggregation/aggregationUtils'
+import { parsergraph } from '../../../VisualisationModule/Parser';
+
+
+/// Contient les fonctionnalités à appliquer lors du menu contextuel d’un nœud, telles que l’extensibilité, l’exécution des actions...
+
+/// Récupère les relations possibles pour un nœud, afin de permettre le développement d’une relation spécifique.
 export const fetchPossibleRelations = async (node, setPossibleRelations) => {
   const token = localStorage.getItem('authToken');
   const node_type = node.group;
@@ -31,7 +34,8 @@ export const fetchPossibleRelations = async (node, setPossibleRelations) => {
   }
 };
 
-
+/// Exécute les extensions de tous les nodes selectionees utilise par le context menu de canvas
+//  : avec une direction et une limite (sans critère).
 export const handleNodeExpansion_selected = async (selectedNodes, setNodes, setEdges,expandLimit,expandDirection) => {
   const token = localStorage.getItem('authToken');
 
@@ -61,7 +65,7 @@ export const handleNodeExpansion_selected = async (selectedNodes, setNodes, setE
       try {
         // Make API call for standard relations (relationType = null)
         const response = await axios.post(
-          BASE_URL_Backend + '/get_node_relationships/',
+          BASE_URL_Backend + '/extensibility/',
           { node_type, id, relation_type: null ,
             expandLimit, // Include sense
           expandDirection  // Include limit
@@ -116,29 +120,23 @@ export const handleNodeExpansion_selected = async (selectedNodes, setNodes, setE
   }
 };
 
-export const handleNodeExpansion = async (node, relationType, setNodes, setEdges, expandLimit = 100, expandDirection = 'In') => {
+
+
+/// Exécute les extensions d’un nœud : soit les relations physiques, soit toutes les relations, soit une relation virtuelle si elle existe, avec une direction et une limite (sans critère).
+export const handleNodeExpansion = async (node, relationType, setNodes, setEdges,virtualRelations, expandLimit = 100, expandDirection = 'In') => {
   const token = localStorage.getItem('authToken');
   const node_type = node.group;
   const id = parseInt(node.id, 10);
 
   try {
-    // Check if relationType is a virtual relation
-    let virtualRelations = [];
-    try {
-      const stored = JSON.parse(localStorage.getItem('virtualRelations'));
-      if (Array.isArray(stored)) {
-        virtualRelations = stored;
-      }
-    } catch (err) {
-      console.warn("Invalid virtualRelations data in localStorage", err);
-    }
+
     const virtualRelation = virtualRelations.find((vr) => vr.name === relationType);
 
     let response;
     if (virtualRelation) {
       // Handle virtual relation, include path, sense, and limit in payload
       response = await axios.post(
-        BASE_URL_Backend + '/get_virtual_relationships/',
+        BASE_URL_Backend + '/extensibilty_virtuel/',
         { 
           node_type, 
           id, 
@@ -157,7 +155,7 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
     } else {
       // Handle standard relation, include sense and limit
       response = await axios.post(
-        BASE_URL_Backend + '/get_node_relationships/',
+        BASE_URL_Backend + '/extensibility/',
         { 
           node_type, 
           id, 
@@ -188,46 +186,12 @@ export const handleNodeExpansion = async (node, relationType, setNodes, setEdges
     console.error('Error during submission:', error);
   }
 };
-export const handleAllConnections = async (
-  selectedNodes,
-  setAllPaths,
-  setCurrentPathIndex,
-  setPathNodes,
-  setPathEdges,
-  setIsBoxPath
-) => {
-  setIsBoxPath(true);
-  const nodeIds = Array.from(selectedNodes).map((id) => parseInt(id, 10));
-
-  try {
-    const response = await axios.post(
-      BASE_URL_Backend + '/get_all_connections/',
-      { ids: nodeIds },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-
-    if (response.status === 200) {
-      const paths = response.data.paths;
-      setAllPaths(paths);
-      setCurrentPathIndex(0);
-      updatePathNodesAndEdges(paths[0], setPathNodes, setPathEdges);
-    } else {
-      console.error('Failed to fetch all connections.');
-    }
-  } catch (error) {
-    console.error('Error fetching all connections:', error);
-  }
-};
-
-export const updatePathNodesAndEdges = (path, setPathNodes, setPathEdges) => {
-  const { nodes: formattedNodes, edges: formattedEdges } = parsePath(path);
-  setPathNodes(formattedNodes);
-  setPathEdges(formattedEdges);
-};
 
 
+
+
+
+/// Permet d’exécuter une action spécifique.
 
 export const handleActionSelect = async (
   action,
@@ -235,19 +199,13 @@ export const handleActionSelect = async (
   setActionsSubMenu,
   setContextMenu,
   setNodes,
-  setEdges,
-  setActiveAggregations
+  setEdges
 ) => {
   console.log(`Selected action: ${action}`);
   const token = localStorage.getItem('authToken');
 
   try {
-    if (action === 'Show Person Profile' || action === 'add_action') {
-      globalWindowState.setWindow(action, node);
-      setActionsSubMenu(null);
-      setContextMenu(null);
-      return;
-    }
+
 
     const idValue =  parseInt(node.id, 10); // Fallback to node.id if idField is not found
 
@@ -284,19 +242,6 @@ export const handleActionSelect = async (
         return [...prevEdges, ...filteredEdges];
       });
 
-      // Apply aggregation for "Show Criminal Network"
-      if (action === 'Afficher le reseau criminel') {
-        await handleAggregation(
-          'apple_telephone',
-          ['Personne', 'Proprietaire', 'Phone', 'Appel_telephone', 'Phone', 'Proprietaire', 'Personne'],
-          'apple_telephone',
-          setNodes,
-          setEdges,
-          updatedNodes, // Pass the updated nodes including new criminal nodes
-          setActiveAggregations
-        );
-      }
-
       // Close menus
       setActionsSubMenu(null);
       setContextMenu(null);
@@ -311,7 +256,7 @@ export const handleActionSelect = async (
 
 
 
-
+/// Expansion avancée à travers des filtres sur des attributs numériques, avec un seuil.
 export const handleAdvancedExpand = async (
   node,
   setNodes,

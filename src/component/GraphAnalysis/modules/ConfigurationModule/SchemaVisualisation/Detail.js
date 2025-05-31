@@ -4,72 +4,74 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
-// Utilities
+// Utilitaires pour la visualisation
 import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 
+// Composant pour afficher les détails d'un nœud ou d'une relation sélectionnée
 const Detail = ({ selectedItem }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(); // Hook pour la traduction
 
-  // State
-  const [showNodeDetails, setShowNodeDetails] = useState(true);
-  const [showProperties, setShowProperties] = useState(true);
-  const [nodeProperties, setNodeProperties] = useState('');
-  const [relationshipProperties, setRelationshipProperties] = useState('');
+  // État pour gérer l'affichage des sections
+  const [showNodeDetails, setShowNodeDetails] = useState(true); // Contrôle l'affichage des détails du nœud
+  const [showProperties, setShowProperties] = useState(true); // Contrôle l'affichage des propriétés
+  const [nodeProperties, setNodeProperties] = useState(''); // Propriétés du nœud
+  const [relationshipProperties, setRelationshipProperties] = useState(''); // Propriétés de la relation
 
-  // API Calls
+  // Appel API pour récupérer les propriétés d'un nœud
   const fetchNodeProperties = async () => {
     if (selectedItem?.isnode && selectedItem.group) {
       try {
         const response = await axios.post(`${BASE_URL_Backend}/get_node_properties/`, {
           node_type: selectedItem.group,
         });
-        setNodeProperties(response.data.properties || []);
+        setNodeProperties(response.data.properties || []); // Met à jour les propriétés du nœud
       } catch (error) {
-        console.error('Error fetching node properties:', error);
-        setNodeProperties([]);
+        console.error('Erreur lors de la récupération des propriétés du nœud:', error);
+        setNodeProperties([]); // Réinitialise en cas d'erreur
       }
     } else {
-      setNodeProperties([]);
+      setNodeProperties([]); // Réinitialise si aucun nœud n'est sélectionné
     }
   };
 
+  // Appel API pour récupérer les propriétés d'une relation
   const fetchRelationshipProperties = async () => {
     if (!selectedItem?.isnode && selectedItem?.group && !selectedItem.virtual) {
       try {
         const response = await axios.post(`${BASE_URL_Backend}/get_relationship_properties/`, {
           relationship_type: selectedItem.group,
         });
-        setRelationshipProperties(response.data.properties || []);
+        setRelationshipProperties(response.data.properties || []); // Met à jour les propriétés de la relation
       } catch (error) {
-        console.error('Error fetching relationship properties:', error);
-        setRelationshipProperties([]);
+        console.error('Erreur lors de la récupération des propriétés de la relation:', error);
+        setRelationshipProperties([]); // Réinitialise en cas d'erreur
       }
     } else {
-      setRelationshipProperties([]);
+      setRelationshipProperties([]); // Réinitialise si aucune relation n'est sélectionnée
     }
   };
 
-  // Effects
+  // Effet pour charger les propriétés lors du changement de selectedItem
   useEffect(() => {
     fetchNodeProperties();
     fetchRelationshipProperties();
   }, [selectedItem]);
 
-  // Event Handlers
-  const toggleNodeDetails = () => setShowNodeDetails(!showNodeDetails);
-  const toggleProperties = () => setShowProperties(!showProperties);
+  // Gestionnaires d'événements pour basculer l'affichage
+  const toggleNodeDetails = () => setShowNodeDetails(!showNodeDetails); // Bascule l'affichage des détails du nœud
+  const toggleProperties = () => setShowProperties(!showProperties); // Bascule l'affichage des propriétés
 
-  // Render Components
+  // Affiche les propriétés sous forme de liste
   const renderProperties = (properties) => {
     let fields = [];
 
     if (Array.isArray(properties) && properties.length === 1 && typeof properties[0] === 'string') {
-      fields = properties[0].split(',').map((f) => f.trim()).filter((f) => f && !f.startsWith('_'));
+      fields = properties[0].split(',').map((f) => f.trim()).filter((f) => f && !f.startsWith('_')); // Sépare une chaîne en liste
     } else if (typeof properties === 'string') {
-      fields = properties.split(',').map((f) => f.trim()).filter((f) => f && !f.startsWith('_'));
+      fields = properties.split(',').map((f) => f.trim()).filter((f) => f && !f.startsWith('_')); // Sépare une chaîne en liste
     } else if (Array.isArray(properties)) {
-      fields = properties.filter((f) => typeof f === 'string' && !f.startsWith('_'));
+      fields = properties.filter((f) => typeof f === 'string' && !f.startsWith('_')); // Filtre les propriétés
     } else {
       return (
         <ul className="list-none p-0 m-0">
@@ -94,16 +96,18 @@ const Detail = ({ selectedItem }) => {
     );
   };
 
+  // Composant pour afficher un badge de nœud
   const NodeBadge = ({ group, className = 'w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm' }) => (
     <div className={className} style={{ backgroundColor: getNodeColor(group) }}>
       <img src={getNodeIcon(group)} alt={group} className="w-3.5 h-3.5" />
     </div>
   );
 
+  // Composant pour afficher un chemin virtuel
   const VirtualPath = ({ path }) => (
     <div className="flex flex-wrap gap-1 mt-1.5 pb-1.5 overflow-x-auto">
       {path.map((step, index) => {
-        const isNode = index % 2 === 0;
+        const isNode = index % 2 === 0; // Détermine si l'étape est un nœud
         return (
           <div key={index} className={`path-step ${isNode ? 'node-step' : 'relation-step'}`}>
             {isNode ? (
@@ -124,6 +128,7 @@ const Detail = ({ selectedItem }) => {
     </div>
   );
 
+  // Composant pour afficher un résumé de relation
   const FinalRelationSummary = ({ path, group }) => (
     <div className="flex flex-wrap gap-1 mt-1.5 pb-1.5 overflow-x-auto">
       <NodeBadge group={path[0]} className="flex items-center bg-gray-500 text-white px-1.5 py-0.5 rounded-full text-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-[140px]" />
@@ -132,7 +137,7 @@ const Detail = ({ selectedItem }) => {
     </div>
   );
 
-  // Conditional Rendering
+  // Rendu conditionnel si aucun élément n'est sélectionné
   if (!selectedItem) {
     return (
       <div className="p-4 bg-white rounded-lg shadow-sm h-full overflow-y-auto">
@@ -142,7 +147,7 @@ const Detail = ({ selectedItem }) => {
     );
   }
 
-  const isNode = selectedItem.isnode;
+  const isNode = selectedItem.isnode; // Vérifie si l'élément est un nœud
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-sm h-full overflow-y-auto">
@@ -151,7 +156,7 @@ const Detail = ({ selectedItem }) => {
         style={
           !isNode
             ? {
-                backgroundColor: selectedItem?.virtual ? 'green' : 'red',
+                backgroundColor: selectedItem?.virtual ? 'green' : 'red', // Couleur selon le type de relation
                 color: 'white',
                 padding: '0.5rem',
                 borderRadius: '4px',
@@ -193,7 +198,7 @@ const Detail = ({ selectedItem }) => {
                 </div>
                 {showProperties && (
                   <div className="mt-1 pl-4">
-                    {renderProperties(nodeProperties)}
+                    {renderProperties(nodeProperties)} 
                   </div>
                 )}
               </div>
@@ -206,20 +211,12 @@ const Detail = ({ selectedItem }) => {
             <span className="font-medium text-gray-600">{t('sidebar.type')}:</span>
             <span className="text-gray-700 ml-2">{selectedItem.group}</span>
           </div>
-          {/* <div className="flex flex-wrap my-3">
-            <span className="font-medium text-gray-600">{t('sidebar.from')}:</span>
-            <span className="text-gray-700 ml-2">{selectedItem.from}</span>
-          </div>
-          <div className="flex flex-wrap my-3">
-            <span className="font-medium text-gray-600">{t('sidebar.to')}:</span>
-            <span className="text-gray-700 ml-2">{selectedItem.to}</span>
-          </div> */}
           <div className="flex flex-wrap my-3">
             <span className="font-medium text-gray-600">{t('sidebar.properties')}:</span>
             <div className="ml-2">
               {selectedItem.virtual
                 ? renderProperties({ count: 'Nombre total de relations entre un début et une fin' })
-                : renderProperties(relationshipProperties)}
+                : renderProperties(relationshipProperties)} 
             </div>
           </div>
 
@@ -231,8 +228,8 @@ const Detail = ({ selectedItem }) => {
                 <VirtualPath path={selectedItem.path} />
               </div>
               <div className="flex flex-wrap my-3">
-                <span className="font-medium text-gray-600">relation virtuel:</span>
-                <FinalRelationSummary path={selectedItem.path} group={selectedItem.group} />
+                <span className="font-medium text-gray-600">Relation virtuelle:</span>
+                <FinalRelationSummary path={selectedItem.path} group={selectedItem.group} /> 
               </div>
             </>
           )}
@@ -242,17 +239,17 @@ const Detail = ({ selectedItem }) => {
   );
 };
 
-// PropTypes
+// Validation des props
 Detail.propTypes = {
   selectedItem: PropTypes.shape({
-    isnode: PropTypes.bool,
-    group: PropTypes.string,
-    id: PropTypes.string,
-    from: PropTypes.string,
-    to: PropTypes.string,
-    virtual: PropTypes.bool,
-    path: PropTypes.arrayOf(PropTypes.string),
+    isnode: PropTypes.bool, // Indique si c'est un nœud
+    group: PropTypes.string, // Type ou groupe de l'élément
+    id: PropTypes.string, // Identifiant du nœud
+    from: PropTypes.string, // Départ de la relation
+    to: PropTypes.string, // Arrivée de la relation
+    virtual: PropTypes.bool, // Indique si la relation est virtuelle
+    path: PropTypes.arrayOf(PropTypes.string), // Chemin pour les relations virtuelles
   }),
 };
 
-export default Detail;
+export default Detail; // Exporte le composant

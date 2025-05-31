@@ -5,7 +5,7 @@ import Chat from './LLM/chat';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCogs, faListAlt, faComments } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-
+///ce composant contient les trois options d'interrogation, cible par type de node(Properties_introgation),questions predifini(Template) ,LLM(Chat)
 const InterrogationModule = ({
   selectedOption,
   setSelectedOption,
