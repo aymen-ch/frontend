@@ -20,6 +20,7 @@ export const loadConfig = async () => {
   }
 };
 
+loadConfig()
 // Fonction pour mettre à jour la configuration d'un type de nœud via l'API
 export const updateNodeConfig = async (nodeType, { color, size, icon, labelKey } = {}) => {
   try {
@@ -310,7 +311,7 @@ export const parsePath = (path, selectedNodes) => {
 export const parseAggregationResponse = (responseData) => {
   const { nodes: newNodes, relationships: newEdges } = responseData; // Données de la réponse
   const parsedNodes = newNodes.map((node) =>
-    createNode(node.id, node.type, node.properties, false, node.aggregated_properties) // Crée les nœuds
+    createNode(node.id, node.type, node.properties, false) // Crée les nœuds
   );
   const parsedEdges = newEdges.map((rel) => createEdge(rel, rel.startId, rel.endId)); // Crée les relations
   return { nodes: parsedNodes, edges: parsedEdges }; // Retourne les nœuds et relations

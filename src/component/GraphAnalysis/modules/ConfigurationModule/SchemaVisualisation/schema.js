@@ -35,263 +35,289 @@ const SchemaVisualizer = () => {
 
   // Modified fetchSchema to accept virtualRelations as a parameter
   const fetchSchema = async (existingVirtualRelations) => {
-    try {
-      const response = await axios.post(BASE_URL_Backend + '/get_schema/');
-      const schemaData = response.data;
-      const schemaNodes = schemaData['nodes'];
-      const schemaRelationships = schemaData['relationships'];
-      const unwantedNodeTypes = ['Chunk'];
+  try {
+    // Récupère les données du schéma depuis le backend
+    const response = await axios.post(BASE_URL_Backend + '/get_schema/');
+    const schemaData = response.data;
+    const schemaNodes = schemaData['nodes'];
+    const schemaRelationships = schemaData['relationships'];
+    const unwantedNodeTypes = ['Chunk'];
 
-      let processedNodes = schemaNodes
-        .map((node) => {
-          const nodeType = node.labels[0];
-          const properties = node.properties.indexes;
-          return createNode(node.id, nodeType, properties, false, null, true);
-        })
-        .filter((node) => !unwantedNodeTypes.includes(node.group));
+    // Traite les nœuds en excluant les types non désirés
+    let processedNodes = schemaNodes
+      .map((node) => {
+        const nodeType = node.labels[0];
+        const properties = node.properties.indexes;
+        return createNode(node.id, nodeType, properties, false, null, true);
+      })
+      .filter((node) => !unwantedNodeTypes.includes(node.group));
 
-      const processedEdges = [];
-      const duplicatedNodesMap = new Map();
+    const processedEdges = [];
+    const duplicatedNodesMap = new Map();
 
-      schemaRelationships.forEach((rel, index) => {
-        const startId = rel.startNode.toString();
-        const endId = rel.endNode.toString();
-        const relType = rel.type;
-        const startNode = schemaNodes.find((n) => n.id.toString() === startId);
-        const endNode = schemaNodes.find((n) => n.id.toString() === endId);
+    // Traite les relations du schéma
+    schemaRelationships.forEach((rel, index) => {
+      const startId = rel.startNode.toString();
+      const endId = rel.endNode.toString();
+      const relType = rel.type;
+      const startNode = schemaNodes.find((n) => n.id.toString() === startId);
+      const endNode = schemaNodes.find((n) => n.id.toString() === endId);
 
-        if (!startNode || !endNode) return;
+      if (!startNode || !endNode) return;
 
-        const startLabels = startNode.labels;
-        const endLabels = endNode.labels;
+      const startLabels = startNode.labels;
+      const endLabels = endNode.labels;
 
-        const unwantedRelationships = [
-          { relType: 'Appel_telephone', startLabel: 'Phone', endLabel: 'Affaire' },
-          { relType: 'Appel_telephone', startLabel: 'Personne', endLabel: 'Phone' },
-          { relType: 'Appel_telephone', startLabel: 'Personne', endLabel: 'Affaire' },
-          { relType: 'appartient', startLabel: 'Commune', endLabel: 'Wilaya' },
-          { relType: 'appartient', startLabel: 'Daira', endLabel: 'Daira' },
-        ];
+      // Liste des relations à exclure
+      const unwantedRelationships = [
+        { relType: 'Appel_telephone', startLabel: 'Phone', endLabel: 'Affaire' },
+        { relType: 'Appel_telephone', startLabel: 'Personne', endLabel: 'Phone' },
+        { relType: 'Appel_telephone', startLabel: 'Personne', endLabel: 'Affaire' },
+        { relType: 'appartient', startLabel: 'Commune', endLabel: 'Wilaya' },
+        { relType: 'appartient', startLabel: 'Daira', endLabel: 'Daira' },
+      ];
 
-        const shouldSkip = unwantedRelationships.some(
-          ({ relType, startLabel, endLabel }) =>
-            rel.type === relType &&
-            startLabels.includes(startLabel) &&
-            endLabels.includes(endLabel)
-        );
+      // Vérifie si la relation doit être ignorée
+      const shouldSkip = unwantedRelationships.some(
+        ({ relType, startLabel, endLabel }) =>
+          rel.type === relType &&
+          startLabels.includes(startLabel) &&
+          endLabels.includes(endLabel)
+      );
 
-        if (shouldSkip) return;
+      if (shouldSkip) return;
 
-        const startNodeExists = processedNodes.some((n) => n.id === startId);
-        const endNodeExists = processedNodes.some((n) => n.id === endId);
-        if (!startNodeExists || !endNodeExists) return;
+      const startNodeExists = processedNodes.some((n) => n.id === startId);
+      const endNodeExists = processedNodes.some((n) => n.id === endId);
+      if (!startNodeExists || !endNodeExists) return;
 
-        if (startId === endId) {
-          const originalNode = processedNodes.find((n) => n.id === startId);
-          if (originalNode) {
-            let duplicatedNode;
-            if (!duplicatedNodesMap.has(startId)) {
-              duplicatedNode = {
-                ...originalNode,
-                id: `${originalNode.id}_dup`,
-              };
-              processedNodes.push(duplicatedNode);
-              duplicatedNodesMap.set(startId, duplicatedNode.id);
-            } else {
-              duplicatedNode = processedNodes.find((n) => n.id === duplicatedNodesMap.get(startId));
-            }
-
-            processedEdges.push(
-              createEdge({ ...rel, id: `${rel.id}_self` }, startId, duplicatedNode.id)
-            );
-
-            const relatedEdges = schemaRelationships.filter((r) => {
-              const isUnwanted = unwantedRelationships.some(
-                ({ relType, startLabel, endLabel }) =>
-                  r.type === relType &&
-                  schemaNodes
-                    .find((n) => n.id.toString() === r.startNode.toString())
-                    ?.labels.includes(startLabel) &&
-                  schemaNodes
-                    .find((n) => n.id.toString() === r.endNode.toString())
-                    ?.labels.includes(endLabel)
-              );
-              return (
-                (r.startNode.toString() === startId || r.endNode.toString() === startId) &&
-                r.startNode.toString() !== r.endNode.toString() &&
-                !isUnwanted
-              );
-            });
-
-            relatedEdges.forEach((relatedRel, relIndex) => {
-              const relStartId = relatedRel.startNode.toString();
-              const relEndId = relatedRel.endNode.toString();
-
-              if (relStartId === startId && relEndId !== startId) {
-                const connectedNode = processedNodes.find((n) => n.id === relEndId);
-                if (connectedNode) {
-                  let targetNodeId = relEndId;
-                  if (!duplicatedNodesMap.has(relEndId)) {
-                    const duplicatedConnectedNode = {
-                      ...connectedNode,
-                      id: `${connectedNode.id}_dup`,
-                    };
-                    processedNodes.push(duplicatedConnectedNode);
-                    duplicatedNodesMap.set(relEndId, duplicatedConnectedNode.id);
-                    targetNodeId = duplicatedConnectedNode.id;
-                  } else {
-                    targetNodeId = duplicatedNodesMap.get(relEndId);
-                  }
-
-                  processedEdges.push(
-                    createEdge(
-                      { ...relatedRel, id: `${relatedRel.id}_dup_out_${relIndex}` },
-                      duplicatedNode.id,
-                      targetNodeId
-                    )
-                  );
-                }
-              } else if (relEndId === startId && relStartId !== startId) {
-                const connectedNode = processedNodes.find((n) => n.id === relStartId);
-                if (connectedNode) {
-                  let sourceNodeId = relStartId;
-                  if (!duplicatedNodesMap.has(relStartId)) {
-                    const duplicatedConnectedNode = {
-                      ...connectedNode,
-                      id: `${connectedNode.id}_dup`,
-                    };
-                    processedNodes.push(duplicatedConnectedNode);
-                    duplicatedNodesMap.set(relStartId, duplicatedConnectedNode.id);
-                    sourceNodeId = duplicatedConnectedNode.id;
-                  } else {
-                    sourceNodeId = duplicatedNodesMap.get(relStartId);
-                  }
-
-                  processedEdges.push(
-                    createEdge(
-                      { ...relatedRel, id: `${relatedRel.id}_dup_in_${relIndex}` },
-                      sourceNodeId,
-                      duplicatedNode.id
-                    )
-                  );
-                }
-              }
-            });
-          }
-        } else {
-          if (startNodeExists && endNodeExists) {
-            processedEdges.push(createEdge(rel, startId, endId));
-          }
-        }
-      });
-
-      // Process self-referential virtual relations
-      const selfReferentialVirtualRelations = [];
-      schemaRelationships.forEach((rel) => {
-        const startId = rel.startNode.toString();
-        const endId = rel.endNode.toString();
-        if (startId === endId) {
-          const startNode = schemaNodes.find((n) => n.id.toString() === startId);
-          if (startNode) {
-            const startNodeLabel = startNode.labels[0];
-            const relType = rel.type;
-
-            if (relType === 'appartient') return;
-
-            const relationExists = existingVirtualRelations.some(
-              (vr) =>
-                vr.name === `${relType}_groupé` &&
-                JSON.stringify(vr.path) === JSON.stringify([startNodeLabel, relType, startNodeLabel])
-            );
-
-            if (!relationExists) {
-              selfReferentialVirtualRelations.push({
-                name: `${relType}_groupé`,
-                path: [startNodeLabel, relType, startNodeLabel],
-              });
-            }
-          }
-        }
-      });
-
-      // Merge with existing virtual relations
-      const allVirtualRelations = [...existingVirtualRelations, ...selfReferentialVirtualRelations];
-
-      // Process all virtual relations to create virtual edges
-      allVirtualRelations.forEach((relation) => {
-        const path = relation.path;
-        const relationName = relation.name;
-        const startNodeLabel = path[0];
-        const endNodeLabel = path[path.length - 1];
-
-        const startNode = processedNodes.find((n) => n.group === startNodeLabel);
-        const endNode = processedNodes.find((n) => n.group === endNodeLabel);
-
-        if (!startNode || !endNode) {
-          console.warn(
-            `Could not find nodes for virtual relation ${relationName}: ${startNodeLabel} -> ${endNodeLabel}`
-          );
-          return;
-        }
-
-        let endNodeId = endNode.id;
-
-        if (startNodeLabel === endNodeLabel && startNode.id === endNode.id) {
-          if (duplicatedNodesMap.has(startNode.id)) {
-            endNodeId = duplicatedNodesMap.get(startNode.id);
-          } else {
-            const duplicatedNode = {
-              ...startNode,
-              id: `${startNode.id}_dup`,
+      // Gestion des relations autoréférentielles
+      if (startId === endId) {
+        const originalNode = processedNodes.find((n) => n.id === startId);
+        if (originalNode) {
+          let duplicatedNode;
+          if (!duplicatedNodesMap.has(startId)) {
+            duplicatedNode = {
+              ...originalNode,
+              id: `${originalNode.id}_dup`,
             };
             processedNodes.push(duplicatedNode);
-            duplicatedNodesMap.set(startNode.id, duplicatedNode.id);
-            endNodeId = duplicatedNode.id;
+            duplicatedNodesMap.set(startId, duplicatedNode.id);
+          } else {
+            duplicatedNode = processedNodes.find((n) => n.id === duplicatedNodesMap.get(startId));
+          }
+
+          processedEdges.push(
+            createEdge({ ...rel, id: `${rel.id}_self` }, startId, duplicatedNode.id)
+          );
+
+          // Traite les relations connectées
+          const relatedEdges = schemaRelationships.filter((r) => {
+            const isUnwanted = unwantedRelationships.some(
+              ({ relType, startLabel, endLabel }) =>
+                r.type === relType &&
+                schemaNodes
+                  .find((n) => n.id.toString() === r.startNode.toString())
+                  ?.labels.includes(startLabel) &&
+                schemaNodes
+                  .find((n) => n.id.toString() === r.endNode.toString())
+                  ?.labels.includes(endLabel)
+            );
+            return (
+              (r.startNode.toString() === startId || r.endNode.toString() === startId) &&
+              r.startNode.toString() !== r.endNode.toString() &&
+              !isUnwanted
+            );
+          });
+
+          relatedEdges.forEach((relatedRel, relIndex) => {
+            const relStartId = relatedRel.startNode.toString();
+            const relEndId = relatedRel.endNode.toString();
+
+            if (relStartId === startId && relEndId !== startId) {
+              const connectedNode = processedNodes.find((n) => n.id === relEndId);
+              if (connectedNode) {
+                let targetNodeId = relEndId;
+                if (!duplicatedNodesMap.has(relEndId)) {
+                  const duplicatedConnectedNode = {
+                    ...connectedNode,
+                    id: `${connectedNode.id}_dup`,
+                  };
+                  processedNodes.push(duplicatedConnectedNode);
+                  duplicatedNodesMap.set(relEndId, duplicatedConnectedNode.id);
+                  targetNodeId = duplicatedConnectedNode.id;
+                } else {
+                  targetNodeId = duplicatedNodesMap.get(relEndId);
+                }
+
+                processedEdges.push(
+                  createEdge(
+                    { ...relatedRel, id: `${relatedRel.id}_dup_out_${relIndex}` },
+                    duplicatedNode.id,
+                    targetNodeId
+                  )
+                );
+              }
+            } else if (relEndId === startId && relStartId !== startId) {
+              const connectedNode = processedNodes.find((n) => n.id === relStartId);
+              if (connectedNode) {
+                let sourceNodeId = relStartId;
+                if (!duplicatedNodesMap.has(relStartId)) {
+                  const duplicatedConnectedNode = {
+                    ...connectedNode,
+                    id: `${connectedNode.id}_dup`,
+                  };
+                  processedNodes.push(duplicatedConnectedNode);
+                  duplicatedNodesMap.set(relStartId, duplicatedConnectedNode.id);
+                  sourceNodeId = duplicatedConnectedNode.id;
+                } else {
+                  sourceNodeId = duplicatedNodesMap.get(relStartId);
+                }
+
+                processedEdges.push(
+                  createEdge(
+                    { ...relatedRel, id: `${relatedRel.id}_dup_in_${relIndex}` },
+                    sourceNodeId,
+                    duplicatedNode.id
+                  )
+                );
+              }
+            }
+          });
+        }
+      } else {
+        if (startNodeExists && endNodeExists) {
+          processedEdges.push(createEdge(rel, startId, endId));
+        }
+      }
+    });
+
+    // Process self-referential virtual relations and save them to the backend
+    const selfReferentialVirtualRelations = [];
+    for (const rel of schemaRelationships) {
+      const startId = rel.startNode.toString();
+      const endId = rel.endNode.toString();
+      if (startId === endId) {
+        const startNode = schemaNodes.find((n) => n.id.toString() === startId);
+        if (startNode) {
+          const startNodeLabel = startNode.labels[0];
+          const relType = rel.type;
+
+          if (relType === 'appartient') continue;
+
+          const pathName = `${relType}_groupé`;
+          const pathResult = [startNodeLabel, relType, startNodeLabel];
+
+          // Vérifie si la relation existe déjà
+          const relationExists = existingVirtualRelations.some(
+            (vr) =>
+              vr.name === pathName &&
+              JSON.stringify(vr.path) === JSON.stringify(pathResult)
+          );
+
+          if (!relationExists) {
+            // Ajoute la relation autoréférentielle à la liste
+            selfReferentialVirtualRelations.push({
+              name: pathName,
+              path: pathResult,
+            });
+
+            // Sauvegarde la relation dans le backend
+            try {
+              await axios.post(BASE_URL_Backend + '/add_aggregation/', {
+                name: pathName,
+                path: pathResult,
+              });
+              console.log(`Relation autoréférentielle sauvegardée : ${pathName}`);
+            } catch (error) {
+              console.error(`Erreur lors de la sauvegarde de la relation ${pathName} :`, error);
+            }
           }
         }
-
-        let virtualEdgeId = `virtual_${relationName}_${startNode.id}_${endNodeId}`;
-        let counter = 1;
-
-        while (processedEdges.some((edge) => edge.id === virtualEdgeId)) {
-          virtualEdgeId = `virtual_${relationName}_${startNode.id}_${endNodeId}_${counter}`;
-          counter++;
-        }
-
-        const edgeExists = processedEdges.some(
-          (edge) =>
-            edge.virtual &&
-            edge.source === startNode.id &&
-            edge.target === endNodeId &&
-            edge.label === relationName
-        );
-
-        if (!edgeExists) {
-          const virtualEdge = {
-            ...createEdge(
-              {
-                type: relationName,
-                id: virtualEdgeId,
-              },
-              startNode.id,
-              endNodeId,
-              'green'
-            ),
-            id: virtualEdgeId,
-            virtual: true,
-            path: path,
-            finalPath: `${startNodeLabel} -${relationName}-> ${endNodeLabel}`,
-          };
-          processedEdges.push(virtualEdge);
-        }
-      });
-
-      return { nodes: processedNodes, edges: processedEdges, virtualRelations: allVirtualRelations };
-    } catch (error) {
-      console.error('Error fetching schema:', error);
-      return { nodes: [], edges: [], virtualRelations: existingVirtualRelations };
+      }
     }
-  };
+
+    // Fusionne les relations virtuelles existantes avec les nouvelles
+    const allVirtualRelations = [...existingVirtualRelations, ...selfReferentialVirtualRelations];
+
+    // Traite toutes les relations virtuelles pour créer des arêtes virtuelles
+    allVirtualRelations.forEach((relation) => {
+      const path = relation.path;
+      const relationName = relation.name;
+      const startNodeLabel = path[0];
+      const endNodeLabel = path[path.length - 1];
+
+      const startNode = processedNodes.find((n) => n.group === startNodeLabel);
+      const endNode = processedNodes.find((n) => n.group === endNodeLabel);
+
+      if (!startNode || !endNode) {
+        console.warn(
+          `Nœuds introuvables pour la relation virtuelle ${relationName}: ${startNodeLabel} -> ${endNodeLabel}`
+        );
+        return;
+      }
+
+      let endNodeId = endNode.id;
+
+      if (startNodeLabel === endNodeLabel && startNode.id === endNode.id) {
+        if (duplicatedNodesMap.has(startNode.id)) {
+          endNodeId = duplicatedNodesMap.get(startNode.id);
+        } else {
+          const duplicatedNode = {
+            ...startNode,
+            id: `${startNode.id}_dup`,
+          };
+          processedNodes.push(duplicatedNode);
+          duplicatedNodesMap.set(startNode.id, duplicatedNode.id);
+          endNodeId = duplicatedNode.id;
+        }
+      }
+
+      let virtualEdgeId = `virtual_${relationName}_${startNode.id}_${endNodeId}`;
+      let counter = 1;
+
+      // Évite les doublons d'ID pour les arêtes virtuelles
+      while (processedEdges.some((edge) => edge.id === virtualEdgeId)) {
+        virtualEdgeId = `virtual_${relationName}_${startNode.id}_${endNodeId}_${counter}`;
+        counter++;
+      }
+
+      // Vérifie si l'arête virtuelle existe déjà
+      const edgeExists = processedEdges.some(
+        (edge) =>
+          edge.virtual &&
+          edge.source === startNode.id &&
+          edge.target === endNodeId &&
+          edge.label === relationName
+      );
+
+      if (!edgeExists) {
+        const virtualEdge = {
+          ...createEdge(
+            {
+              type: relationName,
+              id: virtualEdgeId,
+            },
+            startNode.id,
+            endNodeId,
+            'green'
+          ),
+          id: virtualEdgeId,
+          virtual: true,
+          path: path,
+          finalPath: `${startNodeLabel} -${relationName}-> ${endNodeLabel}`,
+        };
+        processedEdges.push(virtualEdge);
+      }
+    });
+
+    // Retourne les nœuds, arêtes et relations virtuelles
+    return { nodes: processedNodes, edges: processedEdges, virtualRelations: allVirtualRelations };
+  } catch (error) {
+    console.error('Erreur lors de la récupération du schéma :', error);
+    return { nodes: [], edges: [], virtualRelations: existingVirtualRelations };
+  }
+};
 
   // Single useEffect to fetch both schema and aggregations
   useEffect(() => {

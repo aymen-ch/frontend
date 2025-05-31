@@ -69,6 +69,10 @@ const DetailsModule = ({
                     <strong className="font-semibold">type:</strong>
                     <span className="ml-2">{mainProperties.type}</span>
                   </li>
+                   <li className="p-2 border-b border-gray-200">
+                    <strong className="font-semibold">count:</strong>
+                    <span className="ml-2">{mainProperties.count}</span>
+                  </li>
                   {mainProperties.properties &&
                     typeof mainProperties.properties === 'object' &&
                     Object.entries(mainProperties.properties).map(([key, value]) => (
