@@ -15,11 +15,20 @@ import { useTranslation } from 'react-i18next';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
 import './ImportTab.css';
 
+
+////*****
+// This component is to import a database
+//  only supprot json file
+// 
+//  The file structure must be as the one in the neo4j apoc.import.json , go see : https://neo4j.com/labs/apoc/4.4/overview/apoc.import/apoc.import.json/
+// 
+//  */
+
 const ImportTab = () => {
   const { t } = useTranslation();
   const [jsonFile, setJsonFile] = useState(null);
   const [fileType, setFileType] = useState('json');
-  const [config, setConfig] = useState('');
+  const [config, setConfig] = useState(''); /// not used 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,7 +54,7 @@ const ImportTab = () => {
     const formData = new FormData();
     if (jsonFile) formData.append('json_file', jsonFile);
     if (fileType) formData.append('file_type', fileType);
-    if (config) formData.append('config', config);
+    if (config) formData.append('config', config);  /// not used 
 
     try {
       const response = await axios.post(

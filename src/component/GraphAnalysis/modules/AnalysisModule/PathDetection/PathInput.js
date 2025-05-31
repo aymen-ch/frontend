@@ -17,18 +17,18 @@ const PathFinder = ({
   const [error, setError] = useState(null); // State for error messages
   const { t } = useTranslation();
   const {
-    setPathFindingParams,
-    setShortestPathParams,
-    setStartPathfinding,
-    setStartShortestPathFinding,
-  } = useAlgorithm();
+    setPathFindingParams,// selcted nodes,
+    setShortestPathParams,// selcted nodes,
+    setStartPathfinding, // trigger for pathfinding
+    setStartShortestPathFinding, // trigger for shortest path
+  } = useAlgorithm(); // those are global variables that will be used in PathVisualization to indicate what action to do
 
   const handleDepthChange = (event) => {
     setDepth(parseInt(event.target.value, 10));
     setError(null); // Clear error on input change
   };
 
-  const handlePathFinding = () => {
+  const handlePathFinding = () => { 
     if (selectednodes.size < 2) {
       setError(t('pathFinder.errorMinTwoNodes')); // Error for subgraph
       return;

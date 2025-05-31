@@ -9,7 +9,7 @@ import { BASE_URL_Backend } from '../../../Platforme/Urls';
 
 
 ////******
-// This analyse module used analyse the attributes of the nodes.
+// This analyse module used to  analyse the attributes of the nodes.
 // 
 // it have two use case :
 // 1- change the size of a node by attribute 
@@ -124,6 +124,8 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
     return numericProperties;
   };
 
+
+  /// this will resize the nodes solon a properties 
   const handleSizeChange = (nodeType, newSize) => {
     const size = Math.max(50, parseInt(newSize) || NODE_CONFIG.defaultNodeSize || 100);
     const updatedSizes = {};
@@ -204,7 +206,13 @@ const AttributeAnalysis = ({ combinedNodes, onNodeConfigChange }) => {
     setNodeSize(initialSizes);
   }, [combinedNodes]);
 
-
+  ////*****
+  // 
+  // handleStatisticalAnalysisClick will activate te window of statistical analysis
+  // 
+  // 
+  // 
+  //  */
   const handleStatisticalAnalysisClick = () => {
     console.log('selectedAttribute:', selectedAttribute);
     if (!selectedGroup || !selectedAttribute) {

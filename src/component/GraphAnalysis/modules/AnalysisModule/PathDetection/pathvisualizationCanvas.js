@@ -23,6 +23,13 @@ import { useAlgorithm } from '../../ContainersModules/PathPrameters'
 //
 // GraphCanvas is the component that display the graph  (other then MemoizedGraphVisualization that exist in the container module)
 //  */
+//
+//***
+// 
+// 
+// 
+// 
+// *///
 
 const PathVisualization = React.memo(({
   edges,

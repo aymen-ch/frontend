@@ -6,10 +6,7 @@ import {
   Dash, 
   Fullscreen, 
   FullscreenExit, 
-  Person, 
-  InfoCircle,
-  GeoAlt,
-  Clock
+  Person 
 } from 'react-bootstrap-icons';
 import Draggable from 'react-draggable';
 import axios from 'axios';

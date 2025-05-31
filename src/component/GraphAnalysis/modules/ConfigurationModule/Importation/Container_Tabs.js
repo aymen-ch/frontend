@@ -2,7 +2,15 @@ import React from 'react';
 import { Tab, Nav } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next'; // Importing the translation hook
 import ImportTab from './ImportTab';
-import GeneralTab from './GeneralTab';
+import Summary_Statistics from './Summary_Statistics';
+
+///****
+// 
+// Nav bar of of 2 tabs : ImportTab and GeneralTab
+// 
+// 
+// 
+//  */
 
 const SettingsTabs = () => {
   const { t } = useTranslation(); // Initialize the translation hook
@@ -19,7 +27,7 @@ const SettingsTabs = () => {
       </Nav>
       <Tab.Content>
         <Tab.Pane eventKey="general">
-           <GeneralTab />
+           <Summary_Statistics />
         </Tab.Pane>
         <Tab.Pane eventKey="import">
           <ImportTab />

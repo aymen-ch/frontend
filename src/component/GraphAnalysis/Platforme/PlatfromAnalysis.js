@@ -6,8 +6,8 @@ import axios from 'axios';
 
 import Container_AlgorithmicAnalysis from '../Modules/ContainersModules/ContainerModules';
 import SchemaVisualizer from '../Modules/ConfigurationModule/SchemaVisualisation/schema';
-import SettingsPage from '../Modules/ConfigurationModule/Importation/SettingsPage';
-import Dashboard from '../Modules/ConfigurationModule/Dachboard/Dashboard';
+import Container_SettingsPage from '../Modules/ConfigurationModule/Importation/Container_SettingsPage';
+import General_statistics from '../Modules/ConfigurationModule/General_statistics/General_statistics';
 
 
 // Ce composant est le conteneur principal du projet, dédié à l'analyse, l'interrogation et la visualisation.
@@ -41,14 +41,14 @@ const Graphe_analysis = () => {
   // Composant pour afficher la page des paramètres
   const SettingPage = () => (
     <div className="module-content">
-      <SettingsPage />
+      <Container_SettingsPage />
     </div>
   );
 
   // Composant pour afficher la page du tableau de bord
   const DashboardPage = () => (
     <div className="module-content">
-      <Dashboard />
+      <General_statistics />
     </div>
   );
 
