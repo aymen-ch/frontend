@@ -1,80 +1,90 @@
 import React, { useEffect, useState, memo } from 'react';
 import { getNodeIcon, getNodeColor, parsergraph } from '../../../VisualisationModule/Parser';
 import { useTranslation } from 'react-i18next';
-import { getAuthToken,BASE_URL_Backend } from '../../../../Platforme/Urls'
+import { getAuthToken, BASE_URL_Backend } from '../../../../Platforme/Urls';
 import axios from 'axios';
+
+// Ce composant permet de rechercher des noeuds par leurs propriétés et d'ajouter les résultats au graphe
 const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
+  // État pour les propriétés du type de noeud sélectionné
   const [nodeProperties, setNodeProperties] = useState([]);
+  // État pour les valeurs saisies dans le formulaire
   const [formValues, setFormValues] = useState({});
+  // État pour les opérations de recherche (ex. '=', 'contains')
   const [operations, setOperations] = useState({});
+  // État pour gérer les erreurs lors des appels API
   const [error, setError] = useState(null);
+  // État pour stocker les résultats de la recherche
   const [searchResult, setSearchResult] = useState('');
+  // Message pour indiquer le succès ou l'échec de la recherche
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  // Noeuds restants non affichés (si > 1000 noeuds)
   const [remainingNodes, setRemainingNodes] = useState([]);
+  // Relations restantes non affichées (si > 1000 noeuds)
   const [remainingEdges, setRemainingEdges] = useState([]);
+  // État pour afficher le bouton "Charger plus"
   const [showLoadMore, setShowLoadMore] = useState(false);
 
   const { t } = useTranslation();
 
-
-   const fetchNodeProperties = async (nodeType) => {
-  const token = getAuthToken();
-  try {
-    const response = await axios.get(`${BASE_URL_Backend}/node-types/properties_types/`, {
-      params: { node_type: nodeType },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 200) {
-      return response.data.properties;
-    } else {
-      throw new Error('Error fetching properties');
-    }
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
-  }
-};
-
-
-// Utility function to submit search form
- const submitSearch = async (nodeType, formValues) => {
-  const token = getAuthToken();
-  const filteredFormValues = Object.fromEntries(
-    Object.entries(formValues).filter(([key, value]) => value !== '' && value !== null)
-  );
-
-  const payload = {
-    node_type: nodeType,
-    properties: { ...filteredFormValues },
-  };
-
-  try {
-    const response = await axios.post(
-      `${BASE_URL_Backend}/search-nodes/`,
-      payload,
-      {
+  // Récupérer les propriétés d'un type de noeud via l'API
+  const fetchNodeProperties = async (nodeType) => {
+    const token = getAuthToken();
+    try {
+      const response = await axios.get(`${BASE_URL_Backend}/node-types/properties_types/`, {
+        params: { node_type: nodeType },
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
+      });
+
+      if (response.status === 200) {
+        return response.data.properties;
+      } else {
+        throw new Error('Erreur lors de la récupération des propriétés');
       }
+    } catch (error) {
+      console.error('Erreur API :', error);
+      throw error;
+    }
+  };
+
+  // Soumettre le formulaire de recherche via l'API
+  const submitSearch = async (nodeType, formValues) => {
+    const token = getAuthToken();
+    const filteredFormValues = Object.fromEntries(
+      Object.entries(formValues).filter(([key, value]) => value !== '' && value !== null)
     );
 
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error('Submission failed.');
+    const payload = {
+      node_type: nodeType,
+      properties: { ...filteredFormValues },
+    };
+
+    try {
+      const response = await axios.post(
+        `${BASE_URL_Backend}/search-nodes/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        throw new Error('Échec de la soumission');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la soumission :', error);
+      throw error;
     }
-  } catch (error) {
-    console.error('Error during submission:', error);
-    throw error;
-  }
-};
+  };
 
-
+  // Réinitialiser les états et récupérer les propriétés du type de noeud
   useEffect(() => {
     setNodeProperties([]);
     setFormValues({});
@@ -88,7 +98,7 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
         const properties = await fetchNodeProperties(selectedNodeType);
         setNodeProperties(properties);
       } catch (error) {
-        setError(t('Error retrieving properties.'));
+        setError(t('Erreur lors de la récupération des propriétés.'));
       }
     };
     if (selectedNodeType) {
@@ -96,21 +106,19 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
     }
   }, [selectedNodeType, t]);
 
+  // Traiter les résultats de recherche et ajouter les noeuds/relations au graphe
   useEffect(() => {
     if (!searchResult) return;
     const graphData = parsergraph(searchResult);
 
-    if (graphData.nodes.length === 0) {
-    setFeedbackMessage(t('⚠️ No results found for the search criteria.'));
-    }
-    else if (graphData.nodes.length > 1000) {
-      // Keep first 1000 nodes/edges displayed
+    if (graphData.nodes.length > 1000) {
+      // Afficher les 1000 premiers noeuds/relations
       const firstNodes = graphData.nodes.slice(0, 1000);
       const firstEdges = graphData.edges.filter(edge =>
         firstNodes.some(node => node.id === edge.source) &&
         firstNodes.some(node => node.id === edge.target)
       );
-      // Store remaining nodes and edges for later
+      // Stocker les noeuds et relations restants
       const extraNodes = graphData.nodes.slice(1000);
       const extraEdges = graphData.edges.filter(edge =>
         !firstNodes.some(node => node.id === edge.source) ||
@@ -126,28 +134,30 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
       setShowLoadMore(true);
       setFeedbackMessage(
         t(
-          '⚠️ The result contains more than 1000 nodes; only the first 1000 are displayed. You can add the others manually or activate the WebGL option for better performance.'
+          '⚠️ Le résultat contient plus de 1000 noeuds ; seuls les 1000 premiers sont affichés. Vous pouvez ajouter les autres manuellement ou activer l\'option WebGL pour de meilleures performances.'
         )
       );
     } else {
       setNodes((prevNodes) => [...prevNodes, ...graphData.nodes]);
       setEdges((prevEdges) => [...prevEdges, ...graphData.edges]);
-      setFeedbackMessage(t('✅ Successfully retrieved the result.'));
+      setFeedbackMessage(t('✅ Résultat récupéré avec succès.'));
       setShowLoadMore(false);
       setRemainingNodes([]);
       setRemainingEdges([]);
     }
   }, [searchResult, setNodes, setEdges, t]);
 
+  // Charger les noeuds et relations restants
   const handleLoadMore = () => {
     setNodes((prevNodes) => [...prevNodes, ...remainingNodes]);
     setEdges((prevEdges) => [...prevEdges, ...remainingEdges]);
     setShowLoadMore(false);
-    setFeedbackMessage(t('✅ All remaining nodes have been added.'));
+    setFeedbackMessage(t('✅ Tous les noeuds restants ont été ajoutés.'));
     setRemainingNodes([]);
     setRemainingEdges([]);
   };
 
+  // Gérer les changements dans les champs de saisie
   const handleInputChange = (e, propertyName, propertyType) => {
     let value = e.target.value;
     if (propertyType === 'int') {
@@ -163,7 +173,7 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
 
     setFormValues({ ...formValues, [propertyName]: value });
 
-    // Clear feedback message if input is emptied
+    // Réinitialiser le message si le champ est vidé
     if (value === '' || value === null) {
       setFeedbackMessage('');
       setShowLoadMore(false);
@@ -172,10 +182,12 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
     }
   };
 
+  // Gérer les changements d'opération de recherche
   const handleOperationChange = (e, propertyName) => {
     setOperations({ ...operations, [propertyName]: e.target.value });
   };
 
+  // Soumettre le formulaire et lancer la recherche avec validation
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedbackMessage('');
@@ -184,15 +196,13 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
     setRemainingEdges([]);
     setError(null);
 
-    // Validate that at least one property is filled
-    const hasValidProperty = Object.values(formValues).some(
-      (value) => value !== '' && value !== null && value !== undefined
-    );
-
-    if (!hasValidProperty) {
-      setError(t('searchComponent.errorNoProperties'));
+    // Vérifier si au moins une valeur est saisie
+    const hasValues = Object.values(formValues).some(value => value !== '' && value !== null);
+    if (!hasValues) {
+      setError(t('Veuillez remplir au moins un champ pour lancer la recherche.'));
       return;
     }
+
     try {
       const searchPayload = {
         values: formValues,
@@ -201,13 +211,16 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
       const result = await submitSearch(selectedNodeType, searchPayload);
       setSearchResult(result);
     } catch (error) {
-      setError(t('Error during submission.'));
+      setError(t('Erreur lors de la soumission.'));
     }
   };
+
+  // Options d'opérations pour différents types de propriétés
   const intOperationOptions = ['=', '!=', '>', '<', '>=', '<='];
   const stringOperationOptions = ['=', 'contains', 'startswith', 'endswith'];
   const dateOperationOptions = ['=', '!=', '>', '<', '>=', '<='];
 
+  // Déterminer les options d'opération selon le type de propriété
   const getOperationOptions = (propertyType, propertyName) => {
     const type = propertyType?.toLowerCase();
     if (propertyName.toLowerCase().includes('date')) return dateOperationOptions;
@@ -215,6 +228,7 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
     if (type === 'str' || type === 'string') return stringOperationOptions;
     return [];
   };
+
   return (
     <div className="flex-1">
       {error && <div className="bg-red-100 text-red-700 px-3 py-2 rounded">{error}</div>}
@@ -233,7 +247,7 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
               />
             </div>
             <h6 className="text-sm font-semibold m-0">
-              {t('Properties for')} {selectedNodeType}
+              {t('Propriétés pour')} {selectedNodeType}
             </h6>
           </div>
           <div>
@@ -289,7 +303,7 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
                   type="submit"
                   className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded w-full transition-colors"
                 >
-                  {t('Search')}
+                  {t('Rechercher')}
                 </button>
               </div>
             </form>
@@ -297,7 +311,7 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
             {feedbackMessage && (
               <div
                 className={`text-sm px-3 py-2 rounded ${
-                  feedbackMessage.includes('Successfully')
+                  feedbackMessage.includes('Succès')
                     ? 'bg-green-100 text-green-700'
                     : 'bg-yellow-100 text-yellow-700'
                 }`}
@@ -312,10 +326,10 @@ const SearchComponent = ({ selectedNodeType, setNodes, setEdges }) => {
                   className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold px-4 py-2 rounded w-full transition-colors"
                   onClick={handleLoadMore}
                 >
-                  {t('Load remaining nodes')}
+                  {t('Charger les noeuds restants')}
                 </button>
                 <p className="text-xs mt-1 text-yellow-700">
-                  {t('Tip: Activate WebGL option for better performance with large graphs.')}
+                  {t('Astuce : Activez l\'option WebGL pour de meilleures performances avec des graphes volumineux.')}
                 </p>
               </div>
             )}

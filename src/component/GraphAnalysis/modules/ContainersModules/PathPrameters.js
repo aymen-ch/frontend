@@ -11,7 +11,7 @@ import { createContext, useState, useContext, useMemo } from 'react';
 // ** *////
 
 const AlgorithmContext = createContext();
-
+// Fonction permettant d'assurer la gestion des variables de détection de chemin, par niveau
 export function PathPrameter({ children }) {
   const [pathFindingParams, setPathFindingParams] = useState(null);
   const [shortestPathParams, setShortestPathParams] = useState(null);

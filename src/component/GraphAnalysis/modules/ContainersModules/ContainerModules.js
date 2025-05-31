@@ -21,55 +21,52 @@ import { PathPrameter } from './PathPrameters';
 const MemoizedGraphVisualization = memo(GraphVisualization);
 const Memoizedcontext = memo(ContextManagerComponent);
 
+
+// si la partie (visulisation dans le navbar horizontal) Contient les onglets, la visualisation du graphe et la visualisation des chemins affichée si isBoxPath est vrai
+
 const Container_AlgorithmicAnalysis = () => {
   const { t } = useTranslation();
+  // Noeuds et relations
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
-  
+ // Variables pour la contextualisation ; chaque affaire possède ses propres noeuds et relations 
   const [SubGrapgTable, setSubGrapgTable] = useState({ results: [] });
   const [currentSubGraphIndex, setCurrentSubGraphIndex] = useState(0);
-
-
-  const [activeModule, setActiveModule] = useState(null);
-  const nvlRef = useRef(null);
+  const [affairesInRange, setAffairesInRange] = useState([]); // Les affaires affichées par la barre de défilement
+// Références pour la visualisation principale et la visualisation des chemins 
+const nvlRef = useRef(null);
   const nvlRefPath = useRef(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedNodeData, setSelectedNodeData] = useState(null);
+// Contient les données des noeuds et relations cliqués pour affichage dans le composant de détails  
+const [selectedNodeData, setSelectedNodeData] = useState(null);
   const [SelectecRelationData, setSelectecRelationData] = useState(null);
-  const [nodetoshow, setnodetoshow] = useState();
-  const [relationtoshow, setrelationtoshow] = useState(null);
+  const [nodetoshow, setnodetoshow] = useState(); // ID du noeud à afficher
+  const [relationtoshow, setrelationtoshow] = useState(null);// ID de la relation à afficher
+// Pour les trois options d'interrogation : cible, question, chat
   const [selectedOption, setSelectedOption] = useState('option1');
+// Pour la détection de chemins
   const [pathisempty, setPathisempty] = useState(false);
   const [pathNodes, setPathNodes] = useState([]);
   const [pathEdges, setPathEdges] = useState([]);
-  
   const [isBoxPath, setIsBoxPath] = useState(false);
-  const [selectedNodes, setSelectedNodes] = useState(new Set());
-  const [affairesInRange, setAffairesInRange] = useState([]);
   const [allPaths, setAllPaths] = useState([]);
   const [currentPathIndex, setCurrentPathIndex] = useState(0);
-  const [activeAggregations, setActiveAggregations] = useState({});
-  const [visibleNodeTypes, setVisibleNodeTypes] = useState({});
+// Noeuds et relations sélectionnés
+  const [selectedNodes, setSelectedNodes] = useState(new Set());
   const [selectedEdges, setselectedEdges] = useState(new Set());
-  const [virtualRelations, setVirtualRelations] = useState([]);
+
+  const [activeModule, setActiveModule] = useState(null);// L'onglet actif
+  const [isFullscreen, setIsFullscreen] = useState(false);// Mode plein écran
+  const [activeAggregations, setActiveAggregations] = useState({});// Les agrégations actives
+  const [virtualRelations, setVirtualRelations] = useState([]); // Les relations virtuelles utilisées dans l'agrégation
+  const [visibleNodeTypes, setVisibleNodeTypes] = useState({}); // Types de noeuds visualisés, affichés dans l'onglet des détails
+ 
+
 
  useEffect(() => {
-    fetchAggregations(setVirtualRelations);
+    fetchAggregations(setVirtualRelations); // Récupérer toutes les agrégations depuis le fichier d'agrégation du backend
   }, []);
 
 
-  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
 
   useEffect(() => {
@@ -80,28 +77,28 @@ const Container_AlgorithmicAnalysis = () => {
       }
     });
     setVisibleNodeTypes(nodeTypes);
-  }, [nodes]);
+  }, [nodes]);// Récupérer les types de noeuds existants
 
 
   const handleModuleClick = (module) => {
     setActiveModule(activeModule === module ? null : module);
-  };
+  };// Changer l'onglet actif
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
-  };
+  };// Activer/désactiver le mode plein écran
 
   useEffect(() => {
     if (nodetoshow) {
       fetchNodeDetail(nodetoshow, setSelectedNodeData);
     }
-  }, [nodetoshow]);
+  }, [nodetoshow]);// Récupérer les informations d'un noeud si son ID n'est pas null
 
   useEffect(() => {
     if (relationtoshow) {
       fetchrelationDetail(relationtoshow, setSelectecRelationData);
     }
-  }, [relationtoshow]);
+  }, [relationtoshow]);// Récupérer les informations d'une relation si son ID n'est pas null
 
   const extractAffaires = () => {
     return SubGrapgTable.results.map((result, index) => {
@@ -124,7 +121,7 @@ const Container_AlgorithmicAnalysis = () => {
 
       return affaireData;
     });
-  };
+  };// Récupérer toutes les affaires retournées par l'onglet de contextualisation, utilisées par la barre de défilement
 
 
   useEffect(() => {
@@ -132,13 +129,18 @@ const Container_AlgorithmicAnalysis = () => {
       setAffairesInRange([SubGrapgTable.results[0].affaire.id]);
       setCurrentSubGraphIndex(0);
     }
-  }, [SubGrapgTable]);
+  }, [SubGrapgTable]);// Stocker la première affaire pour l'afficher
 
+
+
+  // Appliquer l'agrégation sur le graphe de contextualisation si elle est active, useffect difinier dans function_container
   useAggregation(affairesInRange, activeAggregations, SubGrapgTable, setNodes, setEdges,virtualRelations);
 
+// Filtrer les noeuds avec la propriété "hidden" utilisée par l'agrégation pour masquer les noeuds intermédiaires
   const combinedNodes = [...nodes].filter((node) => !node.hidden);
   const combinedEdges = [...edges].filter((edge) => !edge.hidden);
 
+  // Modifier automatiquement le style des noeuds, utilisé par l'onglet d'analyse des attributs
   const handleNodeConfigChange = (change) => {
     if (change.type === 'size') {
       const updatedNodes = combinedNodes.map((node) => {
@@ -163,7 +165,7 @@ const Container_AlgorithmicAnalysis = () => {
       setNodes(updatedNodes);
     }
   };
-
+  // Contient les onglets, la visualisation du graphe et la visualisation des chemins affichée si isBoxPath est vrai
   return (
   <PathPrameter>
   <div className="h-[calc(100vh-50px)] bg-gradient-to-b from-gray-50 to-gray-100 p-0 overflow-hidden relative">
@@ -312,10 +314,10 @@ const Container_AlgorithmicAnalysis = () => {
                   visibleNodeTypes={visibleNodeTypes}
                   nodetoshow={nodetoshow}
                   selectedNodeData={selectedNodeData}
-                  combinedNodes={combinedNodes}
+                  nodes={combinedNodes}
                   relationtoshow={relationtoshow}
                   SelectecRelationData={SelectecRelationData}
-                  combinedEdges={combinedEdges}
+                  edges={combinedEdges}
                 />
               )}
 

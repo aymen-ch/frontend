@@ -3,12 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { NodeTypeVisibilityControl } from './NodeTypeVisibilityControl';
 import { getNodeColor, getNodeIcon } from '../../VisualisationModule/Parser';
 
+
+
+
+
+// Afficher les informations d'un noeud ou d'une relation et la liste des types de noeuds visualisés
 const DetailsModule = ({
   visibleNodeTypes,
   nodetoshow,
   selectedNodeData,
-  combinedNodes,
-  combinedEdges,
+  nodes,
+  edges,
   relationtoshow,
   SelectecRelationData,
 }) => {
@@ -30,13 +35,12 @@ const DetailsModule = ({
       {relationtoshow && SelectecRelationData && (
         <div className="p-4 bg-white rounded-lg shadow-md mb-4">
           {(() => {
-            const matchedNode = combinedEdges.find(
+            const matchedNode = edges.find(
               (node) => node.id === SelectecRelationData.identity?.toString()
             );
             const nodeGroup = matchedNode
               ? matchedNode.group
               : SelectecRelationData.type || t('unknown');
-            const nodeColor = '#B771E5';
 
             const { detail, ...mainProperties } = SelectecRelationData;
 
@@ -116,7 +120,7 @@ const DetailsModule = ({
       {nodetoshow && (
         <div className="p-4 bg-white rounded-lg shadow-md mb-4">
           {(() => {
-            const matchedNode = combinedNodes.find((node) => node.id === nodetoshow);
+            const matchedNode = nodes.find((node) => node.id === nodetoshow);
             const nodeGroup = matchedNode ? matchedNode.group : t('unknown');
             const nodeColor = getNodeColor(nodeGroup);
             const nodeIcon = getNodeIcon(nodeGroup);

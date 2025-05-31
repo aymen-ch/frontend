@@ -4,6 +4,9 @@ import { getNodeIcon, getNodeColor } from '../../../VisualisationModule/Parser';
 import { BASE_URL_Backend } from '../../../../Platforme/Urls';
 import { useTranslation } from 'react-i18next';
 
+
+
+//// lister tous les type des nodes avec radio box pour le focaliser la rechercher
 const RadioBarComponent = ({ onResult }) => {
   const [nodeData, setNodeData] = useState([]);
   const [selectedNodeType, setSelectedNodeType] = useState('');
