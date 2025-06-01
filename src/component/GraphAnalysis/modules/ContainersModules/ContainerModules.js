@@ -268,7 +268,7 @@ const [selectedNodeData, setSelectedNodeData] = useState(null);
 
         {activeModule && (
         <div
-    className="absolute right-[60px] top-0 bottom-0 w-[700px] lg:w-[600px] md:w-[400px] sm:w-[300px] bg-white shadow-[-3px_0_10px_rgba(0,0,0,0.1)] z-[1200] overflow-y-auto p-5 border-l border-gray-200"
+    className="absolute right-[60px] top-0 bottom-0 w-[700px] lg:w-[600px] md:w-[400px] sm:w-[300px] bg-white shadow-[-3px_0_10px_rgba(0,0,0,0.1)] z-[1000] overflow-y-auto p-5 border-l border-gray-200"
   >
     <div className="flex justify-between items-center border-b-2 border-[#3a4a66] pb-2 mb-4 sticky top-0 bg-white pt-1">
       <h5 className="text-gray-800 font-semibold m-0">{activeModule}</h5>
