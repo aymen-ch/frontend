@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Card, Container, Row, Col, Badge, Tabs, Tab, Image, ListGroup, Form, Spinner } from 'react-bootstrap';
+import { Button, Card, Container, Row, Col, Badge, Tabs, Tab, Image, ListGroup, Form, Spinner, Alert } from 'react-bootstrap';
 import { 
   XLg, 
   Dash, 
@@ -24,21 +24,20 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
   const [selectedVirtualRelations, setSelectedVirtualRelations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedCentrality, setSelectedCentrality] = useState('Article Rank');
-  const [isNormalized, setIsNormalized] = useState(false);
-  const [attributeName, setAttributeName] = useState('');
+  const [selectedCentrality, setSelectedCentrality] = useState('Louvain');
+  const [result, setResult] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const nodeRef = useRef(null);
   const { t } = useTranslation();
   const token = localStorage.getItem('authToken');
 
-  // List of centrality algorithms
-  const centralityAlgorithms = [
-    'K-1 Coloring',
-    'Leiden',
-    'Modularity Optimization',
-    'Label Propagation',
-    'Louvain'
+  // List of community detection algorithms and their corresponding writeProperty values
+  const communityAlgorithms = [
+    { value: 'Louvain', writeProperty: '_louvain' },
+    { value: 'Label Propagation', writeProperty: '_labelPropagation' },
+    { value: 'K1 Coloring', writeProperty: '_color_k1coloring' },
+    { value: 'Modularity Optimization', writeProperty: '_modularityOptimization' },
+    { value: 'Weakly Connected Components', writeProperty: 'uniform' }
   ];
 
   useEffect(() => {
@@ -51,9 +50,7 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
 
       try {
         const response = await axios.get(`${BASE_URL_Backend}/get_relationship_types_for_node_type/`, {
-          params: {
-            nodeType: selectedGroup,
-          },
+          params: { nodeType: selectedGroup },
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -99,14 +96,6 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
     setSelectedCentrality(e.target.value);
   };
 
-  const handleNormalizationChange = (e) => {
-    setIsNormalized(e.target.checked);
-  };
-
-  const handleAttributeNameChange = (e) => {
-    setAttributeName(e.target.value);
-  };
-
   const handleRelationshipToggle = (relType) => {
     setSelectedRelationships((prev) =>
       prev.includes(relType)
@@ -123,11 +112,40 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
+    setError(null);
+    setResult(null);
+
+    // Find the writeProperty for the selected algorithm
+    const selectedAlgo = communityAlgorithms.find(algo => algo.value === selectedCentrality);
+    const writeProperty = selectedAlgo ? selectedAlgo.writeProperty : 'uniform'; // Fallback to 'uniform'
+
+    try {
+      const response = await axios.post(
+        `${BASE_URL_Backend}/detect_communities/`,
+        {
+          nodeType: selectedGroup,
+          communityAlgorithm: selectedCentrality,
+          writeProperty: writeProperty,
+          selectedRelationships,
+          isDirected: false, // Can be made configurable if needed
+          virtualRelationships: selectedVirtualRelations
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      setResult(response.data); // Store the API response
+    } catch (err) {
+      setError(err.response?.data?.error || t('Failed to perform community detection'));
+    } finally {
       setIsSubmitting(false);
-    }, 10000); // 10 seconds
+    }
   };
 
   const windowContent = (
@@ -159,7 +177,7 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
       <Card.Body className="window-content p-4 bg-light">
         <h5 className="mb-3 text-primary">{t('communityBackend.analysisSettings')}</h5>
         <Row>
-          <Col md={6}>
+          <Col md={12}>
             <Form.Group className="mb-3">
               <Form.Label className="fw-bold">{t('communityBackend.communityAlgorithm')}</Form.Label>
               <Form.Select
@@ -167,26 +185,14 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
                 onChange={handleCentralityChange}
                 className="shadow-sm"
               >
-                {centralityAlgorithms.map((algo, index) => (
-                  <option key={index} value={algo}>{algo}</option>
+                {communityAlgorithms.map((algo, index) => (
+                  <option key={index} value={algo.value}>{algo.value}</option>
                 ))}
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col md={6}>
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-bold">{t('Attribute Name')}</Form.Label>
-              <Form.Control
-                type="text"
-                value={attributeName}
-                onChange={handleAttributeNameChange}
-                placeholder={t('Enter attribute name')}
-                className="shadow-sm"
-              />
-            </Form.Group>
-          </Col>
         </Row>
-        
+
         <h5 className="mt-4 mb-3 text-primary">{t('Relationship Types for')} {selectedGroup}</h5>
         {loading && (
           <div className="text-center">
@@ -194,7 +200,7 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
             <p>{t('Loading...')}</p>
           </div>
         )}
-        {error && <p className="text-danger mt-3">{error}</p>}
+        {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
         {!loading && !error && relationshipTypes.length > 0 ? (
           <ListGroup variant="flush" className="bg-white rounded shadow-sm">
             {relationshipTypes.map((relType, index) => (
@@ -216,37 +222,23 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
           !loading && !error && <p className="text-muted mt-3">{t('No relationship types found.')}</p>
         )}
 
-        <h5 className="mt-4 mb-3 text-primary">{t('Virtual Relations')}</h5>
-        {virtualRelationItems.length > 0 ? (
-          <ListGroup variant="flush" className="bg-white rounded shadow-sm">
-            {virtualRelationItems.map((item, index) => (
-              <ListGroup.Item
-                key={index}
-                className="d-flex align-items-center py-2"
-              >
-                <Form.Check
-                  type="checkbox"
-                  checked={selectedVirtualRelations.includes(item.name)}
-                  onChange={() => handleVirtualRelationToggle(item.name)}
-                  className="me-3"
-                />
-                <span>
-                  {item.name} <Badge bg="secondary" className="ms-2">{t('communityBackend.path')}: {item.path.join(' → ')}</Badge>
-                </span>
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        ) : (
-          <p className="text-muted mt-3">
-            {t('No virtual relations found where path starts and ends with')} {selectedGroup}.
-          </p>
+        {/* Display Results */}
+        {result && (
+          <div className="mt-4">
+            <h5 className="text-primary">{t('Community Detection Results')}</h5>
+            <ListGroup variant="flush" className="bg-white rounded shadow-sm">
+              <ListGroup.Item><strong>{t('Node Type')}:</strong> {result.node_type}</ListGroup.Item>
+              <ListGroup.Item><strong>{t('Algorithm')}:</strong> {result.community_algorithm}</ListGroup.Item>
+              <ListGroup.Item><strong>{t('Write Property')}:</strong> {result.write_property}</ListGroup.Item>
+            </ListGroup>
+          </div>
         )}
 
         <div className="d-grid gap-2 mt-4">
           <Button
             variant="primary"
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !selectedRelationships.length}
             className="shadow-sm"
           >
             {isSubmitting ? (
@@ -270,19 +262,19 @@ const Community_BackEnd = ({ selectedGroup, onClose }) => {
     </Card>
   );
 
-return (
-  <div className="fixed inset-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center z-[1050] backdrop-blur-sm">
-    {isMaximized ? (
-      windowContent
-    ) : (
-      <Draggable nodeRef={nodeRef} handle=".window-header" bounds="parent">
-        <div ref={nodeRef} className="w-full max-w-3xl bg-white rounded-lg shadow-xl">
-          {windowContent}
-        </div>
-      </Draggable>
-    )}
-  </div>
-);
+  return (
+    <div className="fixed inset-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center z-[1050] backdrop-blur-sm">
+      {isMaximized ? (
+        windowContent
+      ) : (
+        <Draggable nodeRef={nodeRef} handle=".window-header" bounds="parent">
+          <div ref={nodeRef} className="w-full max-w-3xl bg-white rounded-lg shadow-xl">
+            {windowContent}
+          </div>
+        </Draggable>
+      )}
+    </div>
+  );
 };
 
 export default Community_BackEnd;

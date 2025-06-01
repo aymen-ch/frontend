@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Button, Spinner, Form } from 'react-bootstrap';
 import { BASE_URL_Backend } from '../../../Platforme/Urls';
@@ -9,39 +9,60 @@ import { Target, BarChart2 } from 'lucide-react';
 
 const Community = ({ nodes, setNodes }) => {
   const [selectedCommunityMeasure, setSelectedCommunityMeasure] = useState('uniform');
-    const [isLoading, setIsLoading] = useState(false);
-const{t} = useTranslation()
-const communityMethods = [
-  { value: 'uniform', label: 'Uniform' },
-  { value: '_color_k1coloring', label: 'K1 Coloring' },
-  { value: '_labelPropagation', label: 'Label Propagation' },
-  { value: '_louvain', label: 'Louvain' },
-  {value :'_modularityOptimization',label :'modularityOptimization' },
-  // {value :'_scc',label :'scc' },
-  // {value :'_wcc',label :'wcc' },
-];
-
+  const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation();
   const [nodeData, setNodeData] = useState([]);
   const [error, setError] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState('');
+  const [nodeProperties, setNodeProperties] = useState([]);
+
+  const allowedCommunityMethods = [
+    '_color_k1coloring',
+    '_labelPropagation',
+    '_louvain',
+    '_modularityOptimization'
+  ];
+
+  const fetchNodeProperties = useCallback(async (nodeType) => {
+    if (!nodeType) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(`${BASE_URL_Backend}/node-types/properties_types/`, {
+        params: { node_type: nodeType },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNodeProperties(response.data.properties || []);
+    } catch (error) {
+      setError(t('error_fetching_properties'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     const fetchNodeTypes = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const response = await axios.get(BASE_URL_Backend + '/node-types/', {
+        const response = await axios.get(`${BASE_URL_Backend}/node-types/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.status !== 200) throw new Error('Network response was not ok');
         setNodeData(response.data.node_types);
-        if (response.data.node_types.length > 0)
+        if (response.data.node_types.length > 0) {
           setSelectedGroup(response.data.node_types[0].type);
+        }
       } catch (error) {
         setError(error.message || 'An error occurred');
       }
     };
     fetchNodeTypes();
   }, []);
+
+  useEffect(() => {
+    fetchNodeProperties(selectedGroup);
+  }, [selectedGroup, fetchNodeProperties]);
 
   const ColorNodeWithCommunity = (nodes, setNodes, measure) => {
     const newNodes = [...nodes];
@@ -84,38 +105,33 @@ const communityMethods = [
     setNodes(newNodes);
   };
 
-
-
   return (
     <div className="p-3 d-flex flex-column gap-3">
+      <Button
+        size="sm"
+        variant="info"
+        className="w-100 d-flex align-items-center justify-content-center gap-1"
+        onClick={() => globalWindowState.setWindow("Community_BackEnd", selectedGroup)}
+        style={{ height: '50px' }}
+      >
+        <BarChart2 size={14} className="me-1" />
+        {t('add new community attribute')}
+      </Button>
 
-      
+      <Form.Label>{t('Select Node Type')}</Form.Label>
+      <Form.Select
+        size="sm"
+        value={selectedGroup}
+        onChange={(e) => setSelectedGroup(e.target.value)}
+      >
+        {nodeData.map((node) => (
+          <option key={node.type} value={node.type}>
+            <Target size={16} className="me-2" />
+            {node.type}
+          </option>
+        ))}
+      </Form.Select>
 
-<Button
-    disabled={true} // To DO later 
-    size="sm"
-    variant="info"
-    className="w-100 d-flex align-items-center justify-content-center gap-1"
-    onClick={() => globalWindowState.setWindow("Community_BackEnd",  selectedGroup )}
-    style={{ height: '50px' }} // Match height with other buttons
-  >
-    <BarChart2 size={14} className="me-1" /> {/* Adding BarChart2 icon for statistical analysis */}
-    {t('add new comunoty attribute')}
-  </Button>
-
-  <Form.Label>{t('Select Node Type')}</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={selectedGroup}
-                    onChange={(e) => setSelectedGroup(e.target.value)}
-                  >
-                    {nodeData.map((node) => (
-                      <option key={node.type} value={node.type}>
-                        <Target size={16} className="me-2" />
-                        {node.type}
-                      </option>
-                    ))}
-                  </Form.Select>
       <Form.Group>
         <Form.Label>{t('Community Detection')}</Form.Label>
         <Form.Select
@@ -125,14 +141,23 @@ const communityMethods = [
             ColorNodeWithCommunity(nodes, setNodes, e.target.value);
           }}
         >
-          {communityMethods.map(method => (
-            <option key={method.value} value={method.value}>
-              {method.label}
-            </option>
-          ))}
+          <option value="uniform">{t('Uniform')}</option>
+          {nodeProperties
+            .filter(property => allowedCommunityMethods.includes(property.name))
+            .map(property => (
+              <option key={property.name} value={property.name}>
+                {property.name === '_color_k1coloring' ? 'K1 Coloring' :
+                 property.name === '_labelPropagation' ? 'Label Propagation' :
+                 property.name === '_louvain' ? 'Louvain' :
+                 property.name === '_modularityOptimization' ? 'Modularity Optimization' :
+                 property.name}
+              </option>
+            ))}
         </Form.Select>
       </Form.Group>
- 
+
+      {isLoading && <Spinner animation="border" />}
+      {error && <div className="text-danger">{error}</div>}
     </div>
   );
 };
