@@ -7,7 +7,7 @@ import AddActionWindow from "../Windows/Actions";
 import Analyse_statistique from "../Windows/Statisics_Window";
 import Analyse_BackEnd from "../Windows/Centrality_Window";
 import Community_BackEnd from "../Windows/Community_Window";
-import { FaExpand, FaCompress, FaSave, FaTrash, FaSearch, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaExpand, FaCompress, FaSave, FaTrash, FaSearch, FaTimes, FaSpinner,FaHome } from 'react-icons/fa';
 import { MdOutlineTabUnselected } from "react-icons/md";
 import { ForceDirectedLayoutType } from '@neo4j-nvl/base';
 import { handleLayoutChange } from '../ContainersModules/function_container';
@@ -38,24 +38,26 @@ const GraphVisualization = React.memo(({
   selectedEdges, // Arêtes actuellement sélectionnées
   setselectedEdges, // Fonction pour mettre à jour les arêtes sélectionnées
   setSubGrapgTable, // Fonction pour mettre à jour la table du sous-graphe
-  virtualRelations // Relations virtuelles du graphe
+  virtualRelations, // Relations virtuelles du graphe
+  addVisualization, // Fonction pour ajouter une visualisation à la liste (passée depuis Graphe_analysis)
+  onBackToList,
 }) => {
   const [contextMenu, setContextMenu] = useState(null); // État pour gérer le menu contextuel des nœuds
-  const [contextMenuRel, setContextMenuRel] = useState(null);  // État pour gérer le menu contextuel des relations
+  const [contextMenuRel, setContextMenuRel] = useState(null); // État pour gérer le menu contextuel des relations
   const [ContextMenucanvass, SetContextMenucanvass] = useState(null); // État pour gérer le menu contextuel du canevas
-  const { t } = useTranslation();  // Hook pour la gestion des traduction
-  const [render, setRenderer] = useState("canvas");  // Type de rendu (par défaut : canvas)
+  const { t } = useTranslation(); // Hook pour la gestion des traductions
+  const [render, setRenderer] = useState("canvas"); // Type de rendu (par défaut : canvas)
   const [layoutType, setLayoutType] = useState(ForceDirectedLayoutType); // Type de mise en page (par défaut : ForceDirectedLayoutType)
-  const [searchtype, setsearchtype] = useState("current_graph");  // Type de recherche (par défaut : graphe actuel)
+  const [searchtype, setsearchtype] = useState("current_graph"); // Type de recherche (par défaut : graphe actuel)
   const [activeWindow, setActiveWindow] = useState(null); // Fenêtre actuellement active
   const [inputValue, setInputValue] = useState(''); // Valeur de l'entrée de recherche
   const [searchResults, setSearchResults] = useState([]); // Résultats de la recherche
-  const [isLoading, setIsLoading] = useState(false);// État de chargement pour la recherche
+  const [isLoading, setIsLoading] = useState(false); // État de chargement pour la recherche
   const [multiselecte, setmultiselecte] = useState(false); // Indicateur pour la sélection multiple
-  const [showSaveModal, setShowSaveModal] = useState(false);  // État pour afficher la modale de sauvegarde
-  const [saveType, setSaveType] = useState('png');// Type de fichier pour la sauvegarde (par défaut : png)
-  const [fileName, setFileName] = useState('');  // Nom du fichier pour la sauvegarde
-  const searchRef = useRef(null);  // Référence pour le champ de recherche
+  const [showSaveModal, setShowSaveModal] = useState(false); // État pour afficher la modale de sauvegarde
+  const [saveType, setSaveType] = useState('png'); // Type de fichier pour la sauvegarde (par défaut : png)
+  const [fileName, setFileName] = useState(''); // Nom du fichier pour la sauvegarde
+  const searchRef = useRef(null); // Référence pour le champ de recherche
   const resultsRef = useRef(null); // Référence pour les résultats de recherche
 
   // Met à jour la mise en page lorsque le nombre de nœuds change
@@ -86,8 +88,7 @@ const GraphVisualization = React.memo(({
     );
   };
 
-  // Gère le clic sur le bouton de recherche,
-  /// la recherche dans la base de donnees peut prend de temp il peut aussi returner 
+  // Gère le clic sur le bouton de recherche
   const handleSearchClick = async () => {
     if (searchtype === "current_graph") {
       const newFilteredNodes = filterNodesByQuery(nodes, inputValue);
@@ -120,7 +121,7 @@ const GraphVisualization = React.memo(({
             'Content-Type': 'application/json',
           }
         });
-        const limitedResults = response.data.slice(0, 50);/// on a limit a 50 premier valeur 
+        const limitedResults = response.data.slice(0, 50); // Limite à 50 premiers résultats
         setSearchResults(limitedResults);
       } catch (error) {
         console.error('Erreur lors de la recherche dans la base de données :', error);
@@ -169,15 +170,44 @@ const GraphVisualization = React.memo(({
       alert(t('Veuillez entrer un nom de fichier'));
       return;
     }
+
     if (saveType === 'png') {
+      // Sauvegarde en tant qu'image PNG
       nvlRef.current.saveFullGraphToLargeFile({
         backgroundColor: "white",
         filename: `${fileName}.png`
       });
+    } else if (saveType === 'json') {
+      // Sauvegarde en tant que fichier JSON
+      const visualizationData = {
+        name: fileName,
+        nodes,
+        edges
+      };
+
+      try {
+        const response = await axios.post(BASE_URL_Backend + '/visualizations/save/', visualizationData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}` // Ajoute l'authentification
+          }
+        });
+
+        // Ajoute la visualisation à la liste via la prop addVisualization
+        addVisualization(response.data.name, response.data.file, response.data.id);
+
+        alert(t('Visualisation enregistrée avec succès'));
+        onBackToList()
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde de la visualisation :', error);
+        alert(t('Échec de la sauvegarde de la visualisation'));
+        return;
+      }
     }
+
     setShowSaveModal(false);
     setFileName('');
-    setSaveType('png');
+    setSaveType('json');
   };
 
   // Annule la sauvegarde
@@ -199,12 +229,15 @@ const GraphVisualization = React.memo(({
     setSubGrapgTable({ results: [] });
     setSelectedNodes(new Set());
     setselectedEdges(new Set());
+
+    // Met à jour le canevas de visualisation
+
   };
 
   // Gère le changement de rendu (canvas ou WebGL)
   const handlewebgl = (e) => {
     const selectedRenderer = e.target.value;
-    if (selectedRenderer === 'Moyenne') { /// Permet uniquement de masquer le nom de la relation jusqu’à un certain niveau de zoom.
+    if (selectedRenderer === 'Moyenne') {
       setRenderer(selectedRenderer);
       nvlRef.current.setRenderer('canvas');
       const currentOptions = nvlRef.current.getCurrentOptions();
@@ -212,7 +245,7 @@ const GraphVisualization = React.memo(({
       console.log(updatedOptions);
       nvlRef.current.setLayoutOptions(updatedOptions);
       nvlRef.current.restart(updatedOptions);
-    } else if (selectedRenderer === 'canvas') { //// Permet d’afficher les relations sans avoir besoin de zoomer. 
+    } else if (selectedRenderer === 'canvas') {
       setRenderer(selectedRenderer);
       nvlRef.current.setRenderer('canvas');
       const currentOptions = nvlRef.current.getCurrentOptions();
@@ -220,7 +253,7 @@ const GraphVisualization = React.memo(({
       console.log(updatedOptions);
       nvlRef.current.setLayoutOptions(updatedOptions);
       nvlRef.current.restart(updatedOptions);
-    } else { ////  WebGL permet de masquer le nom et le sens des relations.
+    } else {
       setRenderer(selectedRenderer);
       nvlRef.current.setRenderer(selectedRenderer.toLowerCase());
     }
@@ -237,51 +270,48 @@ const GraphVisualization = React.memo(({
     setActiveWindow(null);
   };
 
-
   return (
     <div className={`w-full h-full ${isFullscreen ? 'fixed inset-0 z-[20000] bg-white' : 'relative border border-gray-300'}`}>
-      {/* Search Bar - Hidden on small screens, visible on md and above */}
-  <div
-  ref={searchRef}
-  className="hidden 2xl:flex absolute top-2 left-1/2 transform -translate-x-1/2 z-[100] items-center bg-white/95 rounded-full px-4 py-2 shadow-md border border-gray-200/30 hover:shadow-lg hover:scale-[1.02] transition-all max-w-sm w-[400px]"
->
-  <FaSearch
-    className="min-w-[20px] mr-2 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-    onClick={handleSearchClick}
-  />
-  <input
-    type="text"
-    value={inputValue}
-    onChange={handleInputChange}
-    placeholder={t("Search nodes by any property")}
-    className="flex-grow min-w-0 border-none outline-none bg-transparent text-gray-800 text-sm placeholder-gray-500"
-  />
-  {isLoading ? (
-    <FaSpinner className="mr-2 text-gray-600 animate-spin" />
-  ) : (
-    inputValue && (
-      <FaTimes
-        className="mr-2 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-        onClick={handleClearSearch}
-        title="Clear search"
-      />
-    )
-  )}
-  <div className="ml-2 max-w-[150px]">
-    <select
-      value={searchtype}
-      onChange={handleSearchTypeChange}
-      className="w-full p-1 border border-gray-200 rounded bg-white/90 text-sm cursor-pointer hover:bg-white hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-    >
-      <option value="current_graph">{t('Current Graph')}</option>
-      <option value="database">{t('Database')}</option>
-    </select>
-  </div>
-</div>
+      {/* Barre de recherche - Masquée sur les petits écrans, visible sur md et plus */}
+      <div
+        ref={searchRef}
+        className="hidden 2xl:flex absolute top-2 left-1/2 transform -translate-x-1/2 z-[100] items-center bg-white/95 rounded-full px-4 py-2 shadow-md border border-gray-200/30 hover:shadow-lg hover:scale-[1.02] transition-all max-w-sm w-[400px]"
+      >
+        <FaSearch
+          className="min-w-[20px] mr-2 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={handleSearchClick}
+        />
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder={t("Search nodes by any property")}
+          className="flex-grow min-w-0 border-none outline-none bg-transparent text-gray-800 text-sm placeholder-gray-500"
+        />
+        {isLoading ? (
+          <FaSpinner className="mr-2 text-gray-600 animate-spin" />
+        ) : (
+          inputValue && (
+            <FaTimes
+              className="mr-2 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={handleClearSearch}
+              title="Clear search"
+            />
+          )
+        )}
+        <div className="ml-2 max-w-[150px]">
+          <select
+            value={searchtype}
+            onChange={handleSearchTypeChange}
+            className="w-full p-1 border border-gray-200 rounded bg-white/90 text-sm cursor-pointer hover:bg-white hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+          >
+            <option value="current_graph">{t('Current Graph')}</option>
+            <option value="database">{t('Database')}</option>
+          </select>
+        </div>
+      </div>
 
-
-
-      {/* Search Results */}
+      {/* Résultats de recherche */}
       {searchResults.length > 0 && (
         <div
           ref={resultsRef}
@@ -323,7 +353,7 @@ const GraphVisualization = React.memo(({
         </div>
       )}
 
-      {/* Controls Container - LayoutControl and Other Buttons Side by Side on md+ */}
+      {/* Conteneur des contrôles - LayoutControl et autres boutons côte à côte sur md+ */}
       <div className="absolute top-2 left-2 z-[1000] flex flex-col md:flex-row gap-2 items-start">
         <LayoutControl
           nvlRef={nvlRef}
@@ -333,55 +363,56 @@ const GraphVisualization = React.memo(({
           setLayoutType={setLayoutType}
         />
 
-  
-
-
         <div className="flex flex-col md:flex-row gap-2 bg-white/95 rounded-lg p-2 shadow-md">
-    <button
-      className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
-      onClick={handleSave}
-      title={t('Save')}
-    >
-      <FaSave className="text-gray-600" size={16} />
-    </button>
-    <button
-      className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
-      onClick={toggleFullscreen}
-      title={isFullscreen ? t("Exit Fullscreen") : t("Enter Fullscreen")}
-    >
-      {isFullscreen ? <FaCompress className="text-gray-600" size={16} /> : <FaExpand className="text-gray-600" size={16} />}
-    </button>
-    <button
-      className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
-      onClick={handleDelete}
-      title={t('Delete Selected')}
-    >
-      <FaTrash className="text-gray-600" size={16} />
-    </button>
-    <button
-      className={`border border-gray-200 rounded p-2 hover:scale-105 transition-all ${multiselecte ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-white/80 hover:bg-white'}`}
-      onClick={hanldemultiselecte}
-      title={t('Multi select')}
-    >
-      <MdOutlineTabUnselected className={`${multiselecte ? 'text-white' : 'text-gray-600'}`} size={16} />
-    </button>
-  </div>
-<select
-  value={render}
-  onChange={handlewebgl}
-  className="mt-[2.5px] h-[45px] bg-white/95 border border-gray-200 rounded px-3 py-2 text-sm cursor-pointer hover:bg-white hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all shadow-md"
-  title={t('Select Renderer')}
->
-  <option value="canvas">{t('Canvas')}</option>
-  <option value="Moyenne">{t('Moyenne')}</option>
-  <option value="WebGL">{t('WebGL')}</option>
-
-</select>
-
-
+         <button
+            className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
+            onClick={onBackToList}
+            title={t('Home')}
+          >
+            <FaHome className="text-gray-600" size={16} />
+          </button>
+          <button
+            className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
+            onClick={handleSave}
+            title={t('Save')}
+          >
+            <FaSave className="text-gray-600" size={16} />
+          </button>
+          <button
+            className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? t("Exit Fullscreen") : t("Enter Fullscreen")}
+          >
+            {isFullscreen ? <FaCompress className="text-gray-600" size={16} /> : <FaExpand className="text-gray-600" size={16} />}
+          </button>
+          <button
+            className="bg-white/80 border border-gray-200 rounded p-2 hover:bg-white hover:scale-105 transition-all"
+            onClick={handleDelete}
+            title={t('Delete Selected')}
+          >
+            <FaTrash className="text-gray-600" size={16} />
+          </button>
+          <button
+            className={`border border-gray-200 rounded p-2 hover:scale-105 transition-all ${multiselecte ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-white/80 hover:bg-white'}`}
+            onClick={hanldemultiselecte}
+            title={t('Multi select')}
+          >
+            <MdOutlineTabUnselected className={`${multiselecte ? 'text-white' : 'text-gray-600'}`} size={16} />
+          </button>
+        </div>
+        <select
+          value={render}
+          onChange={handlewebgl}
+          className="mt-[2.5px] h-[45px] bg-white/95 border border-gray-200 rounded px-3 py-2 text-sm cursor-pointer hover:bg-white hover:border-blue-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all shadow-md"
+          title={t('Select Renderer')}
+        >
+          <option value="canvas">{t('Canvas')}</option>
+          <option value="Moyenne">{t('Moyenne')}</option>
+          <option value="WebGL">{t('WebGL')}</option>
+        </select>
       </div>
 
-      {/* Graph Canvas */}
+      {/* Canevas du graphe */}
       <GraphCanvas
         nvlRef={nvlRef}
         nodes={nodes}
@@ -403,7 +434,7 @@ const GraphVisualization = React.memo(({
         setmultiselecte={setmultiselecte}
       />
 
-      {/* Context Menus */}
+      {/* Menus contextuels */}
       {contextMenu && contextMenu.visible && (
         <ContextMenu
           contextMenu={contextMenu}
@@ -436,7 +467,7 @@ const GraphVisualization = React.memo(({
         />
       )}
 
-      {/* Windows */}
+      {/* Fenêtres */}
       {console.log(activeWindow, 'activeWindow')}
       {activeWindow === 'add_action' && (
         <AddActionWindow node={globalWindowState.windowData} onClose={handleCloseWindow} />
@@ -451,7 +482,7 @@ const GraphVisualization = React.memo(({
         <Community_BackEnd selectedGroup={globalWindowState.windowData} onClose={handleCloseWindow} />
       )}
 
-      {/* Save Modal */}
+      {/* Modale de sauvegarde */}
       <Modal show={showSaveModal} onHide={handleSaveCancel} centered>
         <Modal.Header closeButton>
           <Modal.Title>{t('Save Graph')}</Modal.Title>
@@ -466,6 +497,7 @@ const GraphVisualization = React.memo(({
                 onChange={(e) => setSaveType(e.target.value)}
               >
                 <option value="png">{t('Image (PNG)')}</option>
+                <option value="json">{t('JSON')}</option>
               </Form.Control>
             </Form.Group>
             <Form.Group controlId="fileName">
@@ -502,19 +534,15 @@ GraphVisualization.propTypes = {
   isFullscreen: PropTypes.bool.isRequired,
   toggleFullscreen: PropTypes.func.isRequired,
   setnodetoshow: PropTypes.func.isRequired,
-  setPathEdges: PropTypes.func.isRequired,
-  setPathNodes: PropTypes.func.isRequired,
-  setIsBoxPath: PropTypes.func.isRequired,
-  depth: PropTypes.number,
-  isPathFindingStarted: PropTypes.bool,
   selectedNodes: PropTypes.instanceOf(Set).isRequired,
   setSelectedNodes: PropTypes.func.isRequired,
   ispath: PropTypes.bool.isRequired,
   setrelationtoshow: PropTypes.func.isRequired,
-  setActiveAggregations: PropTypes.func.isRequired,
   selectedEdges: PropTypes.instanceOf(Set).isRequired,
   setselectedEdges: PropTypes.func.isRequired,
   setSubGrapgTable: PropTypes.func.isRequired,
+  virtualRelations: PropTypes.arrayOf(PropTypes.object).isRequired,
+  addVisualization: PropTypes.func.isRequired // Ajout de la prop pour ajouter une visualisation
 };
 
 export default GraphVisualization;

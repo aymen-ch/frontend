@@ -6,6 +6,8 @@ import axios from 'axios';
 
 import Container_AlgorithmicAnalysis from '../Modules/ContainersModules/ContainerModules';
 import SchemaVisualizer from '../Modules/ConfigurationModule/SchemaVisualisation/schema';
+import VisualizationList from '../Modules/ContainersModules/existingvisualization';
+import { BASE_URL_Backend } from './Urls';
 import Container_SettingsPage from '../Modules/ConfigurationModule/Importation/Container_SettingsPage';
 import General_statistics from '../Modules/ConfigurationModule/General_statistics/General_statistics';
 
@@ -17,6 +19,61 @@ const Graphe_analysis = () => {
   const { t, i18n } = useTranslation();
   // État pour suivre le module actif (par défaut : Schema)
   const [activeModule, setActiveModule] = useState('Schema');
+  const [selectedVisualization, setSelectedVisualization] = useState(null); 
+  const [visualizationData, setVisualizationData] = useState({ nodes: [], edges: [] });
+  const [visualizations, setVisualizations] = useState([]);
+
+  // Récupère les visualisations enregistrées depuis le backend au montage
+  useEffect(() => {
+    const fetchVisualizations = async () => {
+      try {
+        const response = await axios.get(BASE_URL_Backend + '/visualizations/');
+        setVisualizations(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des visualisations :', error);
+      }
+    };
+    fetchVisualizations();
+  }, []);
+
+  // Gère la sélection d'une visualisation
+const handleVisualizationSelect = async (visualization) => {
+      try {
+        const response = await axios.get(BASE_URL_Backend + '/visualizations/', {
+          params: { id: visualization.id }
+        });
+        setVisualizationData({ nodes: response.data.nodes, edges: response.data.edges });
+        setSelectedVisualization(visualization);
+      } catch (error) {
+        console.error('Error loading visualization:', error);
+        setVisualizationData({ nodes: [], edges: [] });
+      }
+    };
+
+  // Crée une nouvelle visualisation vide
+  const handleCreateNewVisualization = () => {
+    const newVisualization = {
+      id: null, // Sera défini par le backend lors de la sauvegarde
+      name: 'New Visualization',
+      file: null
+    };
+    setVisualizationData({ nodes: [], edges: [] });
+    setSelectedVisualization(newVisualization);
+  };
+
+  // Retourne à la liste des visualisations
+  const handleBackToList = () => {
+    setSelectedVisualization(null);
+    setVisualizationData({ nodes: [], edges: [] });
+  };
+
+  // Ajoute une nouvelle visualisation à la liste
+  const addVisualization = (name, file, id) => {
+    setVisualizations((prev) => [
+      ...prev.filter(viz => viz.id !== id), // Évite les doublons
+      { id, name, file }
+    ]);
+  };
 
   // Change la langue de l'application
   const changeLanguage = (lng) => {
@@ -27,14 +84,17 @@ const Graphe_analysis = () => {
   // Gère le clic sur un module pour le rendre actif
   const handleModuleClick = (module) => {
     setActiveModule(module);
+    // Réinitialise la visualisation sélectionnée et les données si le module Visualisation est sélectionné
+    if (module === 'Visualization') {
+      setSelectedVisualization(null);
+      setVisualizationData({ nodes: [], edges: [] });
+    }
   };
 
   // Composant pour afficher la page du schéma
   const SchemaPage = () => (
-    <div className="module-content"> {/* Kept as is, not styled by PlatformAnalysis.css */}
-
-        <SchemaVisualizer />
-
+    <div className="module-content">
+      <SchemaVisualizer />
     </div>
   );
 
@@ -54,10 +114,22 @@ const Graphe_analysis = () => {
 
   // Composant pour afficher la page de visualisation
   const VisualizationPage = () => (
-    <div className="module-content"> {/* Kept as is */}
-
-          <Container_AlgorithmicAnalysis />
-
+    <div className="module-content">
+      {selectedVisualization ? (
+        <Container_AlgorithmicAnalysis
+          selectedVisualization={selectedVisualization}
+          initialNodes={visualizationData.nodes}
+          initialEdges={visualizationData.edges}
+          onBackToList={handleBackToList}
+          addVisualization={addVisualization}
+        />
+      ) : (
+        <VisualizationList
+          visualizations={visualizations}
+          onSelectVisualization={handleVisualizationSelect}
+          onCreateNewVisualization={handleCreateNewVisualization}
+        />
+      )}
     </div>
   );
 
@@ -101,7 +173,7 @@ const Graphe_analysis = () => {
           ))}
         </ul>
 
-        {/* Menu déroulant pour le choix de la langue vous pouver ajouter la langue anglais */}
+        {/* Menu déroulant pour le choix de la langue */}
         <div className="relative z-[2000]">
           <DropdownButton
             id="language-dropdown"
@@ -115,6 +187,7 @@ const Graphe_analysis = () => {
           >
             <Dropdown.Item onClick={() => changeLanguage('ar')}>{t('Arabic')}</Dropdown.Item>
             <Dropdown.Item onClick={() => changeLanguage('fr')}>{t('French')}</Dropdown.Item>
+            <Dropdown.Item onClick={() => changeLanguage('en')}>{t('English')}</Dropdown.Item>
           </DropdownButton>
         </div>
       </nav>
